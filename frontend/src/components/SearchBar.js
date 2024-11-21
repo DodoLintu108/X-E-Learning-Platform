@@ -1,0 +1,1 @@
+// Search bar component (Task 2.3)

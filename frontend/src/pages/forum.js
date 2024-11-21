@@ -1,0 +1,1 @@
+// Forum interface (Task 6.2)

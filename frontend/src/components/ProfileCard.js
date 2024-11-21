@@ -1,0 +1,1 @@
+// Reusable profile component (Task 1.2)

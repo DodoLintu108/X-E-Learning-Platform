@@ -1,0 +1,1 @@
+// Notifications dropdown (Task 6.3)
