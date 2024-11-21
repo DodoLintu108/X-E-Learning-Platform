@@ -43,3 +43,4 @@ export class AnalyticsController {
     return this.analyticsService.getDownloadableReport(instructorId);
   }
 }
+
