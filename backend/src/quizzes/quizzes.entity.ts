@@ -1,0 +1,1 @@
+// Schema for storing quizzes and results

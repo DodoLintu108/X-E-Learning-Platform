@@ -1,0 +1,1 @@
+ // User entity schema for MongoDB (Tasks 1.1, 1.2)

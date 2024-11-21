@@ -1,0 +1,1 @@
+// Authentication logic and JWT generation (Tasks 1.1, 5.1)

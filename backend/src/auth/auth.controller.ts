@@ -1,0 +1,1 @@
+// Handles login and registration (Tasks 1.1, 5.1)
