@@ -5,7 +5,8 @@ import Navbar from "../components/Navbar";
 import Link from "next/link";
 import Lottie from "lottie-react";
 import LoginAnimation from "../../public/Login.json";
-import toast, { Toaster } from "react-hot-toast";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; // Import default styles
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -35,6 +36,7 @@ export default function Login() {
       }}
     >
       <Navbar />
+      <ToastContainer /> 
       <div
         style={{
           display: "flex",
