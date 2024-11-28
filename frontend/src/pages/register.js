@@ -3,7 +3,10 @@ import axios from "axios";
 import "../app/globals.css";
 import Navbar from "../components/Navbar";
 import Link from "next/link";
-//import signUpImage from "../../public/signup.png";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; 
+import Lottie from "lottie-react";
+import RegisterAnimation from "../../public/register.json";
 export default function Register() {
   const [fName, setFName] = useState("");
   const [lName, setLName] = useState("");
@@ -13,23 +16,26 @@ export default function Register() {
 
   const handleRegister = async () => {
     console.log("clicked");
+    const name= fName+lName;
+    console.log(name)
     try {
       await axios.post("http://localhost:3000/auth/register", {
-        fName,
-        lName,
+        name,
         email,
         password,
         role,
       });
-      alert("Registration successful!");
+      toast.success("Registration successful!");
     } catch (error) {
-      alert("Registration failed: " + error.response.data.message);
+      toast.error("Registration failed: " + error.response.data.message);
     }
   };
 
   return (
     <div>
       <Navbar />
+      <ToastContainer /> 
+
       <div
         style={{
           display: "flex",
@@ -39,27 +45,24 @@ export default function Register() {
           gap: "30px",
         }}
       >
-        {/* <img
-          src="/signup.png"
-          alt="image"
-          style={{
-            width: "50%",
-            height: "300px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        ></img> */}
+         {/* <div >
+          <Lottie className="h-24" animationData={RegisterAnimation} />
+        </div> */}
         <h1
           style={{
             color: "#7F8081",
             fontSize: "20px",
-            fontFamily: "sans-serif",
           }}
         >
-          "Join our community and unlock a world of knowledge—create your
-          account to start learning, growing, and achieving your goals today!"
+          Join our community and unlock a world of knowledge 
         </h1>
+        <h2 
+        style={{
+            color: "#7F8081",
+            fontSize: "20px",
+          }}>
+        create youraccount to start learning, growing, and achieving your goals today!
+        </h2>
         <div
           style={{
             padding: "30px",
