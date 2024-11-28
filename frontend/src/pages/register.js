@@ -3,7 +3,7 @@ import axios from "axios";
 import "../app/globals.css";
 import Navbar from "../components/Navbar";
 import Link from "next/link";
-import signUpImage from "../../public/signup.png";
+//import signUpImage from "../../public/signup.png";
 export default function Register() {
   const [fName, setFName] = useState("");
   const [lName, setLName] = useState("");
@@ -39,7 +39,7 @@ export default function Register() {
           gap: "30px",
         }}
       >
-        <img
+        {/* <img
           src="/signup.png"
           alt="image"
           style={{
@@ -49,7 +49,7 @@ export default function Register() {
             justifyContent: "center",
             alignItems: "center",
           }}
-        ></img>
+        ></img> */}
         <h1
           style={{
             color: "#7F8081",
