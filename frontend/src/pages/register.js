@@ -2,11 +2,9 @@ import React, { useState } from "react";
 import axios from "axios";
 import "../app/globals.css";
 import Navbar from "../components/Navbar";
-import Link from "next/link";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; 
-import Lottie from "lottie-react";
-import RegisterAnimation from "../../public/register.json";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 export default function Register() {
   const [fName, setFName] = useState("");
   const [lName, setLName] = useState("");
@@ -16,8 +14,8 @@ export default function Register() {
 
   const handleRegister = async () => {
     console.log("clicked");
-    const name= fName+lName;
-    console.log(name)
+    const name = fName + lName;
+    console.log(name);
     try {
       await axios.post("http://localhost:3000/auth/register", {
         name,
@@ -34,7 +32,7 @@ export default function Register() {
   return (
     <div>
       <Navbar />
-      <ToastContainer /> 
+      <ToastContainer />
 
       <div
         style={{
@@ -45,23 +43,22 @@ export default function Register() {
           gap: "30px",
         }}
       >
-         {/* <div >
-          <Lottie className="h-24" animationData={RegisterAnimation} />
-        </div> */}
         <h1
           style={{
             color: "#7F8081",
             fontSize: "20px",
           }}
         >
-          Join our community and unlock a world of knowledge 
+          Join our community and unlock a world of knowledge
         </h1>
-        <h2 
-        style={{
+        <h2
+          style={{
             color: "#7F8081",
             fontSize: "20px",
-          }}>
-        create youraccount to start learning, growing, and achieving your goals today!
+          }}
+        >
+          create your account to start learning, growing, and achieving your
+          goals today!
         </h2>
         <div
           style={{
