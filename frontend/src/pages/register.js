@@ -10,7 +10,7 @@ export default function Register() {
   const [lName, setLName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("student");
+  const [role, setRole] = useState("Select role");
 
   const handleRegister = async () => {
     console.log("clicked");
@@ -142,6 +142,7 @@ export default function Register() {
             value={role}
             onChange={(e) => setRole(e.target.value)}
           >
+            <option value="Select role"disabled>Select role</option>
             <option value="student">Student</option>
             <option value="teacher">Teacher</option>
           </select>
