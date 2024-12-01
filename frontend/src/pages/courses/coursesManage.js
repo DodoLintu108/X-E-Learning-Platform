@@ -381,8 +381,47 @@ const ManageCourses = () => {
             <option value="Advanced">Advanced</option>
           </select>
         </div>
-        <input type="file" accept="video/*" onChange={handleVideoChange} />
-        <input type="file" multiple onChange={handleFileChange} />
+        <label
+          style={{
+            fontWeight: "bold",
+            marginBottom: "8px",
+          }}
+        >
+          Upload Course Materials (PDF, Docs, etc.):
+        </label>
+        <input
+          type="file"
+          multiple
+          style={{
+            padding: "10px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            marginBottom: "20px",
+          }}
+          onChange={(e) => console.log(e.target.files)}
+        />
+
+        {/* Video Upload */}
+        <label
+          style={{
+            fontWeight: "bold",
+            marginBottom: "8px",
+          }}
+        >
+          Upload Course Videos:
+        </label>
+        <input
+          type="file"
+          accept="video/*"
+          multiple
+          style={{
+            padding: "10px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            marginBottom: "20px",
+          }}
+          onChange={(e) => console.log(e.target.files)}
+        />
 
       </Modal>
     </div>
