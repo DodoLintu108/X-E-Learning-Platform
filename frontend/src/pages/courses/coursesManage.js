@@ -39,21 +39,23 @@ const Modal = ({ isOpen, onClose, children }) => {
       >
         {/* Close Button */}
         <button
-          onClick={onClose}
-          style={{
-            background: "red",
-            color: "white",
-            border: "none",
-            padding: "5px 10px",
-            borderRadius: "4px",
-            cursor: "pointer",
-            position: "absolute",
-            top: "10px",
-            right: "10px",
-          }}
-        >
-          Close
-        </button>
+  onClick={onClose}
+  style={{
+    background: "red",
+    color: "white",
+    border: "none",
+    width: "80px",     
+    height: "40px",     
+    borderRadius: "5px",
+    cursor: "pointer",
+    position: "absolute",
+    top: "25px",        
+    right: "6px",
+  }}
+>
+  Close
+</button>
+
 
         {/* Centered Heading */}
         <div
@@ -230,7 +232,7 @@ const ManageCourses = () => {
 
           {/* Create Course */}
           <h2>Create New Course</h2>
-          <input
+          <input 
             type="text"
             value={newCourse.title}
             onChange={(e) =>
@@ -422,7 +424,24 @@ const ManageCourses = () => {
           }}
           onChange={(e) => console.log(e.target.files)}
         />
-
+         
+         {/* submit button */}
+                  <button
+            style={{
+              width: "85%",
+              padding: "4px 5px",  // Smaller padding (vertical and horizontal)
+              backgroundColor: "#7AB2D3",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              marginLeft: "25px",
+              marginTop: "-15px",  // Move the button up by 10 pixels
+            }}
+            onClick={() => setIsModalOpen(true)}
+          >
+            submit
+          </button> 
       </Modal>
     </div>
   );
