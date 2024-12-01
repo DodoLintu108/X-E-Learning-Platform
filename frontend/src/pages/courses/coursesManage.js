@@ -8,17 +8,93 @@ import {
 } from "../../services/api";
 import Navbar from "../../components/Navbar";
 import "../../app/globals.css";
-
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+const Modal = ({ isOpen, onClose, children }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 1000,
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "white",
+          padding: "20px",
+          borderRadius: "8px",
+          minWidth: "300px",
+          position: "relative",
+        }}
+      >
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          style={{
+            background: "red",
+            color: "white",
+            border: "none",
+            padding: "5px 10px",
+            borderRadius: "4px",
+            cursor: "pointer",
+            position: "absolute",
+            top: "10px",
+            right: "10px",
+          }}
+        >
+          Close
+        </button>
+
+        {/* Centered Heading */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: "40px",
+          }}
+        >
+          <h2 style={{ fontSize: "20px", fontWeight: "500" }}>
+            Create New Course
+          </h2>
+        </div>
+
+        {/* Modal Content */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            marginTop: "15px",
+          }}
+        >
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ManageCourses = () => {
   const [courses, setCourses] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [category, setCategory] = useState("Select Course Category");
   const [newCourse, setNewCourse] = useState({
     title: "",
     description: "",
     category: "",
     difficultyLevel: "",
+    video: null,
+    files: [],
   });
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [modules, setModules] = useState([]);
@@ -27,24 +103,13 @@ const ManageCourses = () => {
     content: "",
     resources: [],
   });
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (searchQuery) {
       handleSearchCourses();
     }
   }, [searchQuery]);
-
-  const handleCreateCourse = async () => {
-    const createdCourse = await createCourse(newCourse);
-    if (createdCourse) toast.success("Course Created Successfully");
-    setCourses([...courses, createdCourse]);
-    setNewCourse({
-      title: "",
-      description: "",
-      category: "",
-      difficultyLevel: "",
-    });
-  };
 
   const handleAddModule = async (courseId) => {
     const modulee = await addModule(courseId, newModule);
@@ -63,12 +128,29 @@ const ManageCourses = () => {
   //     courses.map((course) => (course.id === courseId ? updatedCourse : course))
   //   );
   // };
+  const handleCreateCourse = async () => {
+    const createdCourse = await createCourse(newCourse);
+    if (createdCourse) toast.success("Course Created Successfully");
+    setCourses([...courses, createdCourse]);
+    setNewCourse({
+      title: "",
+      description: "",
+      category: "",
+      difficultyLevel: "",
+    });
+  };
 
   const handleViewVersions = async (courseId) => {
     const versions = await getCourseVersions(courseId);
     console.log("Course Versions:", versions);
   };
+  const handleFileChange = (e) => {
+    setNewCourse({ ...newCourse, files: Array.from(e.target.files) });
+  };
 
+  const handleVideoChange = (e) => {
+    setNewCourse({ ...newCourse, video: e.target.files[0] });
+  };
   return (
     <div>
       <Navbar />
@@ -123,7 +205,7 @@ const ManageCourses = () => {
               cursor: "pointer",
               marginLeft: "25px",
             }}
-            onClick={handleCreateCourse}
+            onClick={() => setIsModalOpen(true)}
           >
             Create Course
           </button>
@@ -221,6 +303,88 @@ const ManageCourses = () => {
           )}
         </div>
       </div>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            padding: "9px",
+            borderRadius: "4px",
+          }}
+        >
+          <input
+            type="text"
+            value={newCourse.title}
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "10px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
+            onChange={(e) =>
+              setNewCourse({ ...newCourse, title: e.target.value })
+            }
+            placeholder="Title"
+          />
+          <textarea
+            value={newCourse.description}
+            onChange={(e) =>
+              setNewCourse({ ...newCourse, description: e.target.value })
+            }
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "10px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
+            placeholder="Description"
+          ></textarea>
+          <select
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "20px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <option value="Select Course Category" disabled>
+              Select Course Category
+            </option>
+            <option value="Mathematics">Mathematics</option>
+            <option value="Machine Learning">Machine Learning</option>
+            <option value="Physics">Physics</option>
+            <option value="Chemistry">Chemistry</option>
+          </select>
+          <select
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "20px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
+            value={newCourse.difficultyLevel}
+            onChange={(e) =>
+              setNewCourse({ ...newCourse, difficultyLevel: e.target.value })
+            }
+          >
+            <option value="Select Difficulty Level" disabled>
+              Select Difficulty Level
+            </option>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+        </div>
+        <input type="file" accept="video/*" onChange={handleVideoChange} />
+        <input type="file" multiple onChange={handleFileChange} />
+
+      </Modal>
     </div>
   );
 };
