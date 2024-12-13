@@ -20,13 +20,14 @@ export class Course {
   category: string;
 
   @Prop({ required: true })
-  difficultyLevel: string; // Beginner, Intermediate, Advanced
-
-  @Prop({ required: true })
-  createdBy: string; // Instructor ID
+  difficultyLevel: string; // Beginner, Intermediate, Advanced// Instructor ID
 
   @Prop({ default: Date.now })
   createdAt: Date;
+  @Prop({ default: 'default-image.jpg' })
+  courseImage: string;
+  @Prop(String)
+  courseMaterial: string;
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);

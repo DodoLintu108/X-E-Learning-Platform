@@ -27,6 +27,12 @@ export class Module {
   courseId: string; // Associated course ID
 
   @Prop({ required: true })
+  courseImage: string; // Associated course ID
+
+  @Prop({ required: true })
+  courseMaterial: string; // Associated course ID
+
+  @Prop({ required: true })
   title: string;
 
   @Prop({ required: true })
