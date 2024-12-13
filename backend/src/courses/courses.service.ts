@@ -14,42 +14,31 @@ export class CoursesService {
     @InjectModel(Module.name) private moduleModel: Model<ModuleDocument>,
     @InjectModel(Version.name) private versionModel: Model<VersionDocument>,
   ) {}
-
-  /**
-   * Creates a new course.
-   */
   async createCourse(data: {
     title: string;
     description: string;
     category: string;
     difficultyLevel: string;
-    createdBy: string;
+    courseImage: string;
+    courseMaterial: string;
   }): Promise<Course> {
+    console.log('aa');
     const newCourse = new this.courseModel(data);
     return newCourse.save();
   }
-
-  /**
-   * Adds a new module to an existing course.
-   */
   async addModule(data: {
     courseId: string;
     title: string;
     content: string;
     resources?: string[];
   }): Promise<Module> {
-    const course = await this.courseModel.findById(data.courseId); // Use courseId as _id
+    const course = await this.courseModel.findById(data.courseId);
     if (!course) {
       throw new NotFoundException('Course not found');
     }
-
     const newModule = new this.moduleModel(data);
     return newModule.save();
   }
-
-  /**
-   * Updates a course and tracks version history.
-   */
   async updateCourse(
     courseId: string,
     data: Partial<Course>,
@@ -60,32 +49,24 @@ export class CoursesService {
       throw new NotFoundException('Course not found');
     }
 
-    // Save version history
     const version = new this.versionModel({
       courseId,
       updatedBy,
-      changeSummary: Course updated: ${Object.keys(data).join(', ')},
+      changeSummary: `Course updated: ${Object.keys(data).join(', ')}`, // Corrected syntax
     });
     await version.save();
 
-    // Update the course
-    Object.assign(course, data);
+    Object.assign(course, data); // Ensure the `course` object is updated
     return course.save();
   }
 
-  /**
-   * Fetches version history of a course.
-   */
   async getCourseVersions(courseId: string): Promise<Version[]> {
     return this.versionModel.find({ courseId }).sort({ updatedAt: -1 }).exec();
   }
 
-  /**
-   * Searches for courses by title.
-   */
   async searchCourses(query: string): Promise<Course[]> {
     return this.courseModel
       .find({ title: { $regex: query, $options: 'i' } })
-      .exec();
-  }
+      .exec();
+  }
 }
