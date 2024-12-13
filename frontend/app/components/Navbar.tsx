@@ -25,10 +25,10 @@ const Navbar = () => {
           <Link href="/profile">Profile</Link>
         </li>
         <li>
-          <Link href="/login">Login</Link>
+          <Link href="/Login">Login</Link>
         </li>
         <li>
-          <Link href="/register">Register</Link>
+          <Link href="/Register">Register</Link>
         </li>
       </ul>
     </nav>

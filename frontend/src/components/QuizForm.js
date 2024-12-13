@@ -1,1 +1,0 @@
-// Quiz question component (Task 3.1)

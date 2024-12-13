@@ -1,6 +1,8 @@
+"use client";
+
 import React, { useState } from "react";
 import axios from "axios";
-import "../app/globals.css";
+import "../globals.css";
 import Navbar from "../components/Navbar";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -24,8 +26,13 @@ export default function Register() {
         role,
       });
       toast.success("Registration successful!");
+      window.location.href = "/Login";
     } catch (error) {
-      toast.error("Registration failed: " + error.response.data.message);
+      let errorMessage = "Registration Failed!";
+      if (axios.isAxiosError(error) && error.response) {
+        errorMessage = error.response.data.message || errorMessage;
+      }
+      toast.error(errorMessage);
     }
   };
 
@@ -142,7 +149,9 @@ export default function Register() {
             value={role}
             onChange={(e) => setRole(e.target.value)}
           >
-            <option value="Select role"disabled>Select role</option>
+            <option value="Select role" disabled>
+              Select role
+            </option>
             <option value="student">Student</option>
             <option value="teacher">Teacher</option>
           </select>
