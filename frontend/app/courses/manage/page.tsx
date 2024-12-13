@@ -1,16 +1,18 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
-import {
-  createCourse,
-  addModule,
-  searchCourses,
-  //updateCourse,
-  getCourseVersions,
-} from "../../services/api";
+import axios from "axios";
 import Navbar from "../../components/Navbar";
-import "../../app/globals.css";
+import "../../globals.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-const Modal = ({ isOpen, onClose, children }) => {
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}
+
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
 
   return (
@@ -33,29 +35,28 @@ const Modal = ({ isOpen, onClose, children }) => {
           backgroundColor: "white",
           padding: "20px",
           borderRadius: "8px",
-          minWidth: "300px",
+          minWidth: "500px",
           position: "relative",
         }}
       >
         {/* Close Button */}
         <button
-  onClick={onClose}
-  style={{
-    background: "red",
-    color: "white",
-    border: "none",
-    width: "80px",     
-    height: "40px",     
-    borderRadius: "5px",
-    cursor: "pointer",
-    position: "absolute",
-    top: "25px",        
-    right: "6px",
-  }}
->
-  Close
-</button>
-
+          onClick={onClose}
+          style={{
+            background: "red",
+            color: "white",
+            border: "none",
+            width: "80px",
+            height: "40px",
+            borderRadius: "5px",
+            cursor: "pointer",
+            position: "absolute",
+            top: "25px",
+            right: "6px",
+          }}
+        >
+          Close
+        </button>
 
         {/* Centered Heading */}
         <div
@@ -90,69 +91,57 @@ const ManageCourses = () => {
   const [courses, setCourses] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("Select Course Category");
-  const [newCourse, setNewCourse] = useState({
+  const [newCourse, setNewCourse] = useState<{
+    title: string;
+    description: string;
+    category: string;
+    difficultyLevel: string;
+    courseImage: File | null;
+    courseMaterial: File | null;
+  }>({
     title: "",
     description: "",
     category: "",
     difficultyLevel: "",
-    video: null,
-    files: [],
-  });
-  const [selectedCourse, setSelectedCourse] = useState(null);
-  const [modules, setModules] = useState([]);
-  const [newModule, setNewModule] = useState({
-    title: "",
-    content: "",
-    resources: [],
+    courseImage: null,
+    courseMaterial: null,
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (searchQuery) {
-      handleSearchCourses();
-    }
-  }, [searchQuery]);
-
-  const handleAddModule = async (courseId) => {
-    const modulee = await addModule(courseId, newModule);
-    setModules([...modules, modulee]);
-    setNewModule({ title: "", content: "", resources: [] });
-  };
-
-  const handleSearchCourses = async () => {
-    const results = await searchCourses(searchQuery);
-    setCourses(results);
-  };
-
-  // const handleUpdateCourse = async (courseId, updatedFields) => {
-  //   const updatedCourse = await updateCourse(courseId, updatedFields);
-  //   setCourses(
-  //     courses.map((course) => (course.id === courseId ? updatedCourse : course))
-  //   );
-  // };
   const handleCreateCourse = async () => {
-    const createdCourse = await createCourse(newCourse);
-    if (createdCourse) toast.success("Course Created Successfully");
-    setCourses([...courses, createdCourse]);
-    setNewCourse({
-      title: "",
-      description: "",
-      category: "",
-      difficultyLevel: "",
+    const formData = new FormData();
+
+    formData.append("title", newCourse.title);
+    formData.append("description", newCourse.description);
+    formData.append("category", newCourse.category);
+    formData.append("difficultyLevel", newCourse.difficultyLevel);
+    if (newCourse.courseImage) {
+      formData.append("files", newCourse.courseImage); // Key must match backend
+    }
+    if (newCourse.courseMaterial) {
+      formData.append("files", newCourse.courseMaterial); // Key must match backend
+    }
+
+    console.log("Form Data:");
+    formData.forEach((value, key) => {
+      console.log(key, value);
     });
+
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/courses/create",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      toast.success(response.data.message);
+      setCourses([...courses, response.data.course]); // Add the new course to the list
+      setIsModalOpen(false); // Close the modal
+    } catch (error) {
+      console.error("Error:", error.response?.data || error.message);
+      toast.error("Error creating course!");
+    }
   };
 
-  const handleViewVersions = async (courseId) => {
-    const versions = await getCourseVersions(courseId);
-    console.log("Course Versions:", versions);
-  };
-  const handleFileChange = (e) => {
-    setNewCourse({ ...newCourse, files: Array.from(e.target.files) });
-  };
-
-  const handleVideoChange = (e) => {
-    setNewCourse({ ...newCourse, video: e.target.files[0] });
-  };
   return (
     <div>
       <Navbar />
@@ -192,7 +181,7 @@ const ManageCourses = () => {
           style={{
             display: "flex",
             flexDirection: "row",
-            justifyContent: "flex-start", // Aligns the button to the left
+            justifyContent: "flex-start",
             alignItems: "center",
           }}
         >
@@ -212,6 +201,7 @@ const ManageCourses = () => {
             Create Course
           </button>
         </div>
+        <h1 className="">Courses</h1>
 
         <div
           style={{
@@ -229,80 +219,6 @@ const ManageCourses = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search for courses..."
           />
-
-          {/* Create Course */}
-          <h2>Create New Course</h2>
-          <input 
-            type="text"
-            value={newCourse.title}
-            onChange={(e) =>
-              setNewCourse({ ...newCourse, title: e.target.value })
-            }
-            placeholder="Title"
-          />
-          <textarea
-            value={newCourse.description}
-            onChange={(e) =>
-              setNewCourse({ ...newCourse, description: e.target.value })
-            }
-            placeholder="Description"
-          ></textarea>
-          <input
-            type="text"
-            value={newCourse.category}
-            onChange={(e) =>
-              setNewCourse({ ...newCourse, category: e.target.value })
-            }
-            placeholder="Category"
-          />
-          <input
-            type="text"
-            value={newCourse.difficultyLevel}
-            onChange={(e) =>
-              setNewCourse({ ...newCourse, difficultyLevel: e.target.value })
-            }
-            placeholder="Difficulty Level"
-          />
-
-          {/* List of Courses */}
-          <h2>Courses</h2>
-          {courses.map((course) => (
-            <div key={course.id}>
-              <h3>{course.title}</h3>
-              <p>{course.description}</p>
-              <button onClick={() => setSelectedCourse(course)}>
-                Manage Modules
-              </button>
-              <button onClick={() => handleViewVersions(course.id)}>
-                View Versions
-              </button>
-            </div>
-          ))}
-
-          {/* Add Module */}
-          {selectedCourse && (
-            <>
-              <h2>Add Module to {selectedCourse.title}</h2>
-              <input
-                type="text"
-                value={newModule.title}
-                onChange={(e) =>
-                  setNewModule({ ...newModule, title: e.target.value })
-                }
-                placeholder="Module Title"
-              />
-              <textarea
-                value={newModule.content}
-                onChange={(e) =>
-                  setNewModule({ ...newModule, content: e.target.value })
-                }
-                placeholder="Module Content"
-              ></textarea>
-              <button onClick={() => handleAddModule(selectedCourse.id)}>
-                Add Module
-              </button>
-            </>
-          )}
         </div>
       </div>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
@@ -351,8 +267,10 @@ const ManageCourses = () => {
               border: "1px solid #ccc",
               borderRadius: "4px",
             }}
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            value={newCourse.category}
+            onChange={(e) =>
+              setNewCourse({ ...newCourse, category: e.target.value })
+            }
           >
             <option value="Select Course Category" disabled>
               Select Course Category
@@ -400,7 +318,12 @@ const ManageCourses = () => {
             borderRadius: "4px",
             marginBottom: "20px",
           }}
-          onChange={(e) => console.log(e.target.files)}
+          onChange={(e) =>
+            setNewCourse({
+              ...newCourse,
+              courseMaterial: e.target.files ? e.target.files[0] : null,
+            })
+          }
         />
 
         {/* Video Upload */}
@@ -410,38 +333,43 @@ const ManageCourses = () => {
             marginBottom: "8px",
           }}
         >
-          Upload Course Videos:
+          Upload Course Image:
         </label>
         <input
           type="file"
-          accept="video/*"
-          multiple
+          accept="image/*" // Accepts all image formats
+          multiple={false} // Allow only one image to be selected at a time
           style={{
             padding: "10px",
             border: "1px solid #ccc",
             borderRadius: "4px",
             marginBottom: "20px",
           }}
-          onChange={(e) => console.log(e.target.files)}
+          onChange={(e) =>
+            setNewCourse({
+              ...newCourse,
+              courseImage: e.target.files ? e.target.files[0] : null, // Assuming you are storing the image in `newCourse.image`
+            })
+          }
         />
-         
-         {/* submit button */}
-                  <button
-            style={{
-              width: "85%",
-              padding: "4px 5px",  // Smaller padding (vertical and horizontal)
-              backgroundColor: "#7AB2D3",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              marginLeft: "25px",
-              marginTop: "-15px",  // Move the button up by 10 pixels
-            }}
-            onClick={() => setIsModalOpen(true)}
-          >
-            submit
-          </button> 
+
+        {/* submit button */}
+        <button
+          style={{
+            width: "85%",
+            padding: "4px 5px",
+            backgroundColor: "#7AB2D3",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            marginLeft: "25px",
+            marginTop: "-15px",
+          }}
+          onClick={handleCreateCourse}
+        >
+          submit
+        </button>
       </Modal>
     </div>
   );

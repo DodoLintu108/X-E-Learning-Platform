@@ -1,12 +1,13 @@
+"use client";
 import React, { useState } from "react";
 import axios from "axios";
-import "../app/globals.css";
+import "../globals.css";
 import Navbar from "../components/Navbar";
 import Link from "next/link";
 import Lottie from "lottie-react";
 import LoginAnimation from "../../public/Login.json";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Import default styles
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css"; // Import default styles
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -20,9 +21,13 @@ export default function Login() {
       });
       toast.success("Login successful!");
       console.log("Token:", response.data.accessToken);
+      window.location.href = `/courses/Manage?accessToken=${response.data.accessToken}`;
     } catch (error) {
-      // + error.response.data.message
-      toast.error("Login Faailed!");
+      let errorMessage = "Login Failed!";
+      if (axios.isAxiosError(error) && error.response) {
+        errorMessage = error.response.data.message || errorMessage;
+      }
+      toast.error(errorMessage);
     }
   };
 
@@ -36,7 +41,7 @@ export default function Login() {
       }}
     >
       <Navbar />
-      <ToastContainer /> 
+      <ToastContainer />
       <div
         style={{
           display: "flex",
@@ -46,8 +51,7 @@ export default function Login() {
           justifyContent: "center",
           height: "100%",
           textAlign: "center",
-          padding:"9px",
-
+          padding: "9px",
         }}
       >
         <div style={{ marginRight: "20px" }}>
@@ -71,8 +75,12 @@ export default function Login() {
               transition: "color 0.3s",
               cursor: "pointer",
             }}
-            onMouseEnter={(e) => (e.target.style.color = "#1A5BB8")}
-            onMouseLeave={(e) => (e.target.style.color = "black")} // Revert color on hover out
+            onMouseEnter={(e) =>
+              ((e.target as HTMLElement).style.color = "#1A5BB8")
+            }
+            onMouseLeave={(e) =>
+              ((e.target as HTMLElement).style.color = "black")
+            } // Revert color on hover out
           >
             Welcome Back ...!
           </h1>
@@ -116,9 +124,9 @@ export default function Login() {
             Login
           </button>
           <p>
-            Don't have an account? ...
+            Don&apos;t have an account? ...
             <Link
-              href="/register"
+              href="/Register"
               style={{ color: "#024CAA", textDecoration: "none" }}
             >
               Start a new journey
