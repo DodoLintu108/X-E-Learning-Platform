@@ -24,9 +24,7 @@ import { ApiConsumes, ApiBody } from '@nestjs/swagger';
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
   @Post('create')
-  @UseInterceptors(
-    FilesInterceptor('files', 2, multerOptions), // Allow up to 2 files
-  )
+  @UseInterceptors(FilesInterceptor('files', 2, multerOptions))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'Create a new course with materials and image',
@@ -54,7 +52,7 @@ export class CoursesController {
     const courseData = {
       ...createCourseDto,
       courseMaterial: courseMaterial?.filename || null,
-      courseImage: courseImage?.filename || null, 
+      courseImage: courseImage?.filename || null,
     };
     console.log(courseData);
     const newCourse = await this.coursesService.createCourse(courseData);
@@ -85,6 +83,11 @@ export class CoursesController {
   @Get('search')
   async searchCourses(@Query('query') query: string): Promise<Course[]> {
     return this.coursesService.searchCourses(query);
+  }
+
+  @Get('all')
+  async getAllCourses(): Promise<Course[]> {
+    return this.coursesService.getAllCourses();
   }
 
   @Put(':courseId')
