@@ -39,12 +39,11 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
           position: "relative",
         }}
       >
-        {/* Close Button */}
         <button
           onClick={onClose}
           style={{
-            background: "red",
-            color: "white",
+            background: "white",
+            color: "red",
             border: "none",
             width: "80px",
             height: "40px",
@@ -55,10 +54,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
             right: "6px",
           }}
         >
-          Close
+          ✖
         </button>
-
-        {/* Centered Heading */}
         <div
           style={{
             display: "flex",
@@ -71,8 +68,6 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
             Create New Course
           </h2>
         </div>
-
-        {/* Modal Content */}
         <div
           style={{
             display: "flex",
@@ -88,9 +83,31 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
 };
 
 const ManageCourses = () => {
-  const [courses, setCourses] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("Select Course Category");
+
+  useEffect(() => {
+    getAllCourses();
+  }, []);
+
+  const [allCourses, setAllCourses] = useState([]);
+  const getAllCourses = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/courses/all");
+      setAllCourses(response.data);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Error:", error.response?.data || error.message);
+        toast.error(
+          "Error getting course!",
+          error.response?.data || error.message
+        );
+      } else {
+        console.error("Error:", error);
+      }
+      toast.error("Error getting course!");
+    }
+  };
   const [newCourse, setNewCourse] = useState<{
     title: string;
     description: string;
@@ -101,8 +118,8 @@ const ManageCourses = () => {
   }>({
     title: "",
     description: "",
-    category: "",
-    difficultyLevel: "",
+    category: "Select Course Category",
+    difficultyLevel: "Select Difficulty Level",
     courseImage: null,
     courseMaterial: null,
   });
@@ -122,11 +139,6 @@ const ManageCourses = () => {
       formData.append("files", newCourse.courseMaterial); // Key must match backend
     }
 
-    console.log("Form Data:");
-    formData.forEach((value, key) => {
-      console.log(key, value);
-    });
-
     try {
       const response = await axios.post(
         "http://localhost:3000/courses/create",
@@ -134,14 +146,20 @@ const ManageCourses = () => {
         { headers: { "Content-Type": "multipart/form-data" } }
       );
       toast.success(response.data.message);
-      setCourses([...courses, response.data.course]); // Add the new course to the list
       setIsModalOpen(false); // Close the modal
     } catch (error) {
-      console.error("Error:", error.response?.data || error.message);
+      if (axios.isAxiosError(error)) {
+        console.error("Error:", error.response?.data || error.message);
+        toast.error(
+          "Error creating course!",
+          error.response?.data || error.message
+        );
+      } else {
+        console.error("Error:", error);
+      }
       toast.error("Error creating course!");
     }
   };
-
   return (
     <div>
       <Navbar />
@@ -214,11 +232,88 @@ const ManageCourses = () => {
           }}
         >
           <input
+            style={{
+              width: "20%",
+              padding: "10px",
+              marginBottom: "10px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search for courses..."
           />
+          {
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "5px" }}
+            >
+              {allCourses.map((course: any) => {
+                return (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "9px",
+                      borderRadius: "4px",
+                      border: "1px solid #7F8081",
+                      boxShadow: "1px 4px 6px rgba(0, 0, 0, 0.5)",
+                    }}
+                  >
+                    <div>
+                      <img
+                        src={`http://localhost:3000/files/upload/${course.courseImage}`}
+                        alt="course"
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          borderRadius: "4px",
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <h3>{course.title}</h3>
+                      <p>{course.description}</p>
+                      <p>{course.category}</p>
+                      <p>{course.difficultyLevel}</p>
+                    </div>
+                    <div>
+                      <button
+                        style={{
+                          width: "100%",
+                          padding: "10px",
+                          backgroundColor: "#7AB2D3",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        style={{
+                          width: "100%",
+                          padding: "10px",
+                          backgroundColor: "#7AB2D3",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          marginTop: "5px",
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+              <div></div>
+            </div>
+          }
         </div>
       </div>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
@@ -325,8 +420,6 @@ const ManageCourses = () => {
             })
           }
         />
-
-        {/* Video Upload */}
         <label
           style={{
             fontWeight: "bold",
@@ -337,8 +430,8 @@ const ManageCourses = () => {
         </label>
         <input
           type="file"
-          accept="image/*" // Accepts all image formats
-          multiple={false} // Allow only one image to be selected at a time
+          accept="image/*"
+          multiple={false}
           style={{
             padding: "10px",
             border: "1px solid #ccc",
@@ -348,12 +441,10 @@ const ManageCourses = () => {
           onChange={(e) =>
             setNewCourse({
               ...newCourse,
-              courseImage: e.target.files ? e.target.files[0] : null, // Assuming you are storing the image in `newCourse.image`
+              courseImage: e.target.files ? e.target.files[0] : null,
             })
           }
         />
-
-        {/* submit button */}
         <button
           style={{
             width: "85%",

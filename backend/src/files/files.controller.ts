@@ -4,29 +4,21 @@ import {
   UploadedFile,
   UseInterceptors,
   BadRequestException,
+  Get,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { FileService } from './file.service'; // Import the file service
 
 @Controller('files')
 export class FilesController {
+  constructor(private readonly fileService: FileService) {}
+
   @Post('upload')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, callback) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          callback(
-            null,
-            `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`,
-          );
-        },
-      }),
+   //   storage: this.fileService.getStorage(), // Use GridFS storage
       limits: {
-        fileSize: 5 * 1024 * 1024, 
+        fileSize: 5 * 1024 * 1024, // 5MB limit
       },
     }),
   )
@@ -34,10 +26,22 @@ export class FilesController {
     if (!file) {
       throw new BadRequestException('File not uploaded!');
     }
+
+    // TypeScript will now know that file is not undefined
     return {
       originalname: file.originalname,
       filename: file.filename,
       path: file.path,
     };
   }
+
+
+  // @Get(`view/:filename`)
+  // async serveFile(@Param('filename') filename: string) {
+  //   return {
+  //     file: filename,
+  //   };
+  // }
+
+
 }

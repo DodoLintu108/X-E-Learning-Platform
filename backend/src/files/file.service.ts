@@ -1,7 +1,7 @@
+// file.service.ts
 import { Injectable } from '@nestjs/common';
-import * as mongoose from 'mongoose';
 import { GridFsStorage } from 'multer-gridfs-storage';
-import * as multer from 'multer';
+import * as mongoose from 'mongoose';
 
 @Injectable()
 export class FileService {
@@ -21,6 +21,7 @@ export class FileService {
     });
   }
 
+  // This method is used to get the configured storage for file uploads
   getStorage() {
     return this.storage;
   }

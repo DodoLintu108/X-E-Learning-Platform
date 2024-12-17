@@ -64,6 +64,10 @@ export class CoursesService {
     return this.versionModel.find({ courseId }).sort({ updatedAt: -1 }).exec();
   }
 
+  async getAllCourses(): Promise<Course[]> {
+    return this.courseModel.find().exec();
+  }
+
   async searchCourses(query: string): Promise<Course[]> {
     return this.courseModel
       .find({ title: { $regex: query, $options: 'i' } })
