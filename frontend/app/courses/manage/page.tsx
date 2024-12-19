@@ -125,7 +125,9 @@ const ManageCourses = () => {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleCreateCourse = async () => {
+  const handleCreateCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     const formData = new FormData();
 
     formData.append("title", newCourse.title);
@@ -133,7 +135,7 @@ const ManageCourses = () => {
     formData.append("category", newCourse.category);
     formData.append("difficultyLevel", newCourse.difficultyLevel);
     if (newCourse.courseImage) {
-      formData.append("files", newCourse.courseImage); // Key must match backend
+      formData.append("imagefiles", newCourse.courseImage); // Key must match backend
     }
     if (newCourse.courseMaterial) {
       formData.append("files", newCourse.courseMaterial); // Key must match backend
@@ -147,6 +149,7 @@ const ManageCourses = () => {
       );
       toast.success(response.data.message);
       setIsModalOpen(false); // Close the modal
+      getAllCourses(); // Refresh the list
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error("Error:", error.response?.data || error.message);
@@ -158,6 +161,26 @@ const ManageCourses = () => {
         console.error("Error:", error);
       }
       toast.error("Error creating course!");
+    }
+  };
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await axios.delete(
+        `http://localhost:3000/courses/${id}`
+      );
+      toast.success(response.data.message);
+      getAllCourses();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Error:", error.response?.data || error.message);
+        toast.error(
+          "Error deleting course!",
+          error.response?.data || error.message
+        );
+      } else {
+        console.error("Error:", error);
+      }
+      toast.error("Error deleting course!");
     }
   };
   return (
@@ -251,6 +274,7 @@ const ManageCourses = () => {
               {allCourses.map((course: any) => {
                 return (
                   <div
+                    key={course._id}
                     style={{
                       display: "flex",
                       flexDirection: "row",
@@ -264,20 +288,20 @@ const ManageCourses = () => {
                   >
                     <div>
                       <img
-                        src={`http://localhost:3000/files/upload/${course.courseImage}`}
+                        src={`${course.courseImage}`}
                         alt="course"
+                        width={100}
+                        height={100}
                         style={{
-                          width: "100px",
-                          height: "100px",
                           borderRadius: "4px",
                         }}
                       />
                     </div>
                     <div>
-                      <h3>{course.title}</h3>
-                      <p>{course.description}</p>
-                      <p>{course.category}</p>
-                      <p>{course.difficultyLevel}</p>
+                      <h3>Title: {course.title}</h3>
+                      <p>Description : {course.description}</p>
+                      <p>Category:{course.category}</p>
+                      <p>Level : {course.difficultyLevel}</p>
                     </div>
                     <div>
                       <button
@@ -304,6 +328,7 @@ const ManageCourses = () => {
                           cursor: "pointer",
                           marginTop: "5px",
                         }}
+                        onClick={() => handleDelete(course._id)}
                       >
                         Delete
                       </button>
