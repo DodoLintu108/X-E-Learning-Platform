@@ -8,9 +8,10 @@ import {
   Query,
   Param,
   UseInterceptors,
+  Delete,
   UploadedFiles,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { multerOptions } from '../../multer.config';
 import { CoursesService } from './courses.service';
 import { Course } from './courses.entity';
@@ -24,7 +25,15 @@ import { ApiConsumes, ApiBody } from '@nestjs/swagger';
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
   @Post('create')
-  @UseInterceptors(FilesInterceptor('files', 2, multerOptions))
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'files', maxCount: 2 },
+        { name: 'imagefiles', maxCount: 2 },
+      ],
+      multerOptions,
+    ),
+  )
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'Create a new course with materials and image',
@@ -45,24 +54,29 @@ export class CoursesController {
   })
   async createCourse(
     @Body() createCourseDto: CreateCourseDto,
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles()
+    files: {
+      files?: Express.Multer.File[]; // Files for course materials
+      imagefiles?: Express.Multer.File[]; // Files for course images
+    },
   ) {
     console.log('create');
-    const [courseMaterial, courseImage] = files;
+    const courseMaterial = files.files?.[0]?.filename || null;
+    const courseImage = files.imagefiles?.[0]?.filename || null;
     const courseData = {
       ...createCourseDto,
-      courseMaterial: courseMaterial?.filename || null,
-      courseImage: courseImage?.filename || null,
+      courseMaterial,
+      courseImage,
     };
     console.log(courseData);
     const newCourse = await this.coursesService.createCourse(courseData);
     return {
       message: 'Course created successfully',
       course: newCourse,
-      files: files.map((file) => ({
-        originalName: file.originalname,
-        savedName: file.filename,
-      })),
+      files: {
+        material: courseMaterial,
+        image: courseImage,
+      },
     };
   }
 
@@ -104,5 +118,18 @@ export class CoursesController {
     @Param('courseId') courseId: string,
   ): Promise<Version[]> {
     return this.coursesService.getCourseVersions(courseId);
+  }
+
+  @Delete(':courseId')
+  async deleteCourse(@Param('courseId') courseId: string) {
+    const result = await this.coursesService.deleteCourse(courseId);
+    if (result) {
+      return {
+        message: 'Course deleted successfully',
+      };
+    }
+    return {
+      message: 'Course not found',
+    };
   }
 }

@@ -21,7 +21,7 @@ export default function Login() {
       });
       toast.success("Login successful!");
       console.log("Token:", response.data.accessToken);
-      window.location.href = `/courses/Manage?accessToken=${response.data.accessToken}`;
+      window.location.href = `/courses/manage?accessToken=${response.data.accessToken}`;
     } catch (error) {
       let errorMessage = "Login Failed!";
       if (axios.isAxiosError(error) && error.response) {

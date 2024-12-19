@@ -5,6 +5,9 @@ import { UsersModule } from './users/users.module';
 import { AnalyticsModule } from './analytics/analytics.module'; // If AnalyticsModule is still needed
 import { CoursesModule } from './courses/courses.module';
 import { FilesModule } from './files/files.module';
+import { MulterModule } from '@nestjs/platform-express';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -12,10 +15,17 @@ import { FilesModule } from './files/files.module';
       'mongodb+srv://abdelrhmanmersal:merso2003@main.y2sz6.mongodb.net/main?retryWrites=true&w=majority',
     ),
     AuthModule,
+    MulterModule.register({
+      dest: '../uploads',
+    }),
     UsersModule,
     AnalyticsModule, // Include this if analytics is part of your app
     CoursesModule,
     FilesModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '..', 'uploads'), // Move up two levels from 'dist'
+      serveRoot: '/uploads',
+    }),
   ],
 })
 export class AppModule {}

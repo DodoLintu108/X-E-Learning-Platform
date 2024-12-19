@@ -65,12 +65,37 @@ export class CoursesService {
   }
 
   async getAllCourses(): Promise<Course[]> {
-    return this.courseModel.find().exec();
+    const courses = await this.courseModel.find().exec();
+    const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`; // Add your domain
+    return courses.map((course) => {
+      if (course.courseImage) {
+        course.courseImage = `${baseUrl}/uploads/${course.courseImage}`;
+      }
+      if (course.courseMaterial) {
+        course.courseMaterial = `${baseUrl}/uploads/${course.courseMaterial}`;
+      }
+      return course;
+    });
   }
 
   async searchCourses(query: string): Promise<Course[]> {
     return this.courseModel
       .find({ title: { $regex: query, $options: 'i' } })
       .exec();
+  }
+  async deleteCourse(courseId: string): Promise<boolean> {
+    const course = await this.courseModel.findById(courseId);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    // Optionally, delete related modules and versions
+    await this.moduleModel.deleteMany({ courseId });
+    await this.versionModel.deleteMany({ courseId });
+
+    // Delete the course
+    await this.courseModel.findByIdAndDelete(courseId);
+
+    return true; // Return true if deletion was successful
   }
 }
