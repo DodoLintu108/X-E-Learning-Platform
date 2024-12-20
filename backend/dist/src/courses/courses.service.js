@@ -42,12 +42,14 @@ let CoursesService = class CoursesService {
         if (!course) {
             throw new common_1.NotFoundException('Course not found');
         }
-        const version = new this.versionModel({
-            courseId,
-            updatedBy,
-            changeSummary: `Course updated: ${Object.keys(data).join(', ')}`,
-        });
-        await version.save();
+        if (updatedBy) {
+            const version = new this.versionModel({
+                courseId,
+                updatedBy,
+                changeSummary: `Course updated: ${Object.keys(data).join(', ')}`,
+            });
+            await version.save();
+        }
         Object.assign(course, data);
         return course.save();
     }
@@ -67,10 +69,53 @@ let CoursesService = class CoursesService {
             return course;
         });
     }
+    async getCourseById(courseId) {
+        const course = await this.courseModel.findById(courseId).exec();
+        if (!course) {
+            throw new common_1.NotFoundException('Course not found');
+        }
+        const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
+        if (course.courseImage) {
+            course.courseImage = `${baseUrl}/uploads/${course.courseImage}`;
+        }
+        if (course.courseMaterial) {
+            course.courseMaterial = `${baseUrl}/uploads/${course.courseMaterial}`;
+        }
+        return course;
+    }
+    async getCourseByCategory(category) {
+        const courses = await this.courseModel.find({ category }).exec();
+        if (!courses || courses.length === 0) {
+            throw new common_1.NotFoundException('Course not found');
+        }
+        const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
+        return courses.map((course) => {
+            if (course.courseImage) {
+                course.courseImage = `${baseUrl}/uploads/${course.courseImage}`;
+            }
+            if (course.courseMaterial) {
+                course.courseMaterial = `${baseUrl}/uploads/${course.courseMaterial}`;
+            }
+            return course;
+        });
+    }
     async searchCourses(query) {
-        return this.courseModel
+        const courses = await this.courseModel
             .find({ title: { $regex: query, $options: 'i' } })
             .exec();
+        if (!courses || courses.length === 0) {
+            throw new common_1.NotFoundException('Course not found');
+        }
+        const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
+        return courses.map((course) => ({
+            ...course.toObject(),
+            courseImage: course.courseImage
+                ? `${baseUrl}/uploads/${course.courseImage}`
+                : null,
+            courseMaterial: course.courseMaterial
+                ? `${baseUrl}/uploads/${course.courseMaterial}`
+                : null,
+        }));
     }
     async enrollStudent(courseId, studentId) {
         const course = await this.courseModel.findById(courseId);
@@ -94,31 +139,26 @@ let CoursesService = class CoursesService {
         return true;
     }
     async getCoursesByRole(role) {
-        let roleCriteria;
-        switch (role) {
-            case 'student':
-                roleCriteria = { forStudents: true };
-                break;
-            case 'teacher':
-                roleCriteria = { forTeachers: true };
-                break;
-            case 'admin':
-                roleCriteria = { forAdmins: true };
-                break;
-            default:
-                throw new common_1.NotFoundException('Invalid role');
-        }
+        const roleCriteria = {};
+        if (role === 'student')
+            roleCriteria.forStudents = true;
+        else if (role === 'teacher')
+            roleCriteria.forTeachers = true;
+        else if (role === 'admin')
+            roleCriteria.forAdmins = true;
+        else
+            throw new common_1.NotFoundException('Invalid role');
         const courses = await this.courseModel.find(roleCriteria).exec();
         const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
-        return courses.map((course) => {
-            if (course.courseImage) {
-                course.courseImage = `${baseUrl}/uploads/${course.courseImage}`;
-            }
-            if (course.courseMaterial) {
-                course.courseMaterial = `${baseUrl}/uploads/${course.courseMaterial}`;
-            }
-            return course;
-        });
+        return courses.map((course) => ({
+            ...course.toObject(),
+            courseImage: course.courseImage
+                ? `${baseUrl}/uploads/${course.courseImage}`
+                : null,
+            courseMaterial: course.courseMaterial
+                ? `${baseUrl}/uploads/${course.courseMaterial}`
+                : null,
+        }));
     }
 };
 exports.CoursesService = CoursesService;

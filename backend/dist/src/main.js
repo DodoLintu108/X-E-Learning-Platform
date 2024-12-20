@@ -10,6 +10,7 @@ async function bootstrap() {
         origin: 'http://localhost:3001',
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
         credentials: true,
+        allowedHeaders: 'Authorization, Content-Type',
     });
     app.use('/uploads', express.static((0, path_1.join)(__dirname, '..', 'uploads')));
     await app.listen(3000);

@@ -14,12 +14,15 @@ const courses_service_1 = require("./courses.service");
 const courses_entity_1 = require("./courses.entity");
 const modules_entity_1 = require("./modules.entity");
 const version_entity_1 = require("./version.entity");
+const jwt_1 = require("@nestjs/jwt");
+const auth_guard_1 = require("../auth/auth.guard");
 let CoursesModule = class CoursesModule {
 };
 exports.CoursesModule = CoursesModule;
 exports.CoursesModule = CoursesModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            jwt_1.JwtModule.register({}),
             mongoose_1.MongooseModule.forFeature([
                 { name: courses_entity_1.Course.name, schema: courses_entity_1.CourseSchema },
                 { name: modules_entity_1.Module.name, schema: modules_entity_1.ModuleSchema },
@@ -27,7 +30,7 @@ exports.CoursesModule = CoursesModule = __decorate([
             ]),
         ],
         controllers: [courses_controller_1.CoursesController],
-        providers: [courses_service_1.CoursesService],
+        providers: [courses_service_1.CoursesService, auth_guard_1.AuthGuard],
         exports: [courses_service_1.CoursesService],
     })
 ], CoursesModule);

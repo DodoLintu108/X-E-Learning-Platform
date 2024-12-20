@@ -1,4 +1,4 @@
-// APIs for course creation and management (Tasks 2.1, 2.2)
+// APIs for course creation and management
 import {
   Controller,
   Post,
@@ -45,7 +45,16 @@ export class CoursesController {
       properties: {
         title: { type: 'string' },
         description: { type: 'string' },
+        category: { type: 'string' },
+        difficultyLevel: { type: 'string' },
         files: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+        imagefiles: {
           type: 'array',
           items: {
             type: 'string',
@@ -110,7 +119,7 @@ export class CoursesController {
     return this.coursesService.getCourseById(courseId);
   }
 
-  @Get('category')
+  @Get('category/:category')
   async getCourseByCategory(
     @Param('category') category: string,
   ): Promise<Course[]> {
@@ -146,18 +155,8 @@ export class CoursesController {
   }
 
   // Role-based course retrieval
-  @Get('student')
-  async getStudentCourses(): Promise<Course[]> {
-    return this.coursesService.getCoursesByRole('student');
-  }
-
-  @Get('teacher')
-  async getTeacherCourses(): Promise<Course[]> {
-    return this.coursesService.getCoursesByRole('teacher');
-  }
-
-  @Get('admin')
-  async getAdminCourses(): Promise<Course[]> {
-    return this.coursesService.getCoursesByRole('admin');
+  @Get('role/:role')
+  async getCoursesByRole(@Param('role') role: string): Promise<Course[]> {
+    return this.coursesService.getCoursesByRole(role);
   }
 }
