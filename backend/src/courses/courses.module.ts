@@ -1,3 +1,4 @@
+// courses.module.ts
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CoursesController } from './courses.controller';
@@ -14,10 +15,11 @@ import { AuthGuard } from '../auth/auth.guard';
     MongooseModule.forFeature([
       { name: Course.name, schema: CourseSchema },
       { name: ModuleEntity.name, schema: ModuleSchema },
-      { name: Version.name, schema: VersionSchema }, // Add Version schema here
+      { name: Version.name, schema: VersionSchema },
     ]),
   ],
   controllers: [CoursesController],
   providers: [CoursesService, AuthGuard],
+
 })
 export class CoursesModule {}

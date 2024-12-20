@@ -1,6 +1,6 @@
 // Course-related business logic (Tasks 2.1, 2.2, 2.3)
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Course, CourseDocument } from './courses.entity';
@@ -128,6 +128,20 @@ export class CoursesService {
     }));
   }
 
+  async enrollStudent(courseId: string, studentId: string): Promise<Course> {
+    const course = await this.courseModel.findById(courseId);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+  
+    if (!course.enrolledStudents.includes(studentId)) {
+      course.enrolledStudents.push(studentId);
+      return course.save();
+    }
+  
+    throw new ForbiddenException('Student already enrolled');
+  }
+  
   async deleteCourse(courseId: string): Promise<boolean> {
     const course = await this.courseModel.findById(courseId);
     if (!course) {
