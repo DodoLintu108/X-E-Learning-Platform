@@ -18,6 +18,7 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const users_entity_1 = require("./users.entity");
 const courses_service_1 = require("../courses/courses.service");
+const common_2 = require("@nestjs/common");
 let UsersService = class UsersService {
     constructor(userModel, coursesService) {
         this.userModel = userModel;
@@ -33,7 +34,7 @@ let UsersService = class UsersService {
     async findById(userId) {
         const user = await this.userModel.findOne({ userId }).exec();
         if (!user) {
-            throw new common_1.NotFoundException('User not found');
+            throw new common_2.NotFoundException('User not found');
         }
         return user;
     }
@@ -65,7 +66,7 @@ let UsersService = class UsersService {
             };
         }
         else {
-            throw new common_1.NotFoundException('Invalid role');
+            throw new common_2.NotFoundException('Invalid role');
         }
     }
     async getEnrolledCourses(userId) {

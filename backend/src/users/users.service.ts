@@ -1,14 +1,15 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './users.entity';
-import { CoursesService } from '../courses/courses.service';
+import { CoursesService } from '../courses/courses.service'; // Import CoursesService
+import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-    private readonly coursesService: CoursesService, // Injecting CoursesService
+    private coursesService: CoursesService, // Inject CoursesService
   ) {}
 
   // Create a new user

@@ -165,33 +165,22 @@ export class CoursesService {
   }
 
   async getCoursesByRole(role: string): Promise<Course[]> {
-    let roleCriteria: Record<string, any>;
-
-    // Define role-based criteria
-    switch (role) {
-      case 'student':
-        roleCriteria = { forStudents: true };
-        break;
-      case 'teacher':
-        roleCriteria = { forTeachers: true };
-        break;
-      case 'admin':
-        roleCriteria = { forAdmins: true };
-        break;
-      default:
-        throw new NotFoundException('Invalid role');
-    }
-
+    const roleCriteria: Record<string, any> = {};
+    if (role === 'student') roleCriteria.forStudents = true;
+    else if (role === 'teacher') roleCriteria.forTeachers = true;
+    else if (role === 'admin') roleCriteria.forAdmins = true;
+    else throw new NotFoundException('Invalid role');
+  
     const courses = await this.courseModel.find(roleCriteria).exec();
     const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
-    return courses.map((course) => {
-      if (course.courseImage) {
-        course.courseImage = `${baseUrl}/uploads/${course.courseImage}`;
-      }
-      if (course.courseMaterial) {
-        course.courseMaterial = `${baseUrl}/uploads/${course.courseMaterial}`;
-      }
-      return course;
-    });
+    return courses.map((course) => ({
+      ...course.toObject(),
+      courseImage: course.courseImage
+        ? `${baseUrl}/uploads/${course.courseImage}`
+        : null,
+      courseMaterial: course.courseMaterial
+        ? `${baseUrl}/uploads/${course.courseMaterial}`
+        : null,
+    }));
   }
 }

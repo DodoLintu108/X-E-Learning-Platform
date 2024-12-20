@@ -10,6 +10,7 @@ exports.UsersModule = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const users_service_1 = require("./users.service");
+const users_controller_1 = require("./users.controller");
 const users_entity_1 = require("./users.entity");
 const core_1 = require("@nestjs/core");
 const roles_guard_1 = require("./roles.guard");
@@ -30,6 +31,7 @@ exports.UsersModule = UsersModule = __decorate([
                 useClass: roles_guard_1.RolesGuard,
             },
         ],
+        controllers: [users_controller_1.UsersController],
         exports: [users_service_1.UsersService],
     })
 ], UsersModule);

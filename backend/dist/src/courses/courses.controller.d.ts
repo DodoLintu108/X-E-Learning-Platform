@@ -24,12 +24,12 @@ export declare class CoursesController {
     }): Promise<Module>;
     searchCourses(query: string): Promise<Course[]>;
     getAllCourses(): Promise<Course[]>;
-    updateCourse(courseId: string, body: Partial<Course>, updatedBy: string): Promise<Course>;
+    getCourseById(courseId: string): Promise<Course>;
+    getCourseByCategory(category: string): Promise<Course[]>;
+    updateCourse(courseId: string, body: Partial<Course>): Promise<Course>;
     getCourseVersions(courseId: string): Promise<Version[]>;
     deleteCourse(courseId: string): Promise<{
         message: string;
     }>;
-    getStudentCourses(): Promise<Course[]>;
-    getTeacherCourses(): Promise<Course[]>;
-    getAdminCourses(): Promise<Course[]>;
+    getCoursesByRole(role: string): Promise<Course[]>;
 }
