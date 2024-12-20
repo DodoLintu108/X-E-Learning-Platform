@@ -1,3 +1,4 @@
+// courses.module.ts
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CoursesController } from './courses.controller';
@@ -11,10 +12,11 @@ import { Version, VersionSchema } from './version.entity';
     MongooseModule.forFeature([
       { name: Course.name, schema: CourseSchema },
       { name: ModuleEntity.name, schema: ModuleSchema },
-      { name: Version.name, schema: VersionSchema }, // Add Version schema here
+      { name: Version.name, schema: VersionSchema },
     ]),
   ],
   controllers: [CoursesController],
   providers: [CoursesService],
+  exports: [CoursesService], // Ensure this is exported
 })
 export class CoursesModule {}
