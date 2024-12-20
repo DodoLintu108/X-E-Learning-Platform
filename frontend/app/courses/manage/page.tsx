@@ -6,6 +6,9 @@ import Navbar from "../../components/Navbar";
 import "../../globals.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -85,27 +88,70 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
 const ManageCourses = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("Select Course Category");
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
-    getAllCourses();
-  }, []);
+    if (debouncedQuery) {
+      handleSearch(debouncedQuery);
+    }
+  }, [debouncedQuery]);
+  const [courseData, setCourseData] = useState<{
+    _id: string;
+    title: string;
+    description: string;
+    category: string;
+    difficultyLevel: string;
+    courseImage: string;
+    courseMaterial: string;
+  } | null>(null);
+  useEffect(() => {
+    const token = searchParams.get("accessToken");
+    setAccessToken(token);
+    console.log("Extracted Token:", token);
+  }, [searchParams]);
 
   const [allCourses, setAllCourses] = useState([]);
+
+  useEffect(() => {
+    if (accessToken) {
+      getAllCourses();
+    }
+  }, [accessToken]);
   const getAllCourses = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/courses/all");
+      console.log("access token", accessToken);
+      const response = await axios.get("http://localhost:3000/courses/all", {
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
       setAllCourses(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error("Error:", error.response?.data || error.message);
+        const statusCode = error.response?.status;
         toast.error(
-          "Error getting course!",
+          "Error creating course!",
           error.response?.data || error.message
         );
+        if (statusCode === 401) {
+          toast.error("Session expired. Redirecting to Login...");
+          window.location.href = "/Login";
+          return;
+        }
       } else {
         console.error("Error:", error);
+        toast.error("Error getting course!");
       }
-      toast.error("Error getting course!");
     }
   };
   const [newCourse, setNewCourse] = useState<{
@@ -123,7 +169,6 @@ const ManageCourses = () => {
     courseImage: null,
     courseMaterial: null,
   });
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,28 +180,40 @@ const ManageCourses = () => {
     formData.append("category", newCourse.category);
     formData.append("difficultyLevel", newCourse.difficultyLevel);
     if (newCourse.courseImage) {
-      formData.append("imagefiles", newCourse.courseImage); // Key must match backend
+      formData.append("imagefiles", newCourse.courseImage);
     }
     if (newCourse.courseMaterial) {
-      formData.append("files", newCourse.courseMaterial); // Key must match backend
+      formData.append("files", newCourse.courseMaterial);
     }
 
     try {
       const response = await axios.post(
         "http://localhost:3000/courses/create",
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            authorization: `Bearer ${accessToken}`,
+          },
+        }
       );
       toast.success(response.data.message);
-      setIsModalOpen(false); // Close the modal
-      getAllCourses(); // Refresh the list
+      setIsModalOpen(false);
+      getAllCourses();
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error("Error:", error.response?.data || error.message);
+        const statusCode = error.response?.status;
         toast.error(
           "Error creating course!",
           error.response?.data || error.message
         );
+        if (statusCode === 401) {
+          toast.error("Session expired. Redirecting to Login...");
+
+          window.location.href = "/Login";
+          return;
+        }
+        console.error("Error:", error.response?.data || error.message);
       } else {
         console.error("Error:", error);
       }
@@ -166,22 +223,140 @@ const ManageCourses = () => {
   const handleDelete = async (id: string) => {
     try {
       const response = await axios.delete(
-        `http://localhost:3000/courses/${id}`
+        `http://localhost:3000/courses/${id}`,
+        {
+          headers: {
+            authorization: `Bearer ${accessToken}`,
+          },
+        }
       );
       toast.success(response.data.message);
       getAllCourses();
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error("Error:", error.response?.data || error.message);
+        const statusCode = error.response?.status;
         toast.error(
-          "Error deleting course!",
+          "Error creating course!",
           error.response?.data || error.message
         );
+        if (statusCode === 401) {
+          toast.error("Session expired. Redirecting to Login...");
+          // Redirect to Login
+          window.location.href = "/Login";
+          return;
+        }
       } else {
         console.error("Error:", error);
       }
       toast.error("Error deleting course!");
     }
+  };
+  const handleOpenEditModal = async (id: string) => {
+    try {
+      const response = await axios.get(`http://localhost:3000/courses/${id}`, {
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+      setCourseData(response.data);
+      setNewCourse({
+        title: response.data.title,
+        description: response.data.description,
+        category: response.data.category,
+        difficultyLevel: response.data.difficultyLevel,
+        courseImage: response.data.courseImage.replace(
+          "http://localhost:3000/uploads/",
+          ""
+        ),
+        courseMaterial: response.data.courseMaterial.replace(
+          "http://localhost:3000/uploads/",
+          ""
+        ),
+      });
+      setIsEditModalOpen(true);
+    } catch (error) {
+      toast.error("Error opening edit modal!");
+    }
+  };
+
+  const handleEdit = async (id: string) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:3000/courses/${id}`,
+        {
+          title: newCourse.title,
+          description: newCourse.description,
+          category: newCourse.category,
+          difficultyLevel: newCourse.difficultyLevel,
+          courseImage: newCourse.courseImage,
+          courseMaterial: newCourse.courseMaterial,
+        },
+        {
+          headers: {
+            authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      toast.success(response.data.message);
+      setIsEditModalOpen(false);
+      getAllCourses();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const statusCode = error.response?.status;
+        toast.error(
+          "Error creating course!",
+          error.response?.data || error.message
+        );
+        if (statusCode === 401) {
+          toast.error("Session expired. Redirecting to Login...");
+          window.location.href = "/Login";
+          return;
+        }
+      } else {
+        console.error("Error:", error);
+      }
+      toast.error("Error updating course!");
+    }
+  };
+  const handleSearch = async (query: string) => {
+    if (!query) {
+      setAllCourses([]);
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `http://localhost:3000/courses/search?query=${searchQuery}`,
+        {
+          headers: {
+            authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      setAllCourses(response.data);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Error:", error.response?.data || error.message);
+        toast.error(
+          "Error searching for course!",
+          error.response?.data || error.message
+        );
+      } else {
+        console.error("Error:", error);
+      }
+      toast.error("Error searching for course!");
+    }
+  };
+  const handleOpenModal = async () => {
+    setNewCourse({
+      title: "",
+      description: "",
+      category: "",
+      difficultyLevel: "",
+      courseImage: null,
+      courseMaterial: null,
+    });
+    setIsModalOpen(true);
   };
   return (
     <div>
@@ -206,7 +381,6 @@ const ManageCourses = () => {
           Manage Courses
         </h1>
       </div>
-
       <div
         style={{
           display: "flex",
@@ -237,13 +411,11 @@ const ManageCourses = () => {
               cursor: "pointer",
               marginLeft: "25px",
             }}
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenModal}
           >
             Create Course
           </button>
         </div>
-        <h1 className="">Courses</h1>
-
         <div
           style={{
             display: "flex",
@@ -269,12 +441,19 @@ const ManageCourses = () => {
           />
           {
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "5px" }}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "5px",
+              }}
             >
               {allCourses.map((course: any) => {
                 return (
                   <div
                     key={course._id}
+                    onClick={() =>
+                      (window.location.href = `/courses/specificCourse/?courseId=${course._id}&accessToken=${accessToken}`)
+                    }
                     style={{
                       display: "flex",
                       flexDirection: "row",
@@ -284,7 +463,15 @@ const ManageCourses = () => {
                       borderRadius: "4px",
                       border: "1px solid #7F8081",
                       boxShadow: "1px 4px 6px rgba(0, 0, 0, 0.5)",
+                      cursor: "pointer", 
+                      transition: "transform 0.2s", 
                     }}
+                    onMouseOver={(e) =>
+                      (e.currentTarget.style.transform = "scale(1.02)")
+                    }
+                    onMouseOut={(e) =>
+                      (e.currentTarget.style.transform = "scale(1)")
+                    }
                   >
                     <div>
                       <img
@@ -297,11 +484,43 @@ const ManageCourses = () => {
                         }}
                       />
                     </div>
-                    <div>
-                      <h3>Title: {course.title}</h3>
-                      <p>Description : {course.description}</p>
-                      <p>Category:{course.category}</p>
-                      <p>Level : {course.difficultyLevel}</p>
+                    <div
+                      style={{
+                        flex: "1",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        gap: "5px",
+                        paddingLeft: "10px",
+                        maxWidth: "500px",
+                      }}
+                    >
+                      <h3
+                        style={{
+                          margin: 0,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        Title: {course.title}
+                      </h3>
+                      <p
+                        style={{
+                          margin: 0,
+                          whiteSpace: "normal",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          maxWidth: "400px",
+                        }}
+                      >
+                        Description: {course.description}
+                      </p>
+
+                      <p style={{ margin: 0 }}>Category: {course.category}</p>
+                      <p style={{ margin: 0 }}>
+                        Level: {course.difficultyLevel}
+                      </p>
                     </div>
                     <div>
                       <button
@@ -313,6 +532,9 @@ const ManageCourses = () => {
                           border: "none",
                           borderRadius: "4px",
                           cursor: "pointer",
+                        }}
+                        onClick={() => {
+                          handleOpenEditModal(course._id);
                         }}
                       >
                         Edit
@@ -336,7 +558,6 @@ const ManageCourses = () => {
                   </div>
                 );
               })}
-              <div></div>
             </div>
           }
         </div>
@@ -483,6 +704,152 @@ const ManageCourses = () => {
             marginTop: "-15px",
           }}
           onClick={handleCreateCourse}
+        >
+          submit
+        </button>
+      </Modal>
+      <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            padding: "9px",
+            borderRadius: "4px",
+          }}
+        >
+          <input
+            type="text"
+            value={newCourse?.title}
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "10px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
+            onChange={(e) =>
+              setNewCourse({ ...newCourse, title: e.target.value })
+            }
+            placeholder="Title"
+          />
+          <textarea
+            value={newCourse?.description}
+            onChange={(e) =>
+              setNewCourse({ ...newCourse, description: e.target.value })
+            }
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "10px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
+            placeholder="Description"
+          ></textarea>
+          <select
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "20px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
+            value={newCourse?.category}
+            onChange={(e) =>
+              setNewCourse({ ...newCourse, category: e.target.value })
+            }
+          >
+            <option value="Select Course Category" disabled>
+              Select Course Category
+            </option>
+            <option value="Mathematics">Mathematics</option>
+            <option value="Machine Learning">Machine Learning</option>
+            <option value="Physics">Physics</option>
+            <option value="Chemistry">Chemistry</option>
+          </select>
+          <select
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "20px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
+            value={newCourse?.difficultyLevel}
+            onChange={(e) =>
+              setNewCourse({ ...newCourse, difficultyLevel: e.target.value })
+            }
+          >
+            <option value="Select Difficulty Level" disabled>
+              Select Difficulty Level
+            </option>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+        </div>
+        <label
+          style={{
+            fontWeight: "bold",
+            marginBottom: "8px",
+          }}
+        >
+          Upload Course Materials (PDF, Docs, etc.):
+        </label>
+        <input
+          type="file"
+          multiple
+          style={{
+            padding: "10px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            marginBottom: "20px",
+          }}
+          onChange={(e) =>
+            setNewCourse({
+              ...newCourse,
+              courseMaterial: e.target.files ? e.target.files[0] : null,
+            })
+          }
+        />
+        <label
+          style={{
+            fontWeight: "bold",
+            marginBottom: "8px",
+          }}
+        >
+          Upload Course Image:
+        </label>
+        <input
+          type="file"
+          accept="image/*"
+          multiple={false}
+          style={{
+            padding: "10px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            marginBottom: "20px",
+          }}
+          onChange={(e) =>
+            setNewCourse({
+              ...newCourse,
+              courseImage: e.target.files ? e.target.files[0] : null,
+            })
+          }
+        />
+        <button
+          style={{
+            width: "85%",
+            padding: "4px 5px",
+            backgroundColor: "#7AB2D3",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            marginLeft: "25px",
+            marginTop: "-15px",
+          }}
+          onClick={() => courseData && handleEdit(courseData._id)}
         >
           submit
         </button>

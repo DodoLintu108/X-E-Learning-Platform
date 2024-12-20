@@ -10,18 +10,20 @@ import {
   UseInterceptors,
   Delete,
   UploadedFiles,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '../auth/auth.guard';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { multerOptions } from '../../multer.config';
 import { CoursesService } from './courses.service';
 import { Course } from './courses.entity';
 import { Module } from './modules.entity';
 import { Version } from './version.entity';
-
 import { CreateCourseDto } from './create-course.dto';
 import { ApiConsumes, ApiBody } from '@nestjs/swagger';
 
 @Controller('courses')
+@UseGuards(AuthGuard)
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
@@ -103,13 +105,24 @@ export class CoursesController {
     return this.coursesService.getAllCourses();
   }
 
+  @Get(':courseId')
+  async getCourseById(@Param('courseId') courseId: string): Promise<Course> {
+    return this.coursesService.getCourseById(courseId);
+  }
+
+  @Get('category')
+  async getCourseByCategory(
+    @Param('category') category: string,
+  ): Promise<Course[]> {
+    return this.coursesService.getCourseByCategory(category);
+  }
+
   @Put(':courseId')
   async updateCourse(
     @Param('courseId') courseId: string,
     @Body() body: Partial<Course>,
-    @Body('updatedBy') updatedBy: string,
   ): Promise<Course> {
-    return this.coursesService.updateCourse(courseId, body, updatedBy);
+    return this.coursesService.updateCourse(courseId, body);
   }
 
   @Get(':courseId/versions')
