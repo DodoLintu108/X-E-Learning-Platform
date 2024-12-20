@@ -18,7 +18,7 @@ export class User {
   @Prop({ required: true })
   passwordHash: string;
 
-  @Prop({ required: true, enum: ['student', 'instructor', 'admin'] })
+  @Prop({ required: true, enum: ['student', 'teacher', 'admin'] })
   role: string;
 
   @Prop({ default: Date.now })

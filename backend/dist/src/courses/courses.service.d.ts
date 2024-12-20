@@ -27,4 +27,5 @@ export declare class CoursesService {
     searchCourses(query: string): Promise<Course[]>;
     enrollStudent(courseId: string, studentId: string): Promise<Course>;
     deleteCourse(courseId: string): Promise<boolean>;
+    getCoursesByRole(role: string): Promise<Course[]>;
 }

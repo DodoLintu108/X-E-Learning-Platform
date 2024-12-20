@@ -24,6 +24,7 @@ import { ApiConsumes, ApiBody } from '@nestjs/swagger';
 @Controller('courses')
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
+
   @Post('create')
   @UseInterceptors(
     FileFieldsInterceptor(
@@ -60,7 +61,6 @@ export class CoursesController {
       imagefiles?: Express.Multer.File[]; // Files for course images
     },
   ) {
-    console.log('create');
     const courseMaterial = files.files?.[0]?.filename || null;
     const courseImage = files.imagefiles?.[0]?.filename || null;
     const courseData = {
@@ -68,7 +68,6 @@ export class CoursesController {
       courseMaterial,
       courseImage,
     };
-    console.log(courseData);
     const newCourse = await this.coursesService.createCourse(courseData);
     return {
       message: 'Course created successfully',
@@ -131,5 +130,21 @@ export class CoursesController {
     return {
       message: 'Course not found',
     };
+  }
+
+  // Role-based course retrieval
+  @Get('student')
+  async getStudentCourses(): Promise<Course[]> {
+    return this.coursesService.getCoursesByRole('student');
+  }
+
+  @Get('teacher')
+  async getTeacherCourses(): Promise<Course[]> {
+    return this.coursesService.getCoursesByRole('teacher');
+  }
+
+  @Get('admin')
+  async getAdminCourses(): Promise<Course[]> {
+    return this.coursesService.getCoursesByRole('admin');
   }
 }

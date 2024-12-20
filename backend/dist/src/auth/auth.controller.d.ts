@@ -13,5 +13,6 @@ export declare class AuthController {
         password: string;
     }): Promise<{
         accessToken: string;
+        role: string;
     }>;
 }

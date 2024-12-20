@@ -21,13 +21,22 @@ export class AuthService {
 
   async login(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
+  
+    // Validate user credentials
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       throw new UnauthorizedException('Invalid credentials');
     }
-
+  
+    // Create payload with role and userId
     const payload = { userId: user.userId, role: user.role };
+  
+    // Generate JWT token
+    const accessToken = this.jwtService.sign(payload);
+  
+    // Return both accessToken and role
     return {
-      accessToken: this.jwtService.sign(payload),
+      accessToken,
+      role: user.role, // Explicitly include the role in the response
     };
   }
 }

@@ -1,9 +1,11 @@
 "use client";
+
 import React, { useState } from "react";
 import axios from "axios";
 import "../globals.css";
 import Navbar from "../components/Navbar";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Lottie from "lottie-react";
 import LoginAnimation from "../../public/Login.json";
 import { ToastContainer, toast } from "react-toastify";
@@ -12,6 +14,7 @@ import "react-toastify/dist/ReactToastify.css"; // Import default styles
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
 
   const handleLogin = async () => {
     try {
@@ -19,9 +22,17 @@ export default function Login() {
         email,
         password,
       });
+
+      const { accessToken, role } = response.data;
+
+      // Save the accessToken and role in localStorage
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("userRole", role);
+
       toast.success("Login successful!");
-      console.log("Token:", response.data.accessToken);
-      window.location.href = `/courses/manage?accessToken=${response.data.accessToken}`;
+
+      // Redirect based on the user role using router.push
+      router.push(`/courses/${role}`);
     } catch (error) {
       let errorMessage = "Login Failed!";
       if (axios.isAxiosError(error) && error.response) {
