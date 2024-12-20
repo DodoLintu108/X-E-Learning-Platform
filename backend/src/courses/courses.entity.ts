@@ -1,4 +1,3 @@
-// Schema for courses and versioning (Tasks 2.1, 2.2)
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
@@ -20,14 +19,22 @@ export class Course {
   category: string;
 
   @Prop({ required: true })
-  difficultyLevel: string; // Beginner, Intermediate, Advanced// Instructor ID
+  difficultyLevel: string; // Beginner, Intermediate, Advanced
+
+  @Prop({ required: true })
+  createdBy: string; // ID of the instructor who created the course
+
+  @Prop({ default: [] })
+  enrolledStudents: string[]; // Array of student IDs enrolled in the course
+
+  @Prop({ default: 'default-image.jpg' })
+  courseImage: string;
+
+  @Prop(String)
+  courseMaterial: string;
 
   @Prop({ default: Date.now })
   createdAt: Date;
-  @Prop({ default: 'default-image.jpg' })
-  courseImage: string;
-  @Prop(String)
-  courseMaterial: string;
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);
