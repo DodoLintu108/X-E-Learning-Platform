@@ -39,22 +39,17 @@ export class CoursesService {
     const newModule = new this.moduleModel(data);
     return newModule.save();
   }
-  async updateCourse(
-    courseId: string,
-    data: Partial<Course>,
-    updatedBy: string,
-  ): Promise<Course> {
+  async updateCourse(courseId: string, data: Partial<Course>): Promise<Course> {
     const course = await this.courseModel.findById(courseId);
     if (!course) {
       throw new NotFoundException('Course not found');
     }
 
-    const version = new this.versionModel({
-      courseId,
-      updatedBy,
-      changeSummary: `Course updated: ${Object.keys(data).join(', ')}`, // Corrected syntax
-    });
-    await version.save();
+    // const version = new this.versionModel({
+    //   courseId,
+    //   changeSummary: `Course updated: ${Object.keys(data).join(', ')}`, // Corrected syntax
+    // });
+    // await version.save();
 
     Object.assign(course, data); // Ensure the `course` object is updated
     return course.save();
@@ -78,11 +73,61 @@ export class CoursesService {
     });
   }
 
+  async getCourseById(courseId: string): Promise<Course> {
+    const course = await this.courseModel.findById(courseId).exec();
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+    const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`; // Add your domain
+    if (course.courseImage) {
+      course.courseImage = `${baseUrl}/uploads/${course.courseImage}`;
+    }
+    if (course.courseMaterial) {
+      course.courseMaterial = `${baseUrl}/uploads/${course.courseMaterial}`;
+    }
+    return course;
+  }
+
+  async getCourseByCategory(category: string): Promise<Course[]> {
+    const courses = await this.courseModel.find({ category }).exec();
+    if (!courses || courses.length === 0) {
+      throw new NotFoundException('Course not found');
+    }
+    const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`; // Add your domain
+    return courses.map((course) => {
+      if (course.courseImage) {
+        course.courseImage = `${baseUrl}/uploads/${course.courseImage}`;
+      }
+      if (course.courseMaterial) {
+        course.courseMaterial = `${baseUrl}/uploads/${course.courseMaterial}`;
+      }
+      return course;
+    });
+  }
+
   async searchCourses(query: string): Promise<Course[]> {
-    return this.courseModel
+    const courses = await this.courseModel
       .find({ title: { $regex: query, $options: 'i' } })
       .exec();
+
+    if (!courses || courses.length === 0) {
+      throw new NotFoundException('Course not found');
+    }
+
+    const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`; // Add your domain
+
+    // Add base URL to each course's image and material
+    return courses.map((course) => ({
+      ...course.toObject(), // Ensure it's a plain object
+      courseImage: course.courseImage
+        ? `${baseUrl}/uploads/${course.courseImage}`
+        : null,
+      courseMaterial: course.courseMaterial
+        ? `${baseUrl}/uploads/${course.courseMaterial}`
+        : null,
+    }));
   }
+
   async enrollStudent(courseId: string, studentId: string): Promise<Course> {
     const course = await this.courseModel.findById(courseId);
     if (!course) {

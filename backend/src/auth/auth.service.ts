@@ -10,7 +10,12 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(userData: { name: string; email: string; password: string; role: string }) {
+  async register(userData: {
+    name: string;
+    email: string;
+    password: string;
+    role: string;
+  }) {
     const hashedPassword = await bcrypt.hash(userData.password, 10);
 
     return this.usersService.createUser({
@@ -27,7 +32,7 @@ export class AuthService {
 
     const payload = { userId: user.userId, role: user.role };
     return {
-      accessToken: this.jwtService.sign(payload),
+      accessToken: this.jwtService.sign(payload, { expiresIn: '1h' }),
     };
   }
 }
