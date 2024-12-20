@@ -29,4 +29,7 @@ export declare class CoursesController {
     deleteCourse(courseId: string): Promise<{
         message: string;
     }>;
+    getStudentCourses(): Promise<Course[]>;
+    getTeacherCourses(): Promise<Course[]>;
+    getAdminCourses(): Promise<Course[]>;
 }

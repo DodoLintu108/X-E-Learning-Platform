@@ -16,7 +16,7 @@ export default function Register() {
 
   const handleRegister = async () => {
     console.log("clicked");
-    const name = fName + lName;
+    const name = fName + " " + lName; // Added a space between first and last name
     console.log(name);
     try {
       await axios.post("http://localhost:3000/auth/register", {
@@ -64,7 +64,7 @@ export default function Register() {
             fontSize: "20px",
           }}
         >
-          create your account to start learning, growing, and achieving your
+          Create your account to start learning, growing, and achieving your
           goals today!
         </h2>
         <div
@@ -154,6 +154,7 @@ export default function Register() {
             </option>
             <option value="student">Student</option>
             <option value="teacher">Teacher</option>
+            <option value="admin">Admin</option>
           </select>
           <button
             onClick={handleRegister}
@@ -167,7 +168,7 @@ export default function Register() {
               cursor: "pointer",
             }}
           >
-            SignUp
+            Sign Up
           </button>
         </div>
       </div>

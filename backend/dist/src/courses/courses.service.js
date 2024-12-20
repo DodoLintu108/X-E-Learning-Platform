@@ -26,7 +26,6 @@ let CoursesService = class CoursesService {
         this.versionModel = versionModel;
     }
     async createCourse(data) {
-        console.log('aa');
         const newCourse = new this.courseModel(data);
         return newCourse.save();
     }
@@ -93,6 +92,33 @@ let CoursesService = class CoursesService {
         await this.versionModel.deleteMany({ courseId });
         await this.courseModel.findByIdAndDelete(courseId);
         return true;
+    }
+    async getCoursesByRole(role) {
+        let roleCriteria;
+        switch (role) {
+            case 'student':
+                roleCriteria = { forStudents: true };
+                break;
+            case 'teacher':
+                roleCriteria = { forTeachers: true };
+                break;
+            case 'admin':
+                roleCriteria = { forAdmins: true };
+                break;
+            default:
+                throw new common_1.NotFoundException('Invalid role');
+        }
+        const courses = await this.courseModel.find(roleCriteria).exec();
+        const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
+        return courses.map((course) => {
+            if (course.courseImage) {
+                course.courseImage = `${baseUrl}/uploads/${course.courseImage}`;
+            }
+            if (course.courseMaterial) {
+                course.courseMaterial = `${baseUrl}/uploads/${course.courseMaterial}`;
+            }
+            return course;
+        });
     }
 };
 exports.CoursesService = CoursesService;
