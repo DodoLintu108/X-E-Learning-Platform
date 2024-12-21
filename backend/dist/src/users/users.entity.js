@@ -32,7 +32,7 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "passwordHash", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true, enum: ['student', 'instructor', 'admin'] }),
+    (0, mongoose_1.Prop)({ required: true, enum: ['student', 'teacher', 'admin'] }),
     __metadata("design:type", String)
 ], User.prototype, "role", void 0);
 __decorate([

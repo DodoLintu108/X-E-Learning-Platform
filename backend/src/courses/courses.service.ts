@@ -1,5 +1,3 @@
-// Course-related business logic (Tasks 2.1, 2.2, 2.3)
-
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -14,6 +12,7 @@ export class CoursesService {
     @InjectModel(Module.name) private moduleModel: Model<ModuleDocument>,
     @InjectModel(Version.name) private versionModel: Model<VersionDocument>,
   ) {}
+
   async createCourse(data: {
     title: string;
     description: string;
@@ -23,10 +22,10 @@ export class CoursesService {
     courseMaterial: string;
     rating: number;
   }): Promise<Course> {
-    console.log('aa');
     const newCourse = new this.courseModel(data);
     return newCourse.save();
   }
+
   async addModule(data: {
     courseId: string;
     title: string;
@@ -40,19 +39,29 @@ export class CoursesService {
     const newModule = new this.moduleModel(data);
     return newModule.save();
   }
-  async updateCourse(courseId: string, data: Partial<Course>): Promise<Course> {
+
+  async updateCourse(
+    courseId: string,
+    data: Partial<Course>,
+    updatedBy?: string, // Optional to maintain compatibility
+  ): Promise<Course> {
     const course = await this.courseModel.findById(courseId);
     if (!course) {
       throw new NotFoundException('Course not found');
     }
 
-    // const version = new this.versionModel({
-    //   courseId,
-    //   changeSummary: `Course updated: ${Object.keys(data).join(', ')}`, // Corrected syntax
-    // });
-    // await version.save();
+    // If `updatedBy` is provided, create a version entry
+    if (updatedBy) {
+      const version = new this.versionModel({
+        courseId,
+        updatedBy,
+        changeSummary: `Course updated: ${Object.keys(data).join(', ')}`,
+      });
+      await version.save();
+    }
 
-    Object.assign(course, data); // Ensure the `course` object is updated
+    // Update course details
+    Object.assign(course, data);
     return course.save();
   }
 
@@ -62,7 +71,7 @@ export class CoursesService {
 
   async getAllCourses(): Promise<Course[]> {
     const courses = await this.courseModel.find().exec();
-    const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`; // Add your domain
+    const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
     return courses.map((course) => {
       if (course.courseImage) {
         course.courseImage = `${baseUrl}/uploads/${course.courseImage}`;
@@ -79,7 +88,7 @@ export class CoursesService {
     if (!course) {
       throw new NotFoundException('Course not found');
     }
-    const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`; // Add your domain
+    const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
     if (course.courseImage) {
       course.courseImage = `${baseUrl}/uploads/${course.courseImage}`;
     }
@@ -94,7 +103,7 @@ export class CoursesService {
     if (!courses || courses.length === 0) {
       throw new NotFoundException('Course not found');
     }
-    const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`; // Add your domain
+    const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
     return courses.map((course) => {
       if (course.courseImage) {
         course.courseImage = `${baseUrl}/uploads/${course.courseImage}`;
@@ -133,15 +142,15 @@ export class CoursesService {
     if (!course) {
       throw new NotFoundException('Course not found');
     }
-  
+
     if (!course.enrolledStudents.includes(studentId)) {
       course.enrolledStudents.push(studentId);
       return course.save();
     }
-  
+
     throw new ForbiddenException('Student already enrolled');
   }
-  
+
   async deleteCourse(courseId: string): Promise<boolean> {
     const course = await this.courseModel.findById(courseId);
     if (!course) {
@@ -154,5 +163,27 @@ export class CoursesService {
     await this.courseModel.findByIdAndDelete(courseId);
 
     return true;
+
+  }
+
+  async getCoursesByRole(role: string): Promise<Course[]> {
+    const roleCriteria: Record<string, any> = {};
+    if (role === 'student') roleCriteria.forStudents = true;
+    else if (role === 'teacher') roleCriteria.forTeachers = true;
+    else if (role === 'admin') roleCriteria.forAdmins = true;
+    else throw new NotFoundException('Invalid role');
+  
+    const courses = await this.courseModel.find(roleCriteria).exec();
+    const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
+    return courses.map((course) => ({
+      ...course.toObject(),
+      courseImage: course.courseImage
+        ? `${baseUrl}/uploads/${course.courseImage}`
+        : null,
+      courseMaterial: course.courseMaterial
+        ? `${baseUrl}/uploads/${course.courseMaterial}`
+        : null,
+    }));
+
   }
 }

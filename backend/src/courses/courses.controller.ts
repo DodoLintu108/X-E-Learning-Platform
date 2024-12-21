@@ -1,4 +1,4 @@
-// APIs for course creation and management (Tasks 2.1, 2.2)
+// APIs for course creation and management
 import {
   Controller,
   Post,
@@ -26,6 +26,7 @@ import { ApiConsumes, ApiBody } from '@nestjs/swagger';
 @UseGuards(AuthGuard)
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
+
   @Post('create')
   @UseInterceptors(
     FileFieldsInterceptor(
@@ -44,7 +45,16 @@ export class CoursesController {
       properties: {
         title: { type: 'string' },
         description: { type: 'string' },
+        category: { type: 'string' },
+        difficultyLevel: { type: 'string' },
         files: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+        imagefiles: {
           type: 'array',
           items: {
             type: 'string',
@@ -62,7 +72,6 @@ export class CoursesController {
       imagefiles?: Express.Multer.File[]; // Files for course images
     },
   ) {
-    console.log('create');
     const courseMaterial = files.files?.[0]?.filename || null;
     const courseImage = files.imagefiles?.[0]?.filename || null;
     const courseData = {
@@ -70,7 +79,6 @@ export class CoursesController {
       courseMaterial,
       courseImage,
     };
-    console.log(courseData);
     const newCourse = await this.coursesService.createCourse(courseData);
     return {
       message: 'Course created successfully',
@@ -153,7 +161,7 @@ export class CoursesController {
     return this.coursesService.getCourseById(courseId);
   }
 
-  @Get('category')
+  @Get('category/:category')
   async getCourseByCategory(
     @Param('category') category: string,
   ): Promise<Course[]> {
@@ -178,5 +186,11 @@ export class CoursesController {
     return {
       message: 'Course not found',
     };
+  }
+
+  // Role-based course retrieval
+  @Get('role/:role')
+  async getCoursesByRole(@Param('role') role: string): Promise<Course[]> {
+    return this.coursesService.getCoursesByRole(role);
   }
 }

@@ -3,7 +3,7 @@ import { User, UserDocument } from './users.entity';
 import { CoursesService } from '../courses/courses.service';
 export declare class UsersService {
     private userModel;
-    private readonly coursesService;
+    private coursesService;
     constructor(userModel: Model<UserDocument>, coursesService: CoursesService);
     createUser(userData: Partial<User>): Promise<User>;
     findByEmail(email: string): Promise<User | null>;

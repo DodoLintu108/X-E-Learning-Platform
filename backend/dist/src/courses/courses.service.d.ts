@@ -21,10 +21,13 @@ export declare class CoursesService {
         content: string;
         resources?: string[];
     }): Promise<Module>;
-    updateCourse(courseId: string, data: Partial<Course>, updatedBy: string): Promise<Course>;
+    updateCourse(courseId: string, data: Partial<Course>, updatedBy?: string): Promise<Course>;
     getCourseVersions(courseId: string): Promise<Version[]>;
     getAllCourses(): Promise<Course[]>;
+    getCourseById(courseId: string): Promise<Course>;
+    getCourseByCategory(category: string): Promise<Course[]>;
     searchCourses(query: string): Promise<Course[]>;
     enrollStudent(courseId: string, studentId: string): Promise<Course>;
     deleteCourse(courseId: string): Promise<boolean>;
+    getCoursesByRole(role: string): Promise<Course[]>;
 }

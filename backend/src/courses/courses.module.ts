@@ -1,4 +1,3 @@
-// courses.module.ts
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CoursesController } from './courses.controller';
@@ -11,15 +10,15 @@ import { AuthGuard } from '../auth/auth.guard';
 
 @Module({
   imports: [
-    JwtModule.register({}),
+    JwtModule.register({}), // Register JWT module for token-related operations
     MongooseModule.forFeature([
       { name: Course.name, schema: CourseSchema },
       { name: ModuleEntity.name, schema: ModuleSchema },
       { name: Version.name, schema: VersionSchema },
     ]),
   ],
-  controllers: [CoursesController],
-  providers: [CoursesService, AuthGuard],
-
+  controllers: [CoursesController], // Add Courses Controller
+  providers: [CoursesService, AuthGuard], // Add Courses Service and Auth Guard
+  exports: [CoursesService], // Export CoursesService to be used in other modules
 })
 export class CoursesModule {}

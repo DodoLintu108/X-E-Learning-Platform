@@ -32,8 +32,10 @@ let AuthService = class AuthService {
             throw new common_1.UnauthorizedException('Invalid credentials');
         }
         const payload = { userId: user.userId, role: user.role };
+        const accessToken = this.jwtService.sign(payload, { expiresIn: '1h' });
         return {
-            accessToken: this.jwtService.sign(payload),
+            accessToken,
+            role: user.role,
         };
     }
 };

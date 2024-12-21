@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CoursesController = void 0;
 const common_1 = require("@nestjs/common");
+const auth_guard_1 = require("../auth/auth.guard");
 const platform_express_1 = require("@nestjs/platform-express");
 const multer_config_1 = require("../../multer.config");
 const courses_service_1 = require("./courses.service");
@@ -24,7 +25,6 @@ let CoursesController = class CoursesController {
         this.coursesService = coursesService;
     }
     async createCourse(createCourseDto, files) {
-        console.log('create');
         const courseMaterial = files.files?.[0]?.filename || null;
         const courseImage = files.imagefiles?.[0]?.filename || null;
         const courseData = {
@@ -32,7 +32,6 @@ let CoursesController = class CoursesController {
             courseMaterial,
             courseImage,
         };
-        console.log(courseData);
         const newCourse = await this.coursesService.createCourse(courseData);
         return {
             message: 'Course created successfully',
@@ -53,8 +52,14 @@ let CoursesController = class CoursesController {
     async getAllCourses() {
         return this.coursesService.getAllCourses();
     }
-    async updateCourse(courseId, body, updatedBy) {
-        return this.coursesService.updateCourse(courseId, body, updatedBy);
+    async getCourseById(courseId) {
+        return this.coursesService.getCourseById(courseId);
+    }
+    async getCourseByCategory(category) {
+        return this.coursesService.getCourseByCategory(category);
+    }
+    async updateCourse(courseId, body) {
+        return this.coursesService.updateCourse(courseId, body);
     }
     async getCourseVersions(courseId) {
         return this.coursesService.getCourseVersions(courseId);
@@ -69,6 +74,9 @@ let CoursesController = class CoursesController {
         return {
             message: 'Course not found',
         };
+    }
+    async getCoursesByRole(role) {
+        return this.coursesService.getCoursesByRole(role);
     }
 };
 exports.CoursesController = CoursesController;
@@ -86,7 +94,16 @@ __decorate([
             properties: {
                 title: { type: 'string' },
                 description: { type: 'string' },
+                category: { type: 'string' },
+                difficultyLevel: { type: 'string' },
                 files: {
+                    type: 'array',
+                    items: {
+                        type: 'string',
+                        format: 'binary',
+                    },
+                },
+                imagefiles: {
                     type: 'array',
                     items: {
                         type: 'string',
@@ -124,12 +141,25 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "getAllCourses", null);
 __decorate([
+    (0, common_1.Get)(':courseId'),
+    __param(0, (0, common_1.Param)('courseId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "getCourseById", null);
+__decorate([
+    (0, common_1.Get)('category/:category'),
+    __param(0, (0, common_1.Param)('category')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "getCourseByCategory", null);
+__decorate([
     (0, common_1.Put)(':courseId'),
     __param(0, (0, common_1.Param)('courseId')),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, common_1.Body)('updatedBy')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object, String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "updateCourse", null);
 __decorate([
@@ -146,8 +176,16 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "deleteCourse", null);
+__decorate([
+    (0, common_1.Get)('role/:role'),
+    __param(0, (0, common_1.Param)('role')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "getCoursesByRole", null);
 exports.CoursesController = CoursesController = __decorate([
     (0, common_1.Controller)('courses'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
     __metadata("design:paramtypes", [courses_service_1.CoursesService])
 ], CoursesController);
 //# sourceMappingURL=courses.controller.js.map
