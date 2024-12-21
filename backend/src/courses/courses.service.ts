@@ -21,6 +21,7 @@ export class CoursesService {
     difficultyLevel: string;
     courseImage: string;
     courseMaterial: string;
+    rating: number;
   }): Promise<Course> {
     console.log('aa');
     const newCourse = new this.courseModel(data);
@@ -114,11 +115,10 @@ export class CoursesService {
       throw new NotFoundException('Course not found');
     }
 
-    const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`; // Add your domain
+    const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
 
-    // Add base URL to each course's image and material
     return courses.map((course) => ({
-      ...course.toObject(), // Ensure it's a plain object
+      ...course.toObject(),
       courseImage: course.courseImage
         ? `${baseUrl}/uploads/${course.courseImage}`
         : null,
@@ -134,13 +134,11 @@ export class CoursesService {
       throw new NotFoundException('Course not found');
     }
 
-    // Optionally, delete related modules and versions
     await this.moduleModel.deleteMany({ courseId });
     await this.versionModel.deleteMany({ courseId });
 
-    // Delete the course
     await this.courseModel.findByIdAndDelete(courseId);
 
-    return true; // Return true if deletion was successful
+    return true;
   }
 }

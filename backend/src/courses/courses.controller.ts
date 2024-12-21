@@ -81,6 +81,48 @@ export class CoursesController {
       },
     };
   }
+  @Put(':courseId')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'files', maxCount: 2 },
+        { name: 'imagefiles', maxCount: 2 },
+      ],
+      multerOptions,
+    ),
+  )
+  async updateCourse(
+    @Param('courseId') courseId: string,
+    @Body() updateCourseDto: Partial<Course>,
+    @UploadedFiles()
+    files: {
+      files?: Express.Multer.File[];
+      imagefiles?: Express.Multer.File[];
+    },
+  ): Promise<any> {
+    console.log('update');
+    const courseMaterial = files?.files?.[0]?.filename || null;
+    const courseImage = files?.imagefiles?.[0]?.filename || null;
+
+    const courseData = {
+      ...updateCourseDto,
+      courseMaterial,
+      courseImage,
+    };
+    console.log(courseData);
+    const updatedCourse = await this.coursesService.updateCourse(
+      courseId,
+      courseData,
+    );
+    return {
+      message: 'Course updated successfully',
+      course: updatedCourse,
+      files: {
+        material: courseMaterial,
+        image: courseImage,
+      },
+    };
+  }
 
   @Post(':courseId/modules')
   async addModule(
@@ -116,14 +158,6 @@ export class CoursesController {
     @Param('category') category: string,
   ): Promise<Course[]> {
     return this.coursesService.getCourseByCategory(category);
-  }
-
-  @Put(':courseId')
-  async updateCourse(
-    @Param('courseId') courseId: string,
-    @Body() body: Partial<Course>,
-  ): Promise<Course> {
-    return this.coursesService.updateCourse(courseId, body);
   }
 
   @Get(':courseId/versions')

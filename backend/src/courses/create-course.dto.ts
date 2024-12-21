@@ -1,5 +1,5 @@
 // create-course.dto.ts
-import { IsString, IsEnum, IsOptional } from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum DifficultyLevel {
@@ -20,6 +20,10 @@ export class CreateCourseDto {
   @ApiProperty()
   @IsString()
   category: string;
+
+  @ApiProperty()
+  @IsNumber()
+  rating: number;
 
   @ApiProperty()
   @IsEnum(DifficultyLevel)

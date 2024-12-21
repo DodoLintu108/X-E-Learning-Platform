@@ -161,6 +161,7 @@ const ManageCourses = () => {
     difficultyLevel: string;
     courseImage: File | null;
     courseMaterial: File | null;
+    rating: number;
   }>({
     title: "",
     description: "",
@@ -168,6 +169,7 @@ const ManageCourses = () => {
     difficultyLevel: "Select Difficulty Level",
     courseImage: null,
     courseMaterial: null,
+    rating: 0.0,
   });
 
   const handleCreateCourse = async (e: React.FormEvent) => {
@@ -179,6 +181,7 @@ const ManageCourses = () => {
     formData.append("description", newCourse.description);
     formData.append("category", newCourse.category);
     formData.append("difficultyLevel", newCourse.difficultyLevel);
+    formData.append("rating", newCourse.rating.toString());
     if (newCourse.courseImage) {
       formData.append("imagefiles", newCourse.courseImage);
     }
@@ -261,6 +264,7 @@ const ManageCourses = () => {
       setCourseData(response.data);
       setNewCourse({
         title: response.data.title,
+        rating: 0.0,
         description: response.data.description,
         category: response.data.category,
         difficultyLevel: response.data.difficultyLevel,
@@ -281,18 +285,26 @@ const ManageCourses = () => {
 
   const handleEdit = async (id: string) => {
     try {
+      const formData = new FormData();
+      formData.append("title", newCourse.title);
+      formData.append("description", newCourse.description);
+      formData.append("category", newCourse.category);
+      formData.append("difficultyLevel", newCourse.difficultyLevel);
+
+      if (newCourse.courseImage) {
+        formData.append("imagefiles", newCourse.courseImage);
+      }
+
+      if (newCourse.courseMaterial) {
+        formData.append("files", newCourse.courseMaterial);
+      }
+
       const response = await axios.put(
         `http://localhost:3000/courses/${id}`,
-        {
-          title: newCourse.title,
-          description: newCourse.description,
-          category: newCourse.category,
-          difficultyLevel: newCourse.difficultyLevel,
-          courseImage: newCourse.courseImage,
-          courseMaterial: newCourse.courseMaterial,
-        },
+        formData,
         {
           headers: {
+            "Content-Type": "multipart/form-data",
             authorization: `Bearer ${accessToken}`,
           },
         }
@@ -303,14 +315,10 @@ const ManageCourses = () => {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const statusCode = error.response?.status;
-        toast.error(
-          "Error creating course!",
-          error.response?.data || error.message
-        );
+        toast.error(error.response?.data.message || "Error updating course!");
         if (statusCode === 401) {
           toast.error("Session expired. Redirecting to Login...");
           window.location.href = "/Login";
-          return;
         }
       } else {
         console.error("Error:", error);
@@ -318,6 +326,7 @@ const ManageCourses = () => {
       toast.error("Error updating course!");
     }
   };
+
   const handleSearch = async (query: string) => {
     if (!query) {
       setAllCourses([]);
@@ -336,15 +345,20 @@ const ManageCourses = () => {
       setAllCourses(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error("Error:", error.response?.data || error.message);
+        const statusCode = error.response?.status;
         toast.error(
-          "Error searching for course!",
+          "Error creating course!",
           error.response?.data || error.message
         );
+        if (statusCode === 401) {
+          toast.error("Session expired. Redirecting to Login...");
+          window.location.href = "/Login";
+          return;
+        }
       } else {
         console.error("Error:", error);
       }
-      toast.error("Error searching for course!");
+      toast.error("Error updating course!");
     }
   };
   const handleOpenModal = async () => {
@@ -355,6 +369,7 @@ const ManageCourses = () => {
       difficultyLevel: "",
       courseImage: null,
       courseMaterial: null,
+      rating: 0.0,
     });
     setIsModalOpen(true);
   };
@@ -451,9 +466,6 @@ const ManageCourses = () => {
                 return (
                   <div
                     key={course._id}
-                    onClick={() =>
-                      (window.location.href = `/courses/specificCourse/?courseId=${course._id}&accessToken=${accessToken}`)
-                    }
                     style={{
                       display: "flex",
                       flexDirection: "row",
@@ -463,8 +475,8 @@ const ManageCourses = () => {
                       borderRadius: "4px",
                       border: "1px solid #7F8081",
                       boxShadow: "1px 4px 6px rgba(0, 0, 0, 0.5)",
-                      cursor: "pointer", 
-                      transition: "transform 0.2s", 
+                      cursor: "pointer",
+                      transition: "transform 0.2s",
                     }}
                     onMouseOver={(e) =>
                       (e.currentTarget.style.transform = "scale(1.02)")
@@ -485,6 +497,15 @@ const ManageCourses = () => {
                       />
                     </div>
                     <div
+                      onClick={() =>
+                        (window.location.href = `/courses/specificCourse/?courseId=${course._id}&accessToken=${accessToken}`)
+                      }
+                      onMouseOver={(e) =>
+                        (e.currentTarget.style.transform = "scale(1.02)")
+                      }
+                      onMouseOut={(e) =>
+                        (e.currentTarget.style.transform = "scale(1)")
+                      }
                       style={{
                         flex: "1",
                         display: "flex",
@@ -493,6 +514,8 @@ const ManageCourses = () => {
                         gap: "5px",
                         paddingLeft: "10px",
                         maxWidth: "500px",
+                        cursor: "pointer",
+                        transition: "transform 0.2s",
                       }}
                     >
                       <h3
