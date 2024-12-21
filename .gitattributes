@@ -1,2 +1,12 @@
-# Auto detect text files and perform LF normalization
+# Enforce LF line endings for text files
 * text=auto
+*.js text eol=lf
+*.ts text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+
+# Keep binary files untouched
+*.png binary
+*.jpg binary
+*.gif binary
