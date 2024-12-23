@@ -22,6 +22,9 @@ export declare class CoursesService {
         resources?: string[];
     }): Promise<Module>;
     updateCourse(courseId: string, data: Partial<Course>, updatedBy?: string): Promise<Course>;
+    getAssignedCourses(studentId: string): Promise<Course[]>;
+    getAvailableCourses(studentId: string): Promise<Course[]>;
+    getCoursesByTeacher(teacherId: string): Promise<Course[]>;
     getCourseVersions(courseId: string): Promise<Version[]>;
     getAllCourses(): Promise<Course[]>;
     getCourseById(courseId: string): Promise<Course>;

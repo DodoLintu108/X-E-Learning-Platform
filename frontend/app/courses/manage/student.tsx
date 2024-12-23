@@ -12,9 +12,13 @@ const StudentCourses = () => {
   }, []);
 
   const getStudentCourses = async () => {
+    const token = localStorage.getItem("accessToken");
     try {
-      const response = await axios.get("http://localhost:3000/courses/student");
-      setStudentCourses(response.data);
+      const response = await axios.get("http://localhost:3000/courses/student", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      //setAssignedCourses(response.data.assigned);
+      //setAvailableCourses(response.data.available);
     } catch (error) {
       console.error("Error fetching student courses:", error);
     }

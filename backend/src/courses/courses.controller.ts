@@ -11,6 +11,7 @@ import {
   Delete,
   UploadedFiles,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
@@ -131,6 +132,22 @@ export class CoursesController {
       },
     };
   }
+
+  // Get courses for students
+  @Get('student')
+  async getStudentCourses(@Req() req): Promise<{ assigned: Course[]; available: Course[] }> {
+    const userId = req.user.userId;
+    const assignedCourses = await this.coursesService.getAssignedCourses(userId);
+    const availableCourses = await this.coursesService.getAvailableCourses(userId);
+    return { assigned: assignedCourses, available: availableCourses };
+  }
+
+  @Get('teacher')
+  async getTeacherCourses(@Req() req): Promise<Course[]> {
+    const userId = req.user.userId;
+    return this.coursesService.getCoursesByTeacher(userId);
+  }
+
 
   @Post(':courseId/modules')
   async addModule(

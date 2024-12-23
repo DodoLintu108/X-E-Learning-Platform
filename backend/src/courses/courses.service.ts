@@ -65,6 +65,22 @@ export class CoursesService {
     return course.save();
   }
 
+  // Get courses assigned to a student
+  async getAssignedCourses(studentId: string): Promise<Course[]> {
+    return this.courseModel.find({ enrolledStudents: studentId }).exec();
+  }
+
+  // Get courses available to a student (not yet enrolled)
+  async getAvailableCourses(studentId: string): Promise<Course[]> {
+    return this.courseModel.find({ enrolledStudents: { $ne: studentId } }).exec();
+  }
+
+  // Get courses taught by a teacher
+  async getCoursesByTeacher(teacherId: string): Promise<Course[]> {
+    return this.courseModel.find({ createdBy: teacherId }).exec();
+  }
+
+
   async getCourseVersions(courseId: string): Promise<Version[]> {
     return this.versionModel.find({ courseId }).sort({ updatedAt: -1 }).exec();
   }

@@ -53,6 +53,15 @@ let CoursesService = class CoursesService {
         Object.assign(course, data);
         return course.save();
     }
+    async getAssignedCourses(studentId) {
+        return this.courseModel.find({ enrolledStudents: studentId }).exec();
+    }
+    async getAvailableCourses(studentId) {
+        return this.courseModel.find({ enrolledStudents: { $ne: studentId } }).exec();
+    }
+    async getCoursesByTeacher(teacherId) {
+        return this.courseModel.find({ createdBy: teacherId }).exec();
+    }
     async getCourseVersions(courseId) {
         return this.versionModel.find({ courseId }).sort({ updatedAt: -1 }).exec();
     }

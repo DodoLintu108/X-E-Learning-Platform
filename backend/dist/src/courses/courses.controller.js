@@ -42,6 +42,16 @@ let CoursesController = class CoursesController {
             },
         };
     }
+    async getStudentCourses(req) {
+        const userId = req.user.userId;
+        const assignedCourses = await this.coursesService.getAssignedCourses(userId);
+        const availableCourses = await this.coursesService.getAvailableCourses(userId);
+        return { assigned: assignedCourses, available: availableCourses };
+    }
+    async getTeacherCourses(req) {
+        const userId = req.user.userId;
+        return this.coursesService.getCoursesByTeacher(userId);
+    }
     async addModule(courseId, body) {
         const moduleData = { courseId, ...body };
         return this.coursesService.addModule(moduleData);
@@ -119,6 +129,20 @@ __decorate([
     __metadata("design:paramtypes", [create_course_dto_1.CreateCourseDto, Object]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "createCourse", null);
+__decorate([
+    (0, common_1.Get)('student'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "getStudentCourses", null);
+__decorate([
+    (0, common_1.Get)('teacher'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "getTeacherCourses", null);
 __decorate([
     (0, common_1.Post)(':courseId/modules'),
     __param(0, (0, common_1.Param)('courseId')),
