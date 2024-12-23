@@ -13,7 +13,7 @@ const AdminCourses = () => {
 
   const getAllCourses = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/courses/admin");
+      const response = await axios.get("http://localhost:3000/courses/all");
       setAllCourses(response.data);
     } catch (error) {
       console.error("Error fetching admin courses:", error);

@@ -17,6 +17,11 @@ export declare class CoursesController {
             image: string;
         };
     }>;
+    getStudentCourses(req: any): Promise<{
+        assigned: Course[];
+        available: Course[];
+    }>;
+    getTeacherCourses(req: any): Promise<Course[]>;
     addModule(courseId: string, body: {
         title: string;
         content: string;
