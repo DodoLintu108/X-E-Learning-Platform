@@ -94,9 +94,6 @@ const TeacherCourses = () => {
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false); // Quiz modal
   const [expandedLecture, setExpandedLecture] = useState<string | null>(null); // Track expanded lecture
 
-
-
-
   const [newQuiz, setNewQuiz] = useState({
     level: "Beginner",
     questions: [
@@ -124,20 +121,6 @@ const TeacherCourses = () => {
   useEffect(() => {
     fetchTeacherCourses();
   }, []);
-
-  const handleBackup = async () => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      const response = await axios.post("http://localhost:3000/backup/backup", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log('Backup created successfully:', response.data);
-      toast.success('Backup created successfully: ' + response.data.path);
-    } catch (error) {
-      console.error('Error creating backup:', error);
-      toast.error('Failed to create backup');
-    }
-  };
 
   const fetchTeacherCourses = async () => {
     const token = localStorage.getItem("accessToken");
@@ -334,20 +317,6 @@ const TeacherCourses = () => {
         }}
       >
         Create Course
-      </button>
-      <button
-        onClick={handleBackup}
-        style={{
-          padding: "10px 20px",
-          backgroundColor: "#4CAF50",
-          color: "white",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-          marginBottom: "20px",
-        }}
-      >
-        Create Backup
       </button>
 
       <ul style={{ listStyleType: "none", padding: 0 }}>
