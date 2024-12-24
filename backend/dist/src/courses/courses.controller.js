@@ -128,6 +128,26 @@ let CoursesController = class CoursesController {
             course: updatedCourse,
         };
     }
+    async addQuiz(courseId, quizData) {
+        const quiz = await this.coursesService.addQuizToCourse(courseId, quizData);
+        return {
+            message: 'Quiz added successfully',
+            quiz,
+        };
+    }
+    async getQuizzes(courseId) {
+        return this.coursesService.getQuizzesByCourse(courseId);
+    }
+    async getQuiz(courseId, quizId) {
+        return this.coursesService.getQuizById(courseId, quizId);
+    }
+    async deleteQuiz(courseId, quizId) {
+        const course = await this.coursesService.deleteQuiz(courseId, quizId);
+        return {
+            message: 'Quiz deleted successfully',
+            course,
+        };
+    }
     async addLecture(courseId, lectureData) {
         const updatedCourse = await this.coursesService.addLecture(courseId, lectureData);
         return {
@@ -326,6 +346,37 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "addFiles", null);
+__decorate([
+    (0, common_1.Post)(':courseId/quizzes'),
+    __param(0, (0, common_1.Param)('courseId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "addQuiz", null);
+__decorate([
+    (0, common_1.Get)(':courseId/quizzes'),
+    __param(0, (0, common_1.Param)('courseId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "getQuizzes", null);
+__decorate([
+    (0, common_1.Get)(':courseId/quizzes/:quizId'),
+    __param(0, (0, common_1.Param)('courseId')),
+    __param(1, (0, common_1.Param)('quizId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "getQuiz", null);
+__decorate([
+    (0, common_1.Delete)(':courseId/quizzes/:quizId'),
+    __param(0, (0, common_1.Param)('courseId')),
+    __param(1, (0, common_1.Param)('quizId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "deleteQuiz", null);
 __decorate([
     (0, common_1.Post)(':courseId/lectures'),
     __param(0, (0, common_1.Param)('courseId')),
