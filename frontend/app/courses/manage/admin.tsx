@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import ManageCourses from "../../components/ManageCourses"; // Import shared component
+import ManageCourses from "../../components/ManageCourses";
 
 const AdminCourses = () => {
   const [allCourses, setAllCourses] = useState([]);
@@ -13,8 +13,8 @@ const AdminCourses = () => {
 
   const getAllCourses = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/courses/all");
-      setAllCourses(response.data);
+      const response = await axios.get("http://localhost:3000/courses/all"); // Use /all endpoint
+      setAllCourses(response.data); // Ensure response contains an array of courses
     } catch (error) {
       console.error("Error fetching admin courses:", error);
     }

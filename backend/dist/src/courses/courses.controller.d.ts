@@ -30,6 +30,7 @@ export declare class CoursesController {
     searchCourses(query: string): Promise<Course[]>;
     getAllCourses(): Promise<Course[]>;
     getCourseById(courseId: string): Promise<Course>;
+    getCourses(roleOrId: string): Promise<Course | Course[]>;
     getCourseByCategory(category: string): Promise<Course[]>;
     updateCourse(courseId: string, body: Partial<Course>): Promise<Course>;
     getCourseVersions(courseId: string): Promise<Version[]>;

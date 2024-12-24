@@ -20,6 +20,7 @@ const multer_config_1 = require("../../multer.config");
 const courses_service_1 = require("./courses.service");
 const create_course_dto_1 = require("./create-course.dto");
 const swagger_1 = require("@nestjs/swagger");
+const mongoose_1 = require("mongoose");
 let CoursesController = class CoursesController {
     constructor(coursesService) {
         this.coursesService = coursesService;
@@ -64,6 +65,17 @@ let CoursesController = class CoursesController {
     }
     async getCourseById(courseId) {
         return this.coursesService.getCourseById(courseId);
+    }
+    async getCourses(roleOrId) {
+        if (roleOrId === 'admin') {
+            return this.coursesService.getAllCourses();
+        }
+        else if (mongoose_1.default.Types.ObjectId.isValid(roleOrId)) {
+            return this.coursesService.getCourseById(roleOrId);
+        }
+        else {
+            throw new common_1.BadRequestException('Invalid parameter.');
+        }
     }
     async getCourseByCategory(category) {
         return this.coursesService.getCourseByCategory(category);
@@ -171,6 +183,13 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "getCourseById", null);
+__decorate([
+    (0, common_1.Get)(':roleOrId'),
+    __param(0, (0, common_1.Param)('roleOrId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "getCourses", null);
 __decorate([
     (0, common_1.Get)('category/:category'),
     __param(0, (0, common_1.Param)('category')),

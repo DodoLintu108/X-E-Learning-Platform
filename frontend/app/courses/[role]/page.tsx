@@ -25,14 +25,15 @@ const RoleBasedCourses = () => {
     const fetchCourses = async () => {
       const token = localStorage.getItem("accessToken"); // Add token
       try {
-        const response = await axios.get(
-          `http://localhost:3000/courses/${role}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        // Dynamically set endpoint based on role
+        const endpoint = role === "admin" ? "http://localhost:3000/courses/all" : `http://localhost:3000/courses/${role}`;
+
+        const response = await axios.get(endpoint, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
         console.log("API Response:", response.data); // Debugging
         setCourses(response.data);
       } catch (error) {
@@ -53,9 +54,9 @@ const RoleBasedCourses = () => {
           <h1>{role.charAt(0).toUpperCase() + role.slice(1)} Courses</h1>
           <ul>
             {Array.isArray(courses) && courses.length > 0 ? (
-              courses.map((course) => (
-                <li key={course.id}>{course.title}</li>
-              ))
+              courses.map((course, index) => {
+                return <li key={course.id || course.title || index}>{course.title}</li>; // Fallback to index if no unique property is found
+              })
             ) : (
               <p>No courses available</p>
             )}
