@@ -28,3 +28,25 @@ export const getDownloadableReport = async (instructorId) => {
   });
   return response.data;
 };
+export const addLecture = async (courseId, lectureData) => {
+    const token = localStorage.getItem('accessToken');
+    try {
+        const response = await axios.post(
+            `http://localhost:3000/courses/${courseId}/lectures`,
+            lectureData,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error adding lecture:', error);
+        throw error;
+    }
+
+    
+};
+
+

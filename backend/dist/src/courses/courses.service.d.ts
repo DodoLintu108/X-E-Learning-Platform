@@ -33,4 +33,18 @@ export declare class CoursesService {
     enrollStudent(courseId: string, studentId: string): Promise<Course>;
     deleteCourse(courseId: string): Promise<boolean>;
     getCoursesByRole(role: string): Promise<Course[]>;
+    addLectureToCourse(courseId: string, lectureData: {
+        title: string;
+        type: 'video' | 'pdf';
+        content: string;
+    }): Promise<Course>;
+    addLecture(courseId: string, lectureData: {
+        title: string;
+        type: 'video' | 'pdf';
+        content: string;
+    }): Promise<import("mongoose").Document<unknown, {}, CourseDocument> & Course & import("mongoose").Document<unknown, any, any> & Required<{
+        _id: unknown;
+    }> & {
+        __v: number;
+    }>;
 }

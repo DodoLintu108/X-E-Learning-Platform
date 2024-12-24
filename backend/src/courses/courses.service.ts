@@ -198,5 +198,48 @@ export class CoursesService {
         ? `${baseUrl}/uploads/${course.courseMaterial}`
         : null,
     }));
+
   }
+
+async addLectureToCourse(
+  courseId: string,
+  lectureData: { title: string; type: 'video' | 'pdf'; content: string },
+): Promise<Course> {
+  const course = await this.courseModel.findById(courseId); // Assuming you're using Mongoose
+  if (!course) {
+    throw new NotFoundException('Course not found');
+  }
+
+  // Add lecture data to the course
+  course.lectures.push({
+    title: lectureData.title,
+    type: lectureData.type,
+    content: lectureData.content,
+    createdAt: new Date(), // Add the current timestamp
+  });
+  
+  await course.save();
+  return course;
+}
+
+async addLecture(courseId: string, lectureData: { title: string; type: 'video' | 'pdf'; content: string }) {
+  const course = await this.courseModel.findById(courseId);
+
+  if (!course) {
+    throw new NotFoundException('Course not found');
+  }
+
+  const lecture = {
+    title: lectureData.title,
+    type: lectureData.type,
+    content: lectureData.content,
+    createdAt: new Date(),
+  };
+
+  course.lectures.push(lecture);
+  await course.save();
+
+  return course;
+}
+
 }

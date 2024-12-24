@@ -9,9 +9,32 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CourseSchema = exports.Course = void 0;
+exports.CourseSchema = exports.Course = exports.LectureSchema = exports.Lecture = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
 const uuid_1 = require("uuid");
+let Lecture = class Lecture {
+};
+exports.Lecture = Lecture;
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Lecture.prototype, "title", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true, enum: ['video', 'pdf'] }),
+    __metadata("design:type", String)
+], Lecture.prototype, "type", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Lecture.prototype, "content", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: Date.now }),
+    __metadata("design:type", Date)
+], Lecture.prototype, "createdAt", void 0);
+exports.Lecture = Lecture = __decorate([
+    (0, mongoose_1.Schema)()
+], Lecture);
+exports.LectureSchema = mongoose_1.SchemaFactory.createForClass(Lecture);
 let Course = class Course {
 };
 exports.Course = Course;
@@ -48,13 +71,17 @@ __decorate([
     __metadata("design:type", String)
 ], Course.prototype, "courseImage", void 0);
 __decorate([
-    (0, mongoose_1.Prop)(String),
+    (0, mongoose_1.Prop)({ type: String }),
     __metadata("design:type", String)
 ], Course.prototype, "courseMaterial", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: Date.now }),
     __metadata("design:type", Date)
 ], Course.prototype, "createdAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [exports.LectureSchema], default: [] }),
+    __metadata("design:type", Array)
+], Course.prototype, "lectures", void 0);
 exports.Course = Course = __decorate([
     (0, mongoose_1.Schema)()
 ], Course);

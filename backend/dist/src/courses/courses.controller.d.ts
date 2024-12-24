@@ -3,19 +3,16 @@ import { Course } from './courses.entity';
 import { Module } from './modules.entity';
 import { Version } from './version.entity';
 import { CreateCourseDto } from './create-course.dto';
+import mongoose from 'mongoose';
 export declare class CoursesController {
     private readonly coursesService;
     constructor(coursesService: CoursesService);
-    createCourse(createCourseDto: CreateCourseDto, files: {
+    createCourse(req: any, createCourseDto: CreateCourseDto, files: {
         files?: Express.Multer.File[];
         imagefiles?: Express.Multer.File[];
     }): Promise<{
         message: string;
         course: Course;
-        files: {
-            material: string;
-            image: string;
-        };
     }>;
     getStudentCourses(req: any): Promise<{
         assigned: Course[];
@@ -38,4 +35,23 @@ export declare class CoursesController {
         message: string;
     }>;
     getCoursesByRole(role: string): Promise<Course[]>;
+    addFiles(courseId: string, files: {
+        files?: Express.Multer.File[];
+        imagefiles?: Express.Multer.File[];
+    }): Promise<{
+        message: string;
+        course: Course;
+    }>;
+    addLecture(courseId: string, lectureData: {
+        title: string;
+        type: 'video' | 'pdf';
+        content: string;
+    }): Promise<{
+        message: string;
+        course: mongoose.Document<unknown, {}, import("./courses.entity").CourseDocument> & Course & mongoose.Document<unknown, any, any> & Required<{
+            _id: unknown;
+        }> & {
+            __v: number;
+        };
+    }>;
 }

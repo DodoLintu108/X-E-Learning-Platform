@@ -68,29 +68,69 @@ export class CoursesController {
       },
     },
   })
+  @Post('create')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'files', maxCount: 2 },
+        { name: 'imagefiles', maxCount: 2 },
+      ],
+      multerOptions,
+    ),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Create a new course with materials and image',
+    schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        description: { type: 'string' },
+        category: { type: 'string' },
+        difficultyLevel: { type: 'string' },
+        files: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+        imagefiles: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+      },
+    },
+  })
   async createCourse(
+    @Req() req, // To access the logged-in user's data
     @Body() createCourseDto: CreateCourseDto,
     @UploadedFiles()
     files: {
-      files?: Express.Multer.File[]; // Files for course materials
-      imagefiles?: Express.Multer.File[]; // Files for course images
+      files?: Express.Multer.File[];
+      imagefiles?: Express.Multer.File[];
     },
   ) {
-    const courseMaterial = files.files?.[0]?.filename || null;
-    const courseImage = files.imagefiles?.[0]?.filename || null;
+    const courseMaterial = files?.files?.[0]?.filename || null;
+    const courseImage = files?.imagefiles?.[0]?.filename || null;
+  
+    const teacherId = req.user.userId; // Extract teacher ID from the logged-in user's data
+  
     const courseData = {
       ...createCourseDto,
       courseMaterial,
       courseImage,
+      createdBy: teacherId, // Associate the course with the teacher
     };
+  
     const newCourse = await this.coursesService.createCourse(courseData);
+  
     return {
       message: 'Course created successfully',
       course: newCourse,
-      files: {
-        material: courseMaterial,
-        image: courseImage,
-      },
     };
   }
 
@@ -105,8 +145,9 @@ export class CoursesController {
 
   @Get('teacher')
   async getTeacherCourses(@Req() req): Promise<Course[]> {
-    const userId = req.user.userId;
-    return this.coursesService.getCoursesByTeacher(userId);
+      const userId = req.user.userId; // Ensure req.user.userId exists
+      const courses = await this.coursesService.getCoursesByTeacher(userId);
+      return courses;
   }
 
 
@@ -124,6 +165,8 @@ export class CoursesController {
     return this.coursesService.addModule(moduleData);
   }
 
+
+  
   @Get('search')
   async searchCourses(@Query('query') query: string): Promise<Course[]> {
     return this.coursesService.searchCourses(query);
@@ -193,4 +236,52 @@ export class CoursesController {
   async getCoursesByRole(@Param('role') role: string): Promise<Course[]> {
     return this.coursesService.getCoursesByRole(role);
   }
+
+  //handles images and files
+  @Put(':courseId/files')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'files', maxCount: 2 },
+        { name: 'imagefiles', maxCount: 2 },
+      ],
+      multerOptions,
+    ),
+  )
+  async addFiles(
+    @Param('courseId') courseId: string,
+    @UploadedFiles()
+    files: {
+      files?: Express.Multer.File[];
+      imagefiles?: Express.Multer.File[];
+    },
+  ) {
+    const courseMaterial = files?.files?.[0]?.filename || null;
+    const courseImage = files?.imagefiles?.[0]?.filename || null;
+  
+    const updatedCourse = await this.coursesService.updateCourse(courseId, {
+      courseMaterial,
+      courseImage,
+    });
+  
+    return {
+      message: 'Files added successfully',
+      course: updatedCourse,
+    };
+
+    
+  }
+  @Post(':courseId/lectures')
+  async addLecture(
+    @Param('courseId') courseId: string,
+    @Body() lectureData: { title: string; type: 'video' | 'pdf'; content: string },
+  ) {
+    const updatedCourse = await this.coursesService.addLecture(courseId, lectureData);
+    return {
+      message: 'Lecture added successfully',
+      course: updatedCourse,
+    };
+  }
+  
+
 }
