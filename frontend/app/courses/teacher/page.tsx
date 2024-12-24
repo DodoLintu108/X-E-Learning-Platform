@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import Navbar from "../../components/Navbar";
 import "../../globals.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { AxiosError } from "axios"; // Import AxiosError for type checking
 
 // Interfaces
 interface Course {
@@ -15,10 +14,8 @@ interface Course {
   description: string;
   category: string;
   difficultyLevel: string;
+  lectures: Lecture[]; // Include lectures
 }
-interface ErrorResponse {
-    message: string; // Define the shape of your error response
-  }
 
 interface Lecture {
   title: string;
@@ -30,6 +27,10 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
+}
+
+interface ErrorResponse {
+  message: string; // Define the shape of your error response
 }
 
 // Modal component
@@ -89,6 +90,8 @@ const TeacherCourses = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); // Create course modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Edit course modal
   const [isLectureModalOpen, setIsLectureModalOpen] = useState(false); // Add lecture modal
+  const [isViewLectureModalOpen, setIsViewLectureModalOpen] = useState(false); // View lectures modal
+  const [expandedLecture, setExpandedLecture] = useState<string | null>(null); // Track expanded lecture
 
   const [newCourse, setNewCourse] = useState({
     title: "",
@@ -123,13 +126,9 @@ const TeacherCourses = () => {
   const handleCreateCourse = async () => {
     const token = localStorage.getItem("accessToken");
     try {
-      const response = await axios.post(
-        "http://localhost:3000/courses/create",
-        newCourse,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.post("http://localhost:3000/courses/create", newCourse, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       toast.success("Course created successfully!");
       fetchTeacherCourses();
       setIsModalOpen(false);
@@ -144,7 +143,7 @@ const TeacherCourses = () => {
     if (!selectedCourse) return;
 
     try {
-      const response = await axios.put(
+      await axios.put(
         `http://localhost:3000/courses/${selectedCourse._id}`,
         selectedCourse,
         {
@@ -164,7 +163,7 @@ const TeacherCourses = () => {
     const token = localStorage.getItem("accessToken");
 
     try {
-      const response = await axios.delete(`http://localhost:3000/courses/${id}`, {
+      await axios.delete(`http://localhost:3000/courses/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success("Course deleted successfully!");
@@ -180,8 +179,11 @@ const TeacherCourses = () => {
       toast.error("No course selected!");
       return;
     }
-  
+
     const token = localStorage.getItem("accessToken");
+    const toggleLectureContent = (lectureTitle: string) => {
+        setExpandedLecture(expandedLecture === lectureTitle ? null : lectureTitle);
+      };
     try {
       await axios.post(
         `http://localhost:3000/courses/${selectedCourse._id}/lectures`,
@@ -196,11 +198,11 @@ const TeacherCourses = () => {
           },
         }
       );
-  
+
       toast.success("Lecture added successfully!");
       setIsLectureModalOpen(false);
       setNewLecture({ title: "", type: "video", content: "" });
-  
+
       fetchTeacherCourses(); // Optionally refresh courses
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
@@ -210,7 +212,10 @@ const TeacherCourses = () => {
       );
     }
   };
-  
+
+  const toggleLectureContent = (lectureTitle: string) => {
+    setExpandedLecture(expandedLecture === lectureTitle ? null : lectureTitle);
+  };
 
   return (
     <div>
@@ -292,9 +297,26 @@ const TeacherCourses = () => {
                   border: "none",
                   borderRadius: "5px",
                   cursor: "pointer",
+                  marginRight: "10px",
                 }}
               >
                 Add Lecture
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedCourse(course);
+                  setIsViewLectureModalOpen(true);
+                }}
+                style={{
+                  padding: "10px 15px",
+                  backgroundColor: "#607D8B",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                }}
+              >
+                View Lectures
               </button>
             </li>
           ))
@@ -401,18 +423,26 @@ const TeacherCourses = () => {
       </Modal>
 
       {/* Add Lecture Modal */}
-      <Modal isOpen={isLectureModalOpen} onClose={() => setIsLectureModalOpen(false)}>
+      <Modal
+        isOpen={isLectureModalOpen}
+        onClose={() => setIsLectureModalOpen(false)}
+      >
         <h2>Add Lecture to {selectedCourse?.title}</h2>
         <input
           type="text"
           placeholder="Lecture Title"
           value={newLecture.title}
-          onChange={(e) => setNewLecture({ ...newLecture, title: e.target.value })}
+          onChange={(e) =>
+            setNewLecture({ ...newLecture, title: e.target.value })
+          }
         />
         <select
           value={newLecture.type}
           onChange={(e) =>
-            setNewLecture({ ...newLecture, type: e.target.value as "video" | "pdf" })
+            setNewLecture({
+              ...newLecture,
+              type: e.target.value as "video" | "pdf",
+            })
           }
         >
           <option value="video">YouTube Video</option>
@@ -423,7 +453,9 @@ const TeacherCourses = () => {
             type="text"
             placeholder="YouTube Link"
             value={newLecture.content}
-            onChange={(e) => setNewLecture({ ...newLecture, content: e.target.value })}
+            onChange={(e) =>
+              setNewLecture({ ...newLecture, content: e.target.value })
+            }
           />
         ) : (
           <input
@@ -431,7 +463,10 @@ const TeacherCourses = () => {
             accept="application/pdf"
             onChange={(e) =>
               e.target.files &&
-              setNewLecture({ ...newLecture, content: URL.createObjectURL(e.target.files[0]) })
+              setNewLecture({
+                ...newLecture,
+                content: URL.createObjectURL(e.target.files[0]),
+              })
             }
           />
         )}
@@ -439,9 +474,63 @@ const TeacherCourses = () => {
           Add Lecture
         </button>
       </Modal>
+
+{/* View Lectures Modal */}
+<Modal
+  isOpen={isViewLectureModalOpen}
+  onClose={() => setIsViewLectureModalOpen(false)}
+>
+  <h2>Lectures for {selectedCourse?.title}</h2>
+  <ul>
+    {selectedCourse?.lectures.map((lecture, index) => (
+      <li key={index} style={{ marginBottom: "10px" }}>
+        {/* Clickable Lecture Title */}
+        <span
+          style={{
+            cursor: "pointer",
+            color: "blue",
+            textDecoration: "underline",
+          }}
+          onClick={() => toggleLectureContent(lecture.title)}
+        >
+          {lecture.title}
+        </span>
+
+        {/* Expanded Content */}
+        {expandedLecture === lecture.title && (
+          <div style={{ marginTop: "10px" }}>
+            {lecture.type === "video" ? (
+              <iframe
+                width="100%"
+                height="315"
+                src={lecture.content.replace("watch?v=", "embed/")}
+                frameBorder="0"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+                title={lecture.title}
+              ></iframe>
+            ) : (
+              <iframe
+                src={lecture.content}
+                width="100%"
+                height="500"
+                style={{
+                  border: "1px solid #ccc",
+                  marginTop: "10px",
+                  borderRadius: "5px",
+                }}
+                title={lecture.title}
+              ></iframe>
+            )}
+          </div>
+        )}
+      </li>
+    ))}
+  </ul>
+</Modal>
+
     </div>
   );
-  
 };
 
 export default TeacherCourses;
