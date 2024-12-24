@@ -76,7 +76,19 @@ export class CoursesService {
 
   // Get courses taught by a teacher
   async getCoursesByTeacher(teacherId: string): Promise<Course[]> {
-    return this.courseModel.find({ createdBy: teacherId }).exec();
+        const courses = await this.courseModel
+          .find({ createdBy: teacherId })
+          .exec();
+        const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
+        return courses.map((course) => {
+          if (course.courseImage) {
+            course.courseImage = `${baseUrl}/uploads/${course.courseImage}`;
+          }
+          if (course.courseMaterial) {
+            course.courseMaterial = `${baseUrl}/uploads/${course.courseMaterial}`;
+          }
+          return course;
+        });
   }
 
 

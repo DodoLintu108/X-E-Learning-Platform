@@ -80,6 +80,14 @@ let UsersService = class UsersService {
     async getTotalUsers() {
         return this.userModel.countDocuments();
     }
+    async editUser(userId, updateData) {
+        const user = await this.userModel.findOne({ userId: userId });
+        if (!user) {
+            throw new common_2.NotFoundException('User not found');
+        }
+        Object.assign(user, updateData);
+        await user.save();
+        return user;
     async getAllUsers() {
         return this.userModel.find().exec();
     }
