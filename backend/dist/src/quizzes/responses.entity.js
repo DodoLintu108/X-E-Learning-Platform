@@ -9,39 +9,46 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.QuizSchema = exports.Quiz = void 0;
+exports.ResponseSchema = exports.Response = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
 const uuid_1 = require("uuid");
-let Quiz = class Quiz {
+let Response = class Response {
 };
-exports.Quiz = Quiz;
+exports.Response = Response;
 __decorate([
     (0, mongoose_1.Prop)({ required: true, default: uuid_1.v4 }),
     __metadata("design:type", String)
-], Quiz.prototype, "quizId", void 0);
+], Response.prototype, "responseId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
-], Quiz.prototype, "courseId", void 0);
+], Response.prototype, "userId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Response.prototype, "quizId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({
         type: [
             {
-                question: { type: String, required: true },
-                options: { type: [String], required: true },
-                correctAnswer: { type: Number, required: true },
+                questionId: { type: String, required: true },
+                answer: { type: Number, required: true },
             },
         ],
         required: true,
     }),
     __metadata("design:type", Array)
-], Quiz.prototype, "questions", void 0);
+], Response.prototype, "answers", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", Number)
+], Response.prototype, "score", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: Date.now }),
     __metadata("design:type", Date)
-], Quiz.prototype, "createdAt", void 0);
-exports.Quiz = Quiz = __decorate([
+], Response.prototype, "submittedAt", void 0);
+exports.Response = Response = __decorate([
     (0, mongoose_1.Schema)()
-], Quiz);
-exports.QuizSchema = mongoose_1.SchemaFactory.createForClass(Quiz);
-//# sourceMappingURL=quizzes.entity.js.map
+], Response);
+exports.ResponseSchema = mongoose_1.SchemaFactory.createForClass(Response);
+//# sourceMappingURL=responses.entity.js.map
