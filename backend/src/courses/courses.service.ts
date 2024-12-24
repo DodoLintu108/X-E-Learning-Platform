@@ -332,6 +332,19 @@ async addQuizToCourse(
     };
   }
   
+  async getAllQuizzesForCourse(courseId: string): Promise<any[]> {
+    // Fetch the course by ID
+    const course = await this.courseModel.findById(courseId);
+  
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+  
+    // Extract quizzes from lectures
+    const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
+  
+    return quizzes; // Return all quizzes as a flat array
+  }
   
 }
 

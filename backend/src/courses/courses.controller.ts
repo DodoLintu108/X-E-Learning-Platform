@@ -389,5 +389,9 @@ async getCourseDetails(@Param('courseId') courseId: string): Promise<any> {
   }
   return course;
 }
+@Get(':courseId/quizzes')
+async getQuizzesForCourse(@Param('courseId') courseId: string) {
+  return this.coursesService.getAllQuizzesForCourse(courseId);
+}
 
 }
