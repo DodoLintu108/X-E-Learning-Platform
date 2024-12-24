@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Cron } from '@nestjs/schedule';
 import { Model } from 'mongoose';
+import { ScheduleModule } from '@nestjs/schedule';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -10,6 +12,12 @@ export class BackupService {
         @InjectModel('Course') private readonly coursesModel: Model<any>,
         @InjectModel('User') private readonly userModel: Model<any>
     ) { }
+
+    @Cron('0 * * * *') // Runs at the start of every hour
+    async handleCron() {
+        const backupStatus = await this.backupDatabase();
+        console.log(backupStatus);
+    }
 
     async backupDatabase(): Promise<string> {
         const date = new Date().toISOString().split('T')[0]; // Format date as YYYY-MM-DD

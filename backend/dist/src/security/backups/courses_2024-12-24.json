@@ -38,6 +38,26 @@
             ],
             "createdAt": "2024-12-24T20:13:19.495Z",
             "_id": "676b15df26d10b8cee6b64d4"
+          },
+          {
+            "quizId": "2024-12-24T21:37:58.275Z",
+            "moduleId": "676b115626d10b8cee6b646b",
+            "level": "Beginner",
+            "questions": [
+              {
+                "question": "123",
+                "options": [
+                  "123",
+                  "123",
+                  "123",
+                  "213"
+                ],
+                "correctAnswer": 0,
+                "_id": "676b29b61994192e19f07a4a"
+              }
+            ],
+            "createdAt": "2024-12-24T21:37:58.275Z",
+            "_id": "676b29b61994192e19f07a49"
           }
         ],
         "content": "123",
@@ -45,6 +65,6 @@
         "_id": "676b15da26d10b8cee6b64ce"
       }
     ],
-    "__v": 4
+    "__v": 5
   }
 ]

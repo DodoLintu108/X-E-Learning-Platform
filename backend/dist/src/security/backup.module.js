@@ -13,12 +13,14 @@ const backup_controller_1 = require("./backup.controller");
 const mongoose_1 = require("@nestjs/mongoose");
 const courses_entity_1 = require("../courses/courses.entity");
 const users_entity_1 = require("../users/users.entity");
+const schedule_1 = require("@nestjs/schedule");
 let BackupModule = class BackupModule {
 };
 exports.BackupModule = BackupModule;
 exports.BackupModule = BackupModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            schedule_1.ScheduleModule.forRoot(),
             mongoose_1.MongooseModule.forFeature([
                 { name: courses_entity_1.Course.name, schema: courses_entity_1.CourseSchema },
                 { name: users_entity_1.User.name, schema: users_entity_1.UserSchema },
