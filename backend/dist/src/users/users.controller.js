@@ -17,10 +17,23 @@ const common_1 = require("@nestjs/common");
 const roles_decorator_1 = require("./roles.decorator");
 const users_service_1 = require("./users.service");
 const courses_service_1 = require("../courses/courses.service");
+const auth_guard_1 = require("../auth/auth.guard");
 let UsersController = class UsersController {
     constructor(usersService, coursesService) {
         this.usersService = usersService;
         this.coursesService = coursesService;
+    }
+    async getAllUsers() {
+        return this.usersService.getAllUsers();
+    }
+    async getAllTeachers() {
+        return this.usersService.getAllTeachers();
+    }
+    async getAllStudents() {
+        return this.usersService.getAllStudents();
+    }
+    async deleteUser(userId) {
+        return this.usersService.deleteUser(userId);
     }
     getDashboard(req) {
         return this.usersService.getDashboard(req.user);
@@ -45,6 +58,35 @@ let UsersController = class UsersController {
 };
 exports.UsersController = UsersController;
 __decorate([
+    (0, common_1.Get)('all'),
+    (0, roles_decorator_1.Roles)('admin'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getAllUsers", null);
+__decorate([
+    (0, common_1.Get)('teachers'),
+    (0, roles_decorator_1.Roles)('admin'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getAllTeachers", null);
+__decorate([
+    (0, common_1.Get)('students'),
+    (0, roles_decorator_1.Roles)('admin'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getAllStudents", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, roles_decorator_1.Roles)('admin'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "deleteUser", null);
+__decorate([
     (0, common_1.Get)('dashboard'),
     (0, roles_decorator_1.Roles)('view-dashboard'),
     __param(0, (0, common_1.Req)()),
@@ -54,7 +96,7 @@ __decorate([
 ], UsersController.prototype, "getDashboard", null);
 __decorate([
     (0, common_1.Post)('create-course'),
-    (0, roles_decorator_1.Roles)('create-courses'),
+    (0, roles_decorator_1.Roles)('teacher'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -78,6 +120,7 @@ __decorate([
 ], UsersController.prototype, "editUser", null);
 exports.UsersController = UsersController = __decorate([
     (0, common_1.Controller)('users'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
     __metadata("design:paramtypes", [users_service_1.UsersService,
         courses_service_1.CoursesService])
 ], UsersController);

@@ -88,6 +88,21 @@ let UsersService = class UsersService {
         Object.assign(user, updateData);
         await user.save();
         return user;
+    async getAllUsers() {
+        return this.userModel.find().exec();
+    }
+    async getAllTeachers() {
+        return this.userModel.find({ role: 'teacher' }).exec();
+    }
+    async getAllStudents() {
+        return this.userModel.find({ role: 'student' }).exec();
+    }
+    async deleteUser(userId) {
+        const result = await this.userModel.deleteOne({ userId }).exec();
+        if (result.deletedCount === 0) {
+            throw new common_2.NotFoundException(`User with ID ${userId} not found`);
+        }
+        return { message: `User with ID ${userId} deleted successfully` };
     }
 };
 exports.UsersService = UsersService;

@@ -252,6 +252,29 @@ let CoursesService = class CoursesService {
         await course.save();
         return course;
     }
+    async getCourseDetails(courseId) {
+        const course = await this.courseModel.findById(courseId).exec();
+        if (!course) {
+            throw new common_1.NotFoundException('Course not found');
+        }
+        return {
+            title: course.title,
+            description: course.description,
+            category: course.category,
+            difficultyLevel: course.difficultyLevel,
+            teacherName: course.createdBy,
+            lectures: course.lectures,
+            createdAt: course.createdAt,
+        };
+    }
+    async getAllQuizzesForCourse(courseId) {
+        const course = await this.courseModel.findById(courseId);
+        if (!course) {
+            throw new common_1.NotFoundException('Course not found');
+        }
+        const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
+        return quizzes;
+    }
 };
 exports.CoursesService = CoursesService;
 exports.CoursesService = CoursesService = __decorate([

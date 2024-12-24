@@ -192,41 +192,37 @@ const TeacherCourses = () => {
       return;
     }
     const handleAddQuiz = async () => {
-        if (!selectedCourse) {
-          toast.error("No course selected!");
-          return;
-        }
-      
-        const token = localStorage.getItem("accessToken");
-        try {
-          await axios.post(
-            `http://localhost:3000/courses/${selectedCourse._id}/quizzes`,
-            newQuiz,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-      
-          toast.success("Quiz added successfully!");
-          setIsQuizModalOpen(false);
-          setNewQuiz({
-            level: "Beginner",
-            questions: [
-              {
-                question: "",
-                options: ["", "", "", ""],
-                correctAnswer: 0,
-              },
-            ],
-          });
-        } catch (err) {
-          const error = err as AxiosError<{ message: string }>;
-          console.error("Error adding quiz:", error);
-          toast.error(
-            error.response?.data?.message || "Error adding quiz. Please try again."
-          );
-        }
-      };
+      if (!selectedCourse) {
+        toast.error("No course selected!");
+        return;
+      }
+    
+      const token = localStorage.getItem("accessToken");
+      try {
+        const response = await axios.post(
+          `http://localhost:3000/courses/${selectedCourse._id}/quizzes`,
+          newQuiz, // Send the quiz data
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+    
+        toast.success("Quiz added successfully!");
+        setIsQuizModalOpen(false); // Close modal
+        setNewQuiz({
+          level: "Beginner",
+          questions: [
+            { question: "", options: ["", "", "", ""], correctAnswer: 0 },
+          ],
+        });
+    
+        // Optionally, refresh course list or quiz list
+        fetchTeacherCourses();
+      } catch (error: any) {
+        console.error("Error adding quiz:", error);
+        toast.error(error.response?.data?.message || "Error adding quiz. Please try again.");
+      }
+    };
     const token = localStorage.getItem("accessToken");
     const toggleLectureContent = (lectureTitle: string) => {
         setExpandedLecture(expandedLecture === lectureTitle ? null : lectureTitle);
@@ -606,6 +602,7 @@ const TeacherCourses = () => {
         <option value="Advanced">Advanced</option>
       </select>
     </label>
+
 
     {/* Questions */}
     <h3>Questions</h3>

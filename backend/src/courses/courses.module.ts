@@ -8,6 +8,7 @@ import { Version, VersionSchema } from './version.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthGuard } from '../auth/auth.guard';
 
+
 @Module({
   imports: [
     JwtModule.register({}), // Register JWT module for token-related operations

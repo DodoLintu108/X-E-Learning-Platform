@@ -265,7 +265,16 @@ export class CoursesController {
       course: updatedCourse,
     };
   }
+
   @Post(':courseId/quizzes')
+
+  async addQuizToCourse(
+    @Param('courseId') courseId: string,
+    @Body() quizData: { level: string; questions: { question: string; options: string[]; correctAnswer: number }[] },
+    ) {
+    return this.coursesService.addQuizToCourse(courseId, quizData);
+    }
+
   async addQuiz(
     @Param('courseId') courseId: string,
     @Body()
@@ -344,4 +353,30 @@ export class CoursesController {
       throw new Error('Unexpected error');
     }
   }
+  
+  @Post(':courseId/enroll')
+async enrollInCourse(
+  @Param('courseId') courseId: string,
+  @Req() req: any // To access the logged-in user's data
+) {
+  const userId = req.user.userId; // Assuming `userId` is available in the request object
+  const updatedCourse = await this.coursesService.enrollStudent(courseId, userId);
+  return {
+    message: 'Enrolled successfully',
+    course: updatedCourse,
+  };
+}
+@Get(':courseId/details')
+async getCourseDetails(@Param('courseId') courseId: string): Promise<any> {
+  const course = await this.coursesService.getCourseDetails(courseId);
+  if (!course) {
+    throw new NotFoundException('Course not found');
+  }
+  return course;
+}
+@Get(':courseId/quizzes')
+async getQuizzesForCourse(@Param('courseId') courseId: string) {
+  return this.coursesService.getAllQuizzesForCourse(courseId);
+}
+
 }

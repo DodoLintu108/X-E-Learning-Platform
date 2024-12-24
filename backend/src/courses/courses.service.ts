@@ -248,7 +248,7 @@ async addQuizToCourse(
 
   await course.save();
   return quiz;
-} 
+}
 
   // Get all quizzes for a course
   async getQuizzesByCourse(courseId: string): Promise<any[]> {
@@ -282,7 +282,7 @@ async addQuizToCourse(
 
     return quiz;
   }
-
+  
   // Delete a specific quiz by its ID
   async deleteQuiz(courseId: string, quizId: string): Promise<Course> {
     const course = await this.courseModel.findById(courseId);
@@ -326,4 +326,37 @@ async addQuizToCourse(
 
     return course;
   }
+  async getCourseDetails(courseId: string): Promise<any> {
+    const course = await this.courseModel.findById(courseId).exec();
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+  
+    // Example structure returned
+    return {
+      title: course.title,
+      description: course.description,
+      category: course.category,
+      difficultyLevel: course.difficultyLevel,
+      teacherName: course.createdBy, // Adjust if populated with user info
+      lectures: course.lectures, // Assuming lectures exist on the course schema
+      createdAt: course.createdAt,
+    };
+  }
+  
+  async getAllQuizzesForCourse(courseId: string): Promise<any[]> {
+    // Fetch the course by ID
+    const course = await this.courseModel.findById(courseId);
+  
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+  
+    // Extract quizzes from lectures
+    const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
+  
+    return quizzes; // Return all quizzes as a flat array
+  }
+  
 }
+

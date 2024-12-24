@@ -1,16 +1,18 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
+import { Document, Schema as MongooseSchema } from 'mongoose';
 
 export type QuizDocument = Quiz & Document;
 
-@Schema()
+@Schema({ timestamps: true })
 export class Quiz {
-  @Prop({ required: true, default: uuidv4 })
+  @Prop({ required: true })
   quizId: string; // Unique identifier for the quiz
 
   @Prop({ required: true })
   courseId: string; // Associated course ID
+
+  @Prop({ required: true })
+  title: string; // Title of the quiz
 
   @Prop({
     type: [
@@ -27,6 +29,9 @@ export class Quiz {
     options: string[];
     correctAnswer: number;
   }[];
+  
+  @Prop({ type: [String], default: [] }) // Add submittedBy property
+  submittedBy: string[];
 
   @Prop({ default: Date.now })
   createdAt: Date; // Timestamp for quiz creation
