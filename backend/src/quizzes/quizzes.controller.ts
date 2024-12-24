@@ -15,6 +15,7 @@ export class QuizzesController {
     return this.quizzesService.createQuiz(courseId, quizData);
   }
 
+  
   @Get()
   async getQuizzesForCourse(@Param('courseId') courseId: string): Promise<Quiz[]> {
     return this.quizzesService.getQuizzesForCourse(courseId);

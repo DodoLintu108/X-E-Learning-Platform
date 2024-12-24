@@ -607,6 +607,7 @@ const TeacherCourses = () => {
       </select>
     </label>
 
+
     {/* Questions */}
     <h3>Questions</h3>
     {newQuiz.questions.map((q, idx) => (

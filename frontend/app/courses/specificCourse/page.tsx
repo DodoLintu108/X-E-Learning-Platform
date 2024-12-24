@@ -36,6 +36,7 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
     return <p>Loading course details...</p>;
   }
 
+  
   return (
     <div>
       <Navbar />

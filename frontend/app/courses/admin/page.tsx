@@ -7,6 +7,7 @@ import ManageCourses from "../../components/ManageCourses";
 const AdminCourses = () => {
   const [allCourses, setAllCourses] = useState([]);
 
+  
   useEffect(() => {
     getAllCourses();
   }, []);
