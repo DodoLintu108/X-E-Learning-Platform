@@ -44,23 +44,6 @@ export declare class CoursesController {
         message: string;
         course: Course;
     }>;
-    addQuiz(courseId: string, quizData: {
-        level: string;
-        questions: Array<{
-            question: string;
-            options: string[];
-            correctAnswer: number;
-        }>;
-    }): Promise<{
-        message: string;
-        quiz: any;
-    }>;
-    getQuizzes(courseId: string): Promise<any[]>;
-    getQuiz(courseId: string, quizId: string): Promise<any>;
-    deleteQuiz(courseId: string, quizId: string): Promise<{
-        message: string;
-        course: Course;
-    }>;
     addLecture(courseId: string, lectureData: {
         title: string;
         type: 'video' | 'pdf';
@@ -69,4 +52,9 @@ export declare class CoursesController {
         message: string;
         course: Course;
     }>;
+    enrollInCourse(courseId: string, req: any): Promise<{
+        message: string;
+        course: Course;
+    }>;
+    getCourseDetails(courseId: string): Promise<any>;
 }
