@@ -14,6 +14,7 @@ export declare class CoursesService {
         difficultyLevel: string;
         courseImage: string;
         courseMaterial: string;
+        rating: number;
     }): Promise<Course>;
     addModule(data: {
         courseId: string;

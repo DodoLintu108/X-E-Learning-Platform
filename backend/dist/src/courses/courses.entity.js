@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CourseSchema = exports.Course = exports.LectureSchema = exports.Lecture = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
 const uuid_1 = require("uuid");
+const react_table_1 = require("react-table");
 let Lecture = class Lecture {
 };
 exports.Lecture = Lecture;
@@ -82,6 +83,10 @@ __decorate([
     (0, mongoose_1.Prop)({ type: [exports.LectureSchema], default: [] }),
     __metadata("design:type", Array)
 ], Course.prototype, "lectures", void 0);
+__decorate([
+    (0, react_table_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], Course.prototype, "isDeleted", void 0);
 exports.Course = Course = __decorate([
     (0, mongoose_1.Schema)()
 ], Course);

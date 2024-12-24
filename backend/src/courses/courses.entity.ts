@@ -1,6 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
+import { Column } from 'react-table'; 
+
 
 export type CourseDocument = Course & Document;
 
@@ -56,6 +58,9 @@ export class Course {
 
   @Prop({ type: [LectureSchema], default: [] })
   lectures: Lecture[]; // Array of lectures
+
+  @Column({ default: false })
+  isDeleted: boolean;
 }
 
 // Create the Mongoose schema for Course

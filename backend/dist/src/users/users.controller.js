@@ -28,6 +28,15 @@ let UsersController = class UsersController {
     createCourse(req, courseData) {
         return this.coursesService.createCourse({ ...courseData, createdBy: req.user.userId });
     }
+    getAllTeachers() {
+        return this.usersService.findAllTeachers();
+    }
+    deleteUser(id) {
+        return this.usersService.remove(id);
+    }
+    deleteTeacher(id) {
+        return this.usersService.removeTeacher(id);
+    }
 };
 exports.UsersController = UsersController;
 __decorate([
@@ -47,6 +56,29 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "createCourse", null);
+__decorate([
+    (0, common_1.Get)('teachers'),
+    (0, roles_decorator_1.Roles)('admin'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "getAllTeachers", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, roles_decorator_1.Roles)('admin'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "deleteUser", null);
+__decorate([
+    (0, common_1.Delete)('teachers/:id'),
+    (0, roles_decorator_1.Roles)('admin'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "deleteTeacher", null);
 exports.UsersController = UsersController = __decorate([
     (0, common_1.Controller)('users'),
     __metadata("design:paramtypes", [users_service_1.UsersService,

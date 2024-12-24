@@ -41,6 +41,26 @@ let CoursesController = class CoursesController {
             course: newCourse,
         };
     }
+    async updateCourse(courseId, updateCourseDto, files) {
+        console.log('update');
+        const courseMaterial = files?.files?.[0]?.filename || null;
+        const courseImage = files?.imagefiles?.[0]?.filename || null;
+        const courseData = {
+            ...updateCourseDto,
+            courseMaterial,
+            courseImage,
+        };
+        console.log(courseData);
+        const updatedCourse = await this.coursesService.updateCourse(courseId, courseData);
+        return {
+            message: 'Course updated successfully',
+            course: updatedCourse,
+            files: {
+                material: courseMaterial,
+                image: courseImage,
+            },
+        };
+    }
     async getStudentCourses(req) {
         const userId = req.user.userId;
         const assignedCourses = await this.coursesService.getAssignedCourses(userId);
@@ -78,9 +98,6 @@ let CoursesController = class CoursesController {
     }
     async getCourseByCategory(category) {
         return this.coursesService.getCourseByCategory(category);
-    }
-    async updateCourse(courseId, body) {
-        return this.coursesService.updateCourse(courseId, body);
     }
     async getCourseVersions(courseId) {
         return this.coursesService.getCourseVersions(courseId);
@@ -193,6 +210,19 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "createCourse", null);
 __decorate([
+    (0, common_1.Put)(':courseId'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileFieldsInterceptor)([
+        { name: 'files', maxCount: 2 },
+        { name: 'imagefiles', maxCount: 2 },
+    ], multer_config_1.multerOptions)),
+    __param(0, (0, common_1.Param)('courseId')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.UploadedFiles)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "updateCourse", null);
+__decorate([
     (0, common_1.Get)('student'),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
@@ -248,14 +278,6 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "getCourseByCategory", null);
-__decorate([
-    (0, common_1.Put)(':courseId'),
-    __param(0, (0, common_1.Param)('courseId')),
-    __param(1, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
-], CoursesController.prototype, "updateCourse", null);
 __decorate([
     (0, common_1.Get)(':courseId/versions'),
     __param(0, (0, common_1.Param)('courseId')),

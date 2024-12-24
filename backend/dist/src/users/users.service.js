@@ -17,75 +17,22 @@ const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const users_entity_1 = require("./users.entity");
-const courses_service_1 = require("../courses/courses.service");
-const common_2 = require("@nestjs/common");
 let UsersService = class UsersService {
-    constructor(userModel, coursesService) {
+    constructor(userModel) {
         this.userModel = userModel;
-        this.coursesService = coursesService;
     }
-    async createUser(userData) {
-        const newUser = new this.userModel(userData);
-        return newUser.save();
-    }
-    async findByEmail(email) {
-        return this.userModel.findOne({ email }).exec();
-    }
-    async findById(userId) {
-        const user = await this.userModel.findOne({ userId }).exec();
+    async deleteUser(id) {
+        const user = await this.userModel.findByIdAndDelete(id);
         if (!user) {
-            throw new common_2.NotFoundException('User not found');
+            throw new Error('User not found');
         }
-        return user;
-    }
-    async getDashboard(user) {
-        if (user.role === 'student') {
-            const enrolledCourses = await this.getEnrolledCourses(user.userId);
-            return {
-                message: `Welcome to your student dashboard, ${user.name}`,
-                role: user.role,
-                enrolledCourses,
-            };
-        }
-        else if (user.role === 'instructor') {
-            const createdCourses = await this.getCreatedCourses(user.userId);
-            return {
-                message: `Welcome to your instructor dashboard, ${user.name}`,
-                role: user.role,
-                createdCourses,
-            };
-        }
-        else if (user.role === 'admin') {
-            const totalUsers = await this.getTotalUsers();
-            const allCourses = await this.coursesService.getAllCourses();
-            return {
-                message: `Welcome to your admin dashboard, ${user.name}`,
-                role: user.role,
-                totalUsers,
-                allCourses,
-            };
-        }
-        else {
-            throw new common_2.NotFoundException('Invalid role');
-        }
-    }
-    async getEnrolledCourses(userId) {
-        const courses = await this.coursesService.getAllCourses();
-        return courses.filter((course) => course.enrolledStudents?.includes(userId));
-    }
-    async getCreatedCourses(userId) {
-        const courses = await this.coursesService.getAllCourses();
-        return courses.filter((course) => course.createdBy === userId);
-    }
-    async getTotalUsers() {
-        return this.userModel.countDocuments();
+        return `User with ID ${id} deleted successfully`;
     }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(users_entity_1.User.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model,
-        courses_service_1.CoursesService])
+    __metadata("design:paramtypes", [mongoose_2.Model])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

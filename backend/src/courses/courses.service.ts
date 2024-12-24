@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm' ;
+import { Repository } from 'typeorm';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Course, CourseDocument } from './courses.entity';
@@ -25,6 +27,7 @@ export class CoursesService {
     const newCourse = new this.courseModel(data);
     return newCourse.save();
   }
+
 
   async addModule(data: {
     courseId: string;
@@ -243,5 +246,6 @@ async addLecture(courseId: string, lectureData: { title: string; type: 'video' |
 
   return course;
 }
+
 
 }

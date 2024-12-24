@@ -14,6 +14,10 @@ export declare class CoursesController {
         message: string;
         course: Course;
     }>;
+    updateCourse(courseId: string, updateCourseDto: Partial<Course>, files: {
+        files?: Express.Multer.File[];
+        imagefiles?: Express.Multer.File[];
+    }): Promise<any>;
     getStudentCourses(req: any): Promise<{
         assigned: Course[];
         available: Course[];
@@ -29,7 +33,6 @@ export declare class CoursesController {
     getCourseById(courseId: string): Promise<Course>;
     getCourses(roleOrId: string): Promise<Course | Course[]>;
     getCourseByCategory(category: string): Promise<Course[]>;
-    updateCourse(courseId: string, body: Partial<Course>): Promise<Course>;
     getCourseVersions(courseId: string): Promise<Version[]>;
     deleteCourse(courseId: string): Promise<{
         message: string;

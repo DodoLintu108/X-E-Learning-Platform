@@ -7,12 +7,12 @@ export declare class AuthController {
         email: string;
         password: string;
         role: string;
-    }): Promise<import("../users/users.entity").User>;
+    }): Promise<any>;
     login(body: {
         email: string;
         password: string;
     }): Promise<{
         accessToken: string;
-        role: string;
+        role: any;
     }>;
 }
