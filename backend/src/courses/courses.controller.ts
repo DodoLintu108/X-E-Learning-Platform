@@ -12,6 +12,8 @@ import {
   UploadedFiles,
   UseGuards,
   Req,
+  BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
@@ -22,6 +24,7 @@ import { Module } from './modules.entity';
 import { Version } from './version.entity';
 import { CreateCourseDto } from './create-course.dto';
 import { ApiConsumes, ApiBody } from '@nestjs/swagger';
+import mongoose from 'mongoose';
 
 @Controller('courses')
 @UseGuards(AuthGuard)
@@ -127,15 +130,29 @@ export class CoursesController {
   }
 
   @Get('all')
-  async getAllCourses(): Promise<Course[]> {
+  async getAllCourses() {
     return this.coursesService.getAllCourses();
   }
+
 
   @Get(':courseId')
   async getCourseById(@Param('courseId') courseId: string): Promise<Course> {
     return this.coursesService.getCourseById(courseId);
   }
-
+  
+  @Get(':roleOrId')
+  async getCourses(@Param('roleOrId') roleOrId: string): Promise<Course | Course[]> {
+    if (roleOrId === 'admin') {
+      // Handle the "admin" case explicitly
+      return this.coursesService.getAllCourses();
+    } else if (mongoose.Types.ObjectId.isValid(roleOrId)) {
+      // Handle fetching a course by its ObjectId
+      return this.coursesService.getCourseById(roleOrId);
+    } else {
+      throw new BadRequestException('Invalid parameter.');
+    }
+  }
+  
   @Get('category/:category')
   async getCourseByCategory(
     @Param('category') category: string,
