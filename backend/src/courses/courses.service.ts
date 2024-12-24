@@ -76,7 +76,19 @@ export class CoursesService {
 
   // Get courses taught by a teacher
   async getCoursesByTeacher(teacherId: string): Promise<Course[]> {
-    return this.courseModel.find({ createdBy: teacherId }).exec();
+        const courses = await this.courseModel
+          .find({ createdBy: teacherId })
+          .exec();
+        const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
+        return courses.map((course) => {
+          if (course.courseImage) {
+            course.courseImage = `${baseUrl}/uploads/${course.courseImage}`;
+          }
+          if (course.courseMaterial) {
+            course.courseMaterial = `${baseUrl}/uploads/${course.courseMaterial}`;
+          }
+          return course;
+        });
   }
 
 
@@ -270,7 +282,7 @@ export class CoursesService {
 
     return quiz;
   }
-
+  
   // Delete a specific quiz by its ID
   async deleteQuiz(courseId: string, quizId: string): Promise<Course> {
     const course = await this.courseModel.findById(courseId);
@@ -332,5 +344,21 @@ export class CoursesService {
     };
   }
 
+  
+  async getAllQuizzesForCourse(courseId: string): Promise<any[]> {
+    // Fetch the course by ID
+    const course = await this.courseModel.findById(courseId);
+  
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+  
+    // Extract quizzes from lectures
+    const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
+  
+    return quizzes; // Return all quizzes as a flat array
+  }
+  
 
 }
+

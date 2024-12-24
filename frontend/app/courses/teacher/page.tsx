@@ -196,41 +196,37 @@ const TeacherCourses = () => {
         toast.error("No course selected!");
         return;
       }
-
+    
       const token = localStorage.getItem("accessToken");
       try {
-        await axios.post(
+        const response = await axios.post(
           `http://localhost:3000/courses/${selectedCourse._id}/quizzes`,
-          newQuiz,
+          newQuiz, // Send the quiz data
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-
+    
         toast.success("Quiz added successfully!");
-        setIsQuizModalOpen(false);
+        setIsQuizModalOpen(false); // Close modal
         setNewQuiz({
           level: "Beginner",
           questions: [
-            {
-              question: "",
-              options: ["", "", "", ""],
-              correctAnswer: 0,
-            },
+            { question: "", options: ["", "", "", ""], correctAnswer: 0 },
           ],
         });
-      } catch (err) {
-        const error = err as AxiosError<{ message: string }>;
+    
+        // Optionally, refresh course list or quiz list
+        fetchTeacherCourses();
+      } catch (error: any) {
         console.error("Error adding quiz:", error);
-        toast.error(
-          error.response?.data?.message || "Error adding quiz. Please try again."
-        );
+        toast.error(error.response?.data?.message || "Error adding quiz. Please try again.");
       }
     };
     const token = localStorage.getItem("accessToken");
     const toggleLectureContent = (lectureTitle: string) => {
-      setExpandedLecture(expandedLecture === lectureTitle ? null : lectureTitle);
-    };
+        setExpandedLecture(expandedLecture === lectureTitle ? null : lectureTitle);
+      };
     try {
       await axios.post(
         `http://localhost:3000/courses/${selectedCourse._id}/lectures`,
@@ -269,7 +265,7 @@ const TeacherCourses = () => {
       toast.error("No course selected!");
       return;
     }
-
+  
     const token = localStorage.getItem("accessToken");
     try {
       const response = await axios.post(
@@ -281,14 +277,14 @@ const TeacherCourses = () => {
           },
         }
       );
-
+  
       toast.success("Quiz added successfully!");
       setIsQuizModalOpen(false); // Close the quiz modal
       setNewQuiz({
         level: "Beginner", // Reset to default level
         questions: [], // Clear questions after submission
       });
-
+  
       fetchTeacherCourses(); // Optionally refresh courses to reflect the new quiz
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
@@ -354,22 +350,22 @@ const TeacherCourses = () => {
                 Edit
               </button>
               <button
-                onClick={() => {
-                  setSelectedCourse(course);
-                  setIsQuizModalOpen(true);
-                }}
-                style={{
-                  padding: "10px 15px",
-                  backgroundColor: "#FF5722",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                  marginRight: "10px",
-                }}
-              >
-                Add Quiz
-              </button>
+  onClick={() => {
+    setSelectedCourse(course);
+    setIsQuizModalOpen(true);
+  }}
+  style={{
+    padding: "10px 15px",
+    backgroundColor: "#FF5722",
+    color: "white",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    marginRight: "10px",
+  }}
+>
+  Add Quiz
+</button>
               <button
                 onClick={() => handleDeleteCourse(course._id)}
                 style={{
@@ -573,233 +569,234 @@ const TeacherCourses = () => {
           Add Lecture
         </button>
       </Modal>
-      {/* Add Quiz Modal */}
-      <Modal isOpen={isQuizModalOpen} onClose={() => setIsQuizModalOpen(false)}>
-        <h2>Add Quiz to {selectedCourse?.title}</h2>
+{/* Add Quiz Modal */}
+<Modal isOpen={isQuizModalOpen} onClose={() => setIsQuizModalOpen(false)}>
+  <h2>Add Quiz to {selectedCourse?.title}</h2>
 
-        <div
-          style={{
-            maxHeight: "400px", // Set a maximum height for the scrollable area
-            overflowY: "auto", // Enable vertical scrolling
-            marginBottom: "20px",
-            padding: "10px",
-            border: "1px solid #ccc",
-            borderRadius: "5px",
-          }}
-        >
-          {/* Quiz Level */}
-          <label>
-            Select Level:
-            <select
-              value={newQuiz.level}
-              onChange={(e) => setNewQuiz({ ...newQuiz, level: e.target.value })}
-              style={{
-                display: "block",
-                margin: "10px 0",
-                padding: "8px",
-                borderRadius: "4px",
-                width: "100%",
-              }}
-            >
-              <option value="Beginner">Beginner</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
-            </select>
-          </label>
+  <div
+    style={{
+      maxHeight: "400px", // Set a maximum height for the scrollable area
+      overflowY: "auto", // Enable vertical scrolling
+      marginBottom: "20px",
+      padding: "10px",
+      border: "1px solid #ccc",
+      borderRadius: "5px",
+    }}
+  >
+    {/* Quiz Level */}
+    <label>
+      Select Level:
+      <select
+        value={newQuiz.level}
+        onChange={(e) => setNewQuiz({ ...newQuiz, level: e.target.value })}
+        style={{
+          display: "block",
+          margin: "10px 0",
+          padding: "8px",
+          borderRadius: "4px",
+          width: "100%",
+        }}
+      >
+        <option value="Beginner">Beginner</option>
+        <option value="Intermediate">Intermediate</option>
+        <option value="Advanced">Advanced</option>
+      </select>
+    </label>
 
-          {/* Questions */}
-          <h3>Questions</h3>
-          {newQuiz.questions.map((q, idx) => (
-            <div
-              key={idx}
-              style={{
-                marginBottom: "20px",
-                padding: "10px",
-                border: "1px solid #ddd",
-                borderRadius: "5px",
-                backgroundColor: "#f9f9f9",
-              }}
-            >
-              <input
-                type="text"
-                placeholder={`Question ${idx + 1}`}
-                value={q.question}
-                onChange={(e) =>
-                  setNewQuiz({
-                    ...newQuiz,
-                    questions: newQuiz.questions.map((question, i) =>
-                      i === idx ? { ...question, question: e.target.value } : question
-                    ),
-                  })
-                }
-                style={{
-                  display: "block",
-                  marginBottom: "10px",
-                  padding: "8px",
-                  borderRadius: "4px",
-                  width: "100%",
-                }}
-              />
 
-              {/* Options */}
-              {q.options.map((option, optIdx) => (
-                <input
-                  key={optIdx}
-                  type="text"
-                  placeholder={`Option ${optIdx + 1}`}
-                  value={option}
-                  onChange={(e) =>
-                    setNewQuiz({
-                      ...newQuiz,
-                      questions: newQuiz.questions.map((question, i) =>
-                        i === idx
-                          ? {
-                            ...question,
-                            options: question.options.map((opt, j) =>
-                              j === optIdx ? e.target.value : opt
-                            ),
-                          }
-                          : question
-                      ),
-                    })
-                  }
-                  style={{
-                    display: "block",
-                    marginBottom: "5px",
-                    padding: "8px",
-                    borderRadius: "4px",
-                    width: "100%",
-                  }}
-                />
-              ))}
-
-              {/* Correct Answer */}
-              <label>
-                Correct Answer:
-                <select
-                  value={q.correctAnswer}
-                  onChange={(e) =>
-                    setNewQuiz({
-                      ...newQuiz,
-                      questions: newQuiz.questions.map((question, i) =>
-                        i === idx
-                          ? { ...question, correctAnswer: parseInt(e.target.value) }
-                          : question
-                      ),
-                    })
-                  }
-                  style={{
-                    display: "block",
-                    marginTop: "5px",
-                    padding: "8px",
-                    borderRadius: "4px",
-                    width: "100%",
-                  }}
-                >
-                  {q.options.map((_, optIdx) => (
-                    <option key={optIdx} value={optIdx}>
-                      Option {optIdx + 1}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-          ))}
-        </div>
-
-        {/* Add Question */}
-        <button
-          onClick={() =>
+    {/* Questions */}
+    <h3>Questions</h3>
+    {newQuiz.questions.map((q, idx) => (
+      <div
+        key={idx}
+        style={{
+          marginBottom: "20px",
+          padding: "10px",
+          border: "1px solid #ddd",
+          borderRadius: "5px",
+          backgroundColor: "#f9f9f9",
+        }}
+      >
+        <input
+          type="text"
+          placeholder={`Question ${idx + 1}`}
+          value={q.question}
+          onChange={(e) =>
             setNewQuiz({
               ...newQuiz,
-              questions: [
-                ...newQuiz.questions,
-                { question: "", options: ["", "", "", ""], correctAnswer: 0 },
-              ],
+              questions: newQuiz.questions.map((question, i) =>
+                i === idx ? { ...question, question: e.target.value } : question
+              ),
             })
           }
           style={{
-            marginBottom: "20px",
-            padding: "10px",
-            backgroundColor: "#4CAF50",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
+            display: "block",
+            marginBottom: "10px",
+            padding: "8px",
+            borderRadius: "4px",
+            width: "100%",
           }}
-        >
-          Add Question
-        </button>
+        />
 
-        {/* Submit Quiz */}
-        <button
-          onClick={handleAddQuiz}
+        {/* Options */}
+        {q.options.map((option, optIdx) => (
+          <input
+            key={optIdx}
+            type="text"
+            placeholder={`Option ${optIdx + 1}`}
+            value={option}
+            onChange={(e) =>
+              setNewQuiz({
+                ...newQuiz,
+                questions: newQuiz.questions.map((question, i) =>
+                  i === idx
+                    ? {
+                        ...question,
+                        options: question.options.map((opt, j) =>
+                          j === optIdx ? e.target.value : opt
+                        ),
+                      }
+                    : question
+                ),
+              })
+            }
+            style={{
+              display: "block",
+              marginBottom: "5px",
+              padding: "8px",
+              borderRadius: "4px",
+              width: "100%",
+            }}
+          />
+        ))}
+
+        {/* Correct Answer */}
+        <label>
+          Correct Answer:
+          <select
+            value={q.correctAnswer}
+            onChange={(e) =>
+              setNewQuiz({
+                ...newQuiz,
+                questions: newQuiz.questions.map((question, i) =>
+                  i === idx
+                    ? { ...question, correctAnswer: parseInt(e.target.value) }
+                    : question
+                ),
+              })
+            }
+            style={{
+              display: "block",
+              marginTop: "5px",
+              padding: "8px",
+              borderRadius: "4px",
+              width: "100%",
+            }}
+          >
+            {q.options.map((_, optIdx) => (
+              <option key={optIdx} value={optIdx}>
+                Option {optIdx + 1}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+    ))}
+  </div>
+
+  {/* Add Question */}
+  <button
+    onClick={() =>
+      setNewQuiz({
+        ...newQuiz,
+        questions: [
+          ...newQuiz.questions,
+          { question: "", options: ["", "", "", ""], correctAnswer: 0 },
+        ],
+      })
+    }
+    style={{
+      marginBottom: "20px",
+      padding: "10px",
+      backgroundColor: "#4CAF50",
+      color: "white",
+      border: "none",
+      borderRadius: "5px",
+      cursor: "pointer",
+    }}
+  >
+    Add Question
+  </button>
+
+  {/* Submit Quiz */}
+  <button
+    onClick={handleAddQuiz}
+    style={{
+      padding: "10px 15px",
+      backgroundColor: "#FF5722",
+      color: "white",
+      border: "none",
+      borderRadius: "5px",
+      cursor: "pointer",
+    }}
+  >
+    Submit Quiz
+  </button>
+</Modal>
+
+{/* View Lectures Modal */}
+<Modal
+  isOpen={isViewLectureModalOpen}
+  onClose={() => setIsViewLectureModalOpen(false)}
+>
+  <h2>Lectures for {selectedCourse?.title}</h2>
+  <ul>
+    {selectedCourse?.lectures.map((lecture, index) => (
+      <li key={index} style={{ marginBottom: "10px" }}>
+        {/* Clickable Lecture Title */}
+        <span
           style={{
-            padding: "10px 15px",
-            backgroundColor: "#FF5722",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
             cursor: "pointer",
+            color: "blue",
+            textDecoration: "underline",
           }}
+          onClick={() => toggleLectureContent(lecture.title)}
         >
-          Submit Quiz
-        </button>
-      </Modal>
+          {lecture.title}
+        </span>
 
-      {/* View Lectures Modal */}
-      <Modal
-        isOpen={isViewLectureModalOpen}
-        onClose={() => setIsViewLectureModalOpen(false)}
-      >
-        <h2>Lectures for {selectedCourse?.title}</h2>
-        <ul>
-          {selectedCourse?.lectures.map((lecture, index) => (
-            <li key={index} style={{ marginBottom: "10px" }}>
-              {/* Clickable Lecture Title */}
-              <span
+        {/* Expanded Content */}
+        {expandedLecture === lecture.title && (
+          <div style={{ marginTop: "10px" }}>
+            {lecture.type === "video" ? (
+              <iframe
+                width="100%"
+                height="315"
+                src={lecture.content.replace("watch?v=", "embed/")}
+                frameBorder="0"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+                title={lecture.title}
+              ></iframe>
+            ) : (
+              <iframe
+                src={lecture.content}
+                width="100%"
+                height="500"
                 style={{
-                  cursor: "pointer",
-                  color: "blue",
-                  textDecoration: "underline",
+                  border: "1px solid #ccc",
+                  marginTop: "10px",
+                  borderRadius: "5px",
                 }}
-                onClick={() => toggleLectureContent(lecture.title)}
-              >
-                {lecture.title}
-              </span>
-
-              {/* Expanded Content */}
-              {expandedLecture === lecture.title && (
-                <div style={{ marginTop: "10px" }}>
-                  {lecture.type === "video" ? (
-                    <iframe
-                      width="100%"
-                      height="315"
-                      src={lecture.content.replace("watch?v=", "embed/")}
-                      frameBorder="0"
-                      allow="autoplay; encrypted-media"
-                      allowFullScreen
-                      title={lecture.title}
-                    ></iframe>
-                  ) : (
-                    <iframe
-                      src={lecture.content}
-                      width="100%"
-                      height="500"
-                      style={{
-                        border: "1px solid #ccc",
-                        marginTop: "10px",
-                        borderRadius: "5px",
-                      }}
-                      title={lecture.title}
-                    ></iframe>
-                  )}
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      </Modal>
+                title={lecture.title}
+              ></iframe>
+            )}
+          </div>
+        )}
+      </li>
+    ))}
+  </ul>
+</Modal>
 
     </div>
   );

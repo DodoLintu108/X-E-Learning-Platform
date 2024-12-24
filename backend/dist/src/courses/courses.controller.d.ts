@@ -6,7 +6,7 @@ import { CreateCourseDto } from './create-course.dto';
 export declare class CoursesController {
     private readonly coursesService;
     constructor(coursesService: CoursesService);
-    createCourse(req: any, createCourseDto: CreateCourseDto, files: {
+    createCourse(createCourseDto: CreateCourseDto, files: {
         files?: Express.Multer.File[];
         imagefiles?: Express.Multer.File[];
     }): Promise<{
@@ -17,11 +17,10 @@ export declare class CoursesController {
         files?: Express.Multer.File[];
         imagefiles?: Express.Multer.File[];
     }): Promise<any>;
-    getStudentCourses(req: any): Promise<{
+    getStudentCourses(userId: string): Promise<{
         assigned: Course[];
-        available: Course[];
     }>;
-    getTeacherCourses(req: any): Promise<Course[]>;
+    getTeacherCourses(userId: string): Promise<Course[]>;
     addModule(courseId: string, body: {
         title: string;
         content: string;
@@ -44,6 +43,31 @@ export declare class CoursesController {
         message: string;
         course: Course;
     }>;
+    addQuizToCourse(courseId: string, quizData: {
+        level: string;
+        questions: {
+            question: string;
+            options: string[];
+            correctAnswer: number;
+        }[];
+    }): Promise<any>;
+    addQuiz(courseId: string, quizData: {
+        level: string;
+        questions: Array<{
+            question: string;
+            options: string[];
+            correctAnswer: number;
+        }>;
+    }): Promise<{
+        message: string;
+        quiz: any;
+    }>;
+    getQuizzes(courseId: string): Promise<any[]>;
+    getQuiz(courseId: string, quizId: string): Promise<any>;
+    deleteQuiz(courseId: string, quizId: string): Promise<{
+        message: string;
+        course: Course;
+    }>;
     addLecture(courseId: string, lectureData: {
         title: string;
         type: 'video' | 'pdf';
@@ -52,9 +76,12 @@ export declare class CoursesController {
         message: string;
         course: Course;
     }>;
+    enrollStudent(courseId: string, studentId: string): Promise<Course>;
+
     enrollInCourse(courseId: string, req: any): Promise<{
         message: string;
         course: Course;
     }>;
     getCourseDetails(courseId: string): Promise<any>;
+    getQuizzesForCourse(courseId: string): Promise<any[]>;
 }

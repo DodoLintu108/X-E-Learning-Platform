@@ -11,18 +11,21 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QuizSchema = exports.Quiz = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
-const uuid_1 = require("uuid");
 let Quiz = class Quiz {
 };
 exports.Quiz = Quiz;
 __decorate([
-    (0, mongoose_1.Prop)({ required: true, default: uuid_1.v4 }),
+    (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
 ], Quiz.prototype, "quizId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
 ], Quiz.prototype, "courseId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Quiz.prototype, "title", void 0);
 __decorate([
     (0, mongoose_1.Prop)({
         type: [
@@ -37,11 +40,15 @@ __decorate([
     __metadata("design:type", Array)
 ], Quiz.prototype, "questions", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ type: [String], default: [] }),
+    __metadata("design:type", Array)
+], Quiz.prototype, "submittedBy", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ default: Date.now }),
     __metadata("design:type", Date)
 ], Quiz.prototype, "createdAt", void 0);
 exports.Quiz = Quiz = __decorate([
-    (0, mongoose_1.Schema)()
+    (0, mongoose_1.Schema)({ timestamps: true })
 ], Quiz);
 exports.QuizSchema = mongoose_1.SchemaFactory.createForClass(Quiz);
 //# sourceMappingURL=quizzes.entity.js.map

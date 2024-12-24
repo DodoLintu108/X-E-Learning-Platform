@@ -16,3 +16,4 @@ import { QuizzesService } from './quizzes.service';
   providers: [QuizzesService],
 })
 export class QuizzesModule {}
+

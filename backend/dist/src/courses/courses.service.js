@@ -60,7 +60,19 @@ let CoursesService = class CoursesService {
         return this.courseModel.find({ enrolledStudents: { $ne: studentId } }).exec();
     }
     async getCoursesByTeacher(teacherId) {
-        return this.courseModel.find({ createdBy: teacherId }).exec();
+        const courses = await this.courseModel
+            .find({ createdBy: teacherId })
+            .exec();
+        const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
+        return courses.map((course) => {
+            if (course.courseImage) {
+                course.courseImage = `${baseUrl}/uploads/${course.courseImage}`;
+            }
+            if (course.courseMaterial) {
+                course.courseMaterial = `${baseUrl}/uploads/${course.courseMaterial}`;
+            }
+            return course;
+        });
     }
     async getCourseVersions(courseId) {
         return this.versionModel.find({ courseId }).sort({ updatedAt: -1 }).exec();
@@ -254,6 +266,14 @@ let CoursesService = class CoursesService {
             lectures: course.lectures,
             createdAt: course.createdAt,
         };
+    }
+    async getAllQuizzesForCourse(courseId) {
+        const course = await this.courseModel.findById(courseId);
+        if (!course) {
+            throw new common_1.NotFoundException('Course not found');
+        }
+        const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
+        return quizzes;
     }
 };
 exports.CoursesService = CoursesService;

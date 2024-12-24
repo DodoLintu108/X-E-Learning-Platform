@@ -11,26 +11,42 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QuizSchema = exports.Quiz = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
-const mongoose_2 = require("mongoose");
-let Quiz = class Quiz extends mongoose_2.Document {
+let Quiz = class Quiz {
 };
 exports.Quiz = Quiz;
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
-], Quiz.prototype, "title", void 0);
+], Quiz.prototype, "quizId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
 ], Quiz.prototype, "courseId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)([{ question: String, options: [String], correctAnswer: String }]),
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Quiz.prototype, "title", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: [
+            {
+                question: { type: String, required: true },
+                options: { type: [String], required: true },
+                correctAnswer: { type: Number, required: true },
+            },
+        ],
+        required: true,
+    }),
     __metadata("design:type", Array)
 ], Quiz.prototype, "questions", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ default: 0 }),
-    __metadata("design:type", Number)
-], Quiz.prototype, "attempts", void 0);
+    (0, mongoose_1.Prop)({ type: [String], default: [] }),
+    __metadata("design:type", Array)
+], Quiz.prototype, "submittedBy", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: Date.now }),
+    __metadata("design:type", Date)
+], Quiz.prototype, "createdAt", void 0);
 exports.Quiz = Quiz = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Quiz);

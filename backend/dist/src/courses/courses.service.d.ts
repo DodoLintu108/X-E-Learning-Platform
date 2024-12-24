@@ -50,4 +50,5 @@ export declare class CoursesService {
         content: string;
     }): Promise<Course>;
     getCourseDetails(courseId: string): Promise<any>;
+    getAllQuizzesForCourse(courseId: string): Promise<any[]>;
 }
