@@ -5,9 +5,10 @@ import { BackupController } from './backup.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Course, CourseSchema } from 'src/courses/courses.entity';
 import { UserSchema, User } from 'src/users/users.entity';
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
     imports: [
-
+        ScheduleModule.forRoot(),
         MongooseModule.forFeature([
             { name: Course.name, schema: CourseSchema },
             { name: User.name, schema: UserSchema },

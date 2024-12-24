@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BackupService = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
+const schedule_1 = require("@nestjs/schedule");
 const mongoose_2 = require("mongoose");
 const fs = require("fs");
 const path = require("path");
@@ -22,6 +23,10 @@ let BackupService = class BackupService {
     constructor(coursesModel, userModel) {
         this.coursesModel = coursesModel;
         this.userModel = userModel;
+    }
+    async handleCron() {
+        const backupStatus = await this.backupDatabase();
+        console.log(backupStatus);
     }
     async backupDatabase() {
         const date = new Date().toISOString().split('T')[0];
@@ -45,6 +50,12 @@ let BackupService = class BackupService {
     }
 };
 exports.BackupService = BackupService;
+__decorate([
+    (0, schedule_1.Cron)('0 * * * *'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], BackupService.prototype, "handleCron", null);
 exports.BackupService = BackupService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)('Course')),
