@@ -7,6 +7,7 @@ export declare class CoursesController {
     private readonly coursesService;
     constructor(coursesService: CoursesService);
     createCourse(createCourseDto: CreateCourseDto, files: {
+    createCourse(createCourseDto: CreateCourseDto, files: {
         files?: Express.Multer.File[];
         imagefiles?: Express.Multer.File[];
     }): Promise<{
@@ -18,8 +19,10 @@ export declare class CoursesController {
         imagefiles?: Express.Multer.File[];
     }): Promise<any>;
     getStudentCourses(userId: string): Promise<{
+    getStudentCourses(userId: string): Promise<{
         assigned: Course[];
     }>;
+    getTeacherCourses(userId: string): Promise<Course[]>;
     getTeacherCourses(userId: string): Promise<Course[]>;
     addModule(courseId: string, body: {
         title: string;
@@ -76,6 +79,8 @@ export declare class CoursesController {
         message: string;
         course: Course;
     }>;
+    enrollStudent(courseId: string, studentId: string): Promise<Course>;
+
     enrollStudent(courseId: string, studentId: string): Promise<Course>;
 
     enrollInCourse(courseId: string, req: any): Promise<{

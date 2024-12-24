@@ -378,5 +378,23 @@ async getCourseDetails(@Param('courseId') courseId: string): Promise<any> {
 async getQuizzesForCourse(@Param('courseId') courseId: string) {
   return this.coursesService.getAllQuizzesForCourse(courseId);
 }
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+
+@Post(':courseId/quizzes/:quizId/submit')
+async submitQuiz(
+  @Param('courseId') courseId: string,
+  @Param('quizId') quizId: string,
+  @Body() body: { userId: string; answers: Array<{ questionId: string; answer: number }> },
+) {
+  const { userId, answers } = body;
+  return this.coursesService.submitQuizResponse(courseId, quizId, userId, answers);
+}
+
+
+=======
+>>>>>>> b7cc8b65868416c9ecaa08e74932c4c986ecdb48
+>>>>>>> Stashed changes
 
 }

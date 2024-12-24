@@ -186,6 +186,13 @@ let CoursesController = class CoursesController {
     async getQuizzesForCourse(courseId) {
         return this.coursesService.getAllQuizzesForCourse(courseId);
     }
+<<<<<<< Updated upstream
+=======
+    async submitQuiz(courseId, quizId, body) {
+        const { userId, answers } = body;
+        return this.coursesService.submitQuizResponse(courseId, quizId, userId, answers);
+    }
+>>>>>>> Stashed changes
 };
 exports.CoursesController = CoursesController;
 __decorate([
@@ -405,6 +412,18 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "getQuizzesForCourse", null);
+<<<<<<< Updated upstream
+=======
+__decorate([
+    (0, common_1.Post)(':courseId/quizzes/:quizId/submit'),
+    __param(0, (0, common_1.Param)('courseId')),
+    __param(1, (0, common_1.Param)('quizId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "submitQuiz", null);
+>>>>>>> Stashed changes
 exports.CoursesController = CoursesController = __decorate([
     (0, common_1.Controller)('courses'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
