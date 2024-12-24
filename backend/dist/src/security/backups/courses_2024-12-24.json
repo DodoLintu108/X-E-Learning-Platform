@@ -1,0 +1,50 @@
+[
+  {
+    "_id": "676b115626d10b8cee6b646b",
+    "title": "123",
+    "description": "123",
+    "category": "Mathematics",
+    "difficultyLevel": "Beginner",
+    "createdBy": "684b0bdb-63c1-4b18-8618-c7e5ba335ef7",
+    "enrolledStudents": [
+      "481c526f-96bd-4b44-970b-0bb094b7d6ab",
+      "5b2d4876-410b-4789-a0f5-1cb08f5a4d16"
+    ],
+    "courseImage": null,
+    "courseMaterial": null,
+    "courseId": "3b439474-8ed1-44fa-b1ca-0d95a7924e48",
+    "createdAt": "2024-12-24T19:53:58.734Z",
+    "lectures": [
+      {
+        "title": "123",
+        "type": "video",
+        "quizzes": [
+          {
+            "quizId": "2024-12-24T20:13:19.495Z",
+            "moduleId": "676b115626d10b8cee6b646b",
+            "level": "Beginner",
+            "questions": [
+              {
+                "question": "123",
+                "options": [
+                  "123",
+                  "123",
+                  "123",
+                  "123"
+                ],
+                "correctAnswer": 0,
+                "_id": "676b15df26d10b8cee6b64d5"
+              }
+            ],
+            "createdAt": "2024-12-24T20:13:19.495Z",
+            "_id": "676b15df26d10b8cee6b64d4"
+          }
+        ],
+        "content": "123",
+        "createdAt": "2024-12-24T20:13:14.057Z",
+        "_id": "676b15da26d10b8cee6b64ce"
+      }
+    ],
+    "__v": 4
+  }
+]
