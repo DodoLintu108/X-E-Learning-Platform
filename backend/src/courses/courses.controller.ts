@@ -333,6 +333,7 @@ export class CoursesController {
     return this.coursesService.getQuizById(courseId, quizId);
   }
   
+  
   @Delete(':courseId/quizzes/:quizId')
   async deleteQuiz(
     @Param('courseId') courseId: string,

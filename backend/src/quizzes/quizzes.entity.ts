@@ -33,3 +33,4 @@ export class Quiz {
 }
 
 export const QuizSchema = SchemaFactory.createForClass(Quiz);
+

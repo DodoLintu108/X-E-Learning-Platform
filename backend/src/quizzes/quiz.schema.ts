@@ -9,6 +9,7 @@ export class Quiz extends Document {
   @Prop({ required: true })
   courseId: string; // Link to the course
 
+  
   @Prop([{ question: String, options: [String], correctAnswer: String }])
   questions: Array<{
     question: string;

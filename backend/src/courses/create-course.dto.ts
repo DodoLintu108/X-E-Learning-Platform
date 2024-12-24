@@ -8,6 +8,7 @@ export enum DifficultyLevel {
   Hard = 'Hard',
 }
 
+
 export class CreateCourseDto {
   @ApiProperty()
   @IsString()
