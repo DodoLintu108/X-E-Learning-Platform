@@ -191,7 +191,6 @@ let CoursesService = class CoursesService {
             moduleId: courseId,
             level: quizData.level,
             questions: quizData.questions,
-            submittedBy: [],
             createdAt: new Date(),
         };
         if (!course.lectures || course.lectures.length === 0) {
@@ -301,15 +300,7 @@ let CoursesService = class CoursesService {
         };
     }
     async getAllQuizzesForCourse(courseId) {
-<<<<<<< Updated upstream
         const course = await this.courseModel.findById(courseId);
-=======
-<<<<<<< HEAD
-        const course = await this.courseModel.findById(courseId).exec();
-=======
-        const course = await this.courseModel.findById(courseId);
->>>>>>> b7cc8b65868416c9ecaa08e74932c4c986ecdb48
->>>>>>> Stashed changes
         if (!course) {
             throw new common_1.NotFoundException('Course not found');
         }

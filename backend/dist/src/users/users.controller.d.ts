@@ -1,21 +1,21 @@
 import { UsersService } from './users.service';
 import { CoursesService } from '../courses/courses.service';
-import { User } from './users.entity';
+import { User, UserDocument } from './users.entity';
 export declare class UsersController {
     private readonly usersService;
     private readonly coursesService;
     constructor(usersService: UsersService, coursesService: CoursesService);
-    getAllUsers(): Promise<(import("mongoose").Document<unknown, {}, import("./users.entity").UserDocument> & import("./users.entity").User & import("mongoose").Document<unknown, any, any> & Required<{
+    getAllUsers(): Promise<(import("mongoose").Document<unknown, {}, UserDocument> & User & import("mongoose").Document<unknown, any, any> & Required<{
         _id: unknown;
     }> & {
         __v: number;
     })[]>;
-    getAllTeachers(): Promise<(import("mongoose").Document<unknown, {}, import("./users.entity").UserDocument> & import("./users.entity").User & import("mongoose").Document<unknown, any, any> & Required<{
+    getAllTeachers(): Promise<(import("mongoose").Document<unknown, {}, UserDocument> & User & import("mongoose").Document<unknown, any, any> & Required<{
         _id: unknown;
     }> & {
         __v: number;
     })[]>;
-    getAllStudents(): Promise<(import("mongoose").Document<unknown, {}, import("./users.entity").UserDocument> & import("./users.entity").User & import("mongoose").Document<unknown, any, any> & Required<{
+    getAllStudents(): Promise<(import("mongoose").Document<unknown, {}, UserDocument> & User & import("mongoose").Document<unknown, any, any> & Required<{
         _id: unknown;
     }> & {
         __v: number;

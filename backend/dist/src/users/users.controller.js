@@ -13,10 +13,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersController = void 0;
-const common_1 = require("@nestjs/common");
 const roles_decorator_1 = require("./roles.decorator");
 const users_service_1 = require("./users.service");
 const courses_service_1 = require("../courses/courses.service");
+const common_1 = require("@nestjs/common");
 const auth_guard_1 = require("../auth/auth.guard");
 let UsersController = class UsersController {
     constructor(usersService, coursesService) {
@@ -111,7 +111,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "findById", null);
 __decorate([
-    (0, common_1.Put)('user/:userId'),
+    Put('user/:userId'),
     __param(0, (0, common_1.Param)('userId')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
