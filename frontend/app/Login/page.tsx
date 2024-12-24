@@ -25,16 +25,17 @@ export default function Login() {
         password,
       });
 
-      const { accessToken, role } = response.data;
-
+      const { accessToken, role, user } = response.data;
+      console.log("userrr", user);
       // Save the accessToken and role in localStorage
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("userRole", role);
+      localStorage.setItem("userID", user.userId);
 
       toast.success("Login successful!");
 
       // Redirect based on the user role using router.push
-      router.push(`/courses/${role}`);
+      router.push(`/courses/allCourses`);
     } catch (error) {
       let errorMessage = "Login Failed!";
       if (axios.isAxiosError(error) && error.response) {
@@ -51,8 +52,7 @@ export default function Login() {
         height: "100vh",
         display: "flex",
         flexDirection: "column",
-      }}
-    >
+      }}>
       <Navbar />
       <ToastContainer />
       <div
@@ -65,8 +65,7 @@ export default function Login() {
           height: "100%",
           textAlign: "center",
           padding: "9px",
-        }}
-      >
+        }}>
         <div style={{ marginRight: "20px" }}>
           <Lottie className="h-64" animationData={LoginAnimation} />
         </div>
@@ -79,8 +78,7 @@ export default function Login() {
             boxShadow: "1px 4px 6px rgba(0, 0, 0, 0.5)",
             width: "450px",
             textAlign: "center",
-          }}
-        >
+          }}>
           <h1
             style={{
               fontSize: "22px",
@@ -132,16 +130,14 @@ export default function Login() {
               border: "none",
               borderRadius: "4px",
               cursor: "pointer",
-            }}
-          >
+            }}>
             Login
           </button>
           <p>
             Don&apos;t have an account? ...
             <Link
               href="/Register"
-              style={{ color: "#024CAA", textDecoration: "none" }}
-            >
+              style={{ color: "#024CAA", textDecoration: "none" }}>
               Start a new journey
             </Link>
           </p>{" "}

@@ -12,4 +12,23 @@ export declare class UsersService {
     private getEnrolledCourses;
     private getCreatedCourses;
     private getTotalUsers;
+    editUser(userId: string, updateData: Partial<User>): Promise<User | null>;
+    getAllUsers(): Promise<(import("mongoose").Document<unknown, {}, UserDocument> & User & import("mongoose").Document<unknown, any, any> & Required<{
+        _id: unknown;
+    }> & {
+        __v: number;
+    })[]>;
+    getAllTeachers(): Promise<(import("mongoose").Document<unknown, {}, UserDocument> & User & import("mongoose").Document<unknown, any, any> & Required<{
+        _id: unknown;
+    }> & {
+        __v: number;
+    })[]>;
+    getAllStudents(): Promise<(import("mongoose").Document<unknown, {}, UserDocument> & User & import("mongoose").Document<unknown, any, any> & Required<{
+        _id: unknown;
+    }> & {
+        __v: number;
+    })[]>;
+    deleteUser(userId: string): Promise<{
+        message: string;
+    }>;
 }
