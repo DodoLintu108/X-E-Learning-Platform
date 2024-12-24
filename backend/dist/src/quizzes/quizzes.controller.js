@@ -36,7 +36,8 @@ let QuizzesController = class QuizzesController {
         return this.quizzesService.deleteQuiz(quizId);
     }
     async submitQuizResponse(quizId, responseData) {
-        return this.quizzesService.submitQuizResponse({ ...responseData, quizId });
+        const result = await this.quizzesService.submitQuizResponse({ ...responseData, quizId });
+        return result;
     }
     async getAllQuizzes(courseId) {
         return this.quizzesService.getQuizzesForCourse(courseId);
