@@ -49,4 +49,5 @@ export declare class CoursesService {
         type: 'video' | 'pdf';
         content: string;
     }): Promise<Course>;
+    getCourseDetails(courseId: string): Promise<any>;
 }

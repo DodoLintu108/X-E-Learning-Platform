@@ -236,7 +236,7 @@ async addQuizToCourse(
 
   await course.save();
   return quiz;
-} 
+}
 
   // Get all quizzes for a course
   async getQuizzesByCourse(courseId: string): Promise<any[]> {
@@ -314,4 +314,23 @@ async addQuizToCourse(
 
     return course;
   }
+  async getCourseDetails(courseId: string): Promise<any> {
+    const course = await this.courseModel.findById(courseId).exec();
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+  
+    // Example structure returned
+    return {
+      title: course.title,
+      description: course.description,
+      category: course.category,
+      difficultyLevel: course.difficultyLevel,
+      teacherName: course.createdBy, // Adjust if populated with user info
+      lectures: course.lectures, // Assuming lectures exist on the course schema
+      createdAt: course.createdAt,
+    };
+  }
+  
+  
 }
