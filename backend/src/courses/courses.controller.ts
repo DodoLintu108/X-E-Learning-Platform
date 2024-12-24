@@ -68,45 +68,8 @@ export class CoursesController {
       },
     },
   })
-  @Post('create')
-  @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'files', maxCount: 2 },
-        { name: 'imagefiles', maxCount: 2 },
-      ],
-      multerOptions,
-    ),
-  )
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    description: 'Create a new course with materials and image',
-    schema: {
-      type: 'object',
-      properties: {
-        title: { type: 'string' },
-        description: { type: 'string' },
-        category: { type: 'string' },
-        difficultyLevel: { type: 'string' },
-        files: {
-          type: 'array',
-          items: {
-            type: 'string',
-            format: 'binary',
-          },
-        },
-        imagefiles: {
-          type: 'array',
-          items: {
-            type: 'string',
-            format: 'binary',
-          },
-        },
-      },
-    },
-  })
   async createCourse(
-    @Req() req, // To access the logged-in user's data
+    // @Req() req, // To access the logged-in user's data
     @Body() createCourseDto: CreateCourseDto,
     @UploadedFiles()
     files: {
@@ -116,18 +79,18 @@ export class CoursesController {
   ) {
     const courseMaterial = files?.files?.[0]?.filename || null;
     const courseImage = files?.imagefiles?.[0]?.filename || null;
-  
-    const teacherId = req.user.userId; // Extract teacher ID from the logged-in user's data
-  
+
+    const teacherId = createCourseDto.createdBy; // Extract teacher ID from the logged-in user's data
+    console.log('teacherId', teacherId);
     const courseData = {
       ...createCourseDto,
       courseMaterial,
       courseImage,
       createdBy: teacherId, // Associate the course with the teacher
     };
-  
+
     const newCourse = await this.coursesService.createCourse(courseData);
-  
+
     return {
       message: 'Course created successfully',
       course: newCourse,
@@ -178,20 +141,23 @@ export class CoursesController {
 
   // Get courses for students
   @Get('student')
-  async getStudentCourses(@Req() req): Promise<{ assigned: Course[]; available: Course[] }> {
+  async getStudentCourses(
+    @Req() req,
+  ): Promise<{ assigned: Course[]; available: Course[] }> {
     const userId = req.user.userId;
-    const assignedCourses = await this.coursesService.getAssignedCourses(userId);
-    const availableCourses = await this.coursesService.getAvailableCourses(userId);
+    const assignedCourses =
+      await this.coursesService.getAssignedCourses(userId);
+    const availableCourses =
+      await this.coursesService.getAvailableCourses(userId);
     return { assigned: assignedCourses, available: availableCourses };
   }
 
-  @Get('teacher')
-  async getTeacherCourses(@Req() req): Promise<Course[]> {
-      const userId = req.user.userId; // Ensure req.user.userId exists
-      const courses = await this.coursesService.getCoursesByTeacher(userId);
-      return courses;
+  @Get('teacher/:userId')
+  async getTeacherCourses(@Param('userId') userId: string): Promise<Course[]> {
+    console.log(userId);
+    const courses = await this.coursesService.getCoursesByTeacher(userId);
+    return courses;
   }
-
 
   @Post(':courseId/modules')
   async addModule(
@@ -207,8 +173,6 @@ export class CoursesController {
     return this.coursesService.addModule(moduleData);
   }
 
-
-  
   @Get('search')
   async searchCourses(@Query('query') query: string): Promise<Course[]> {
     return this.coursesService.searchCourses(query);
@@ -219,14 +183,15 @@ export class CoursesController {
     return this.coursesService.getAllCourses();
   }
 
-
   @Get(':courseId')
   async getCourseById(@Param('courseId') courseId: string): Promise<Course> {
     return this.coursesService.getCourseById(courseId);
   }
-  
+
   @Get(':roleOrId')
-  async getCourses(@Param('roleOrId') roleOrId: string): Promise<Course | Course[]> {
+  async getCourses(
+    @Param('roleOrId') roleOrId: string,
+  ): Promise<Course | Course[]> {
     if (roleOrId === 'admin') {
       // Handle the "admin" case explicitly
       return this.coursesService.getAllCourses();
@@ -237,7 +202,7 @@ export class CoursesController {
       throw new BadRequestException('Invalid parameter.');
     }
   }
-  
+
   @Get('category/:category')
   async getCourseByCategory(
     @Param('category') category: string,
@@ -292,26 +257,29 @@ export class CoursesController {
   ) {
     const courseMaterial = files?.files?.[0]?.filename || null;
     const courseImage = files?.imagefiles?.[0]?.filename || null;
-  
+
     const updatedCourse = await this.coursesService.updateCourse(courseId, {
       courseMaterial,
       courseImage,
     });
-  
+
     return {
       message: 'Files added successfully',
       course: updatedCourse,
     };
-
-    
   }
   @Post(':courseId/quizzes')
   async addQuiz(
     @Param('courseId') courseId: string,
-    @Body() quizData: {
+    @Body()
+    quizData: {
       level: string;
-      questions: Array<{ question: string; options: string[]; correctAnswer: number }>;
-    }
+      questions: Array<{
+        question: string;
+        options: string[];
+        correctAnswer: number;
+      }>;
+    },
   ) {
     const quiz = await this.coursesService.addQuizToCourse(courseId, quizData);
     return {
@@ -319,24 +287,24 @@ export class CoursesController {
       quiz,
     };
   }
-  
+
   @Get(':courseId/quizzes')
   async getQuizzes(@Param('courseId') courseId: string) {
     return this.coursesService.getQuizzesByCourse(courseId);
   }
-  
+
   @Get(':courseId/quizzes/:quizId')
   async getQuiz(
     @Param('courseId') courseId: string,
-    @Param('quizId') quizId: string
+    @Param('quizId') quizId: string,
   ) {
     return this.coursesService.getQuizById(courseId, quizId);
   }
-  
+
   @Delete(':courseId/quizzes/:quizId')
   async deleteQuiz(
     @Param('courseId') courseId: string,
-    @Param('quizId') quizId: string
+    @Param('quizId') quizId: string,
   ) {
     const course = await this.coursesService.deleteQuiz(courseId, quizId);
     return {
@@ -344,19 +312,20 @@ export class CoursesController {
       course,
     };
   }
-  
 
   @Post(':courseId/lectures')
   async addLecture(
     @Param('courseId') courseId: string,
-    @Body() lectureData: { title: string; type: 'video' | 'pdf'; content: string },
+    @Body()
+    lectureData: { title: string; type: 'video' | 'pdf'; content: string },
   ) {
-    const updatedCourse = await this.coursesService.addLecture(courseId, lectureData);
+    const updatedCourse = await this.coursesService.addLecture(
+      courseId,
+      lectureData,
+    );
     return {
       message: 'Lecture added successfully',
       course: updatedCourse,
     };
   }
-  
-
 }

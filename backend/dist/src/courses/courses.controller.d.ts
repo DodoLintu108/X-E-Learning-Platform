@@ -6,7 +6,7 @@ import { CreateCourseDto } from './create-course.dto';
 export declare class CoursesController {
     private readonly coursesService;
     constructor(coursesService: CoursesService);
-    createCourse(req: any, createCourseDto: CreateCourseDto, files: {
+    createCourse(createCourseDto: CreateCourseDto, files: {
         files?: Express.Multer.File[];
         imagefiles?: Express.Multer.File[];
     }): Promise<{
@@ -21,7 +21,7 @@ export declare class CoursesController {
         assigned: Course[];
         available: Course[];
     }>;
-    getTeacherCourses(req: any): Promise<Course[]>;
+    getTeacherCourses(userId: string): Promise<Course[]>;
     addModule(courseId: string, body: {
         title: string;
         content: string;
