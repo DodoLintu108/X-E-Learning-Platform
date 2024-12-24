@@ -169,16 +169,57 @@ let CoursesService = class CoursesService {
                 : null,
         }));
     }
-    async addLectureToCourse(courseId, lectureData) {
+    async addQuizToCourse(courseId, quizData) {
         const course = await this.courseModel.findById(courseId);
         if (!course) {
             throw new common_1.NotFoundException('Course not found');
         }
-        course.lectures.push({
-            title: lectureData.title,
-            type: lectureData.type,
-            content: lectureData.content,
+        const quiz = {
+            quizId: new Date().toISOString(),
+            moduleId: courseId,
+            level: quizData.level,
+            questions: quizData.questions,
             createdAt: new Date(),
+        };
+        if (!course.lectures || course.lectures.length === 0) {
+            throw new common_1.NotFoundException('No lectures available to add the quiz');
+        }
+        const targetLecture = course.lectures[course.lectures.length - 1];
+        targetLecture.quizzes = targetLecture.quizzes || [];
+        targetLecture.quizzes.push(quiz);
+        await course.save();
+        return quiz;
+    }
+    async getQuizzesByCourse(courseId) {
+        const course = await this.courseModel.findById(courseId);
+        if (!course) {
+            throw new common_1.NotFoundException('Course not found');
+        }
+        const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
+        return quizzes;
+    }
+    async getQuizById(courseId, quizId) {
+        const course = await this.courseModel.findById(courseId);
+        if (!course) {
+            throw new common_1.NotFoundException('Course not found');
+        }
+        const quiz = course.lectures
+            .flatMap((lecture) => lecture.quizzes || [])
+            .find((q) => q.quizId === quizId);
+        if (!quiz) {
+            throw new common_1.NotFoundException('Quiz not found');
+        }
+        return quiz;
+    }
+    async deleteQuiz(courseId, quizId) {
+        const course = await this.courseModel.findById(courseId);
+        if (!course) {
+            throw new common_1.NotFoundException('Course not found');
+        }
+        course.lectures.forEach((lecture) => {
+            if (lecture.quizzes) {
+                lecture.quizzes = lecture.quizzes.filter((quiz) => quiz.quizId !== quizId);
+            }
         });
         await course.save();
         return course;
@@ -193,6 +234,7 @@ let CoursesService = class CoursesService {
             type: lectureData.type,
             content: lectureData.content,
             createdAt: new Date(),
+            quizzes: [],
         };
         course.lectures.push(lecture);
         await course.save();

@@ -3,7 +3,6 @@ import { Course } from './courses.entity';
 import { Module } from './modules.entity';
 import { Version } from './version.entity';
 import { CreateCourseDto } from './create-course.dto';
-import mongoose from 'mongoose';
 export declare class CoursesController {
     private readonly coursesService;
     constructor(coursesService: CoursesService);
@@ -14,6 +13,10 @@ export declare class CoursesController {
         message: string;
         course: Course;
     }>;
+    updateCourse(courseId: string, updateCourseDto: Partial<Course>, files: {
+        files?: Express.Multer.File[];
+        imagefiles?: Express.Multer.File[];
+    }): Promise<any>;
     getStudentCourses(req: any): Promise<{
         assigned: Course[];
         available: Course[];
@@ -29,7 +32,6 @@ export declare class CoursesController {
     getCourseById(courseId: string): Promise<Course>;
     getCourses(roleOrId: string): Promise<Course | Course[]>;
     getCourseByCategory(category: string): Promise<Course[]>;
-    updateCourse(courseId: string, body: Partial<Course>): Promise<Course>;
     getCourseVersions(courseId: string): Promise<Version[]>;
     deleteCourse(courseId: string): Promise<{
         message: string;
@@ -42,16 +44,29 @@ export declare class CoursesController {
         message: string;
         course: Course;
     }>;
+    addQuiz(courseId: string, quizData: {
+        level: string;
+        questions: Array<{
+            question: string;
+            options: string[];
+            correctAnswer: number;
+        }>;
+    }): Promise<{
+        message: string;
+        quiz: any;
+    }>;
+    getQuizzes(courseId: string): Promise<any[]>;
+    getQuiz(courseId: string, quizId: string): Promise<any>;
+    deleteQuiz(courseId: string, quizId: string): Promise<{
+        message: string;
+        course: Course;
+    }>;
     addLecture(courseId: string, lectureData: {
         title: string;
         type: 'video' | 'pdf';
         content: string;
     }): Promise<{
         message: string;
-        course: mongoose.Document<unknown, {}, import("./courses.entity").CourseDocument> & Course & mongoose.Document<unknown, any, any> & Required<{
-            _id: unknown;
-        }> & {
-            __v: number;
-        };
+        course: Course;
     }>;
 }

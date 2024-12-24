@@ -305,6 +305,47 @@ export class CoursesController {
 
     
   }
+  @Post(':courseId/quizzes')
+  async addQuiz(
+    @Param('courseId') courseId: string,
+    @Body() quizData: {
+      level: string;
+      questions: Array<{ question: string; options: string[]; correctAnswer: number }>;
+    }
+  ) {
+    const quiz = await this.coursesService.addQuizToCourse(courseId, quizData);
+    return {
+      message: 'Quiz added successfully',
+      quiz,
+    };
+  }
+  
+  @Get(':courseId/quizzes')
+  async getQuizzes(@Param('courseId') courseId: string) {
+    return this.coursesService.getQuizzesByCourse(courseId);
+  }
+  
+  @Get(':courseId/quizzes/:quizId')
+  async getQuiz(
+    @Param('courseId') courseId: string,
+    @Param('quizId') quizId: string
+  ) {
+    return this.coursesService.getQuizById(courseId, quizId);
+  }
+  
+  @Delete(':courseId/quizzes/:quizId')
+  async deleteQuiz(
+    @Param('courseId') courseId: string,
+    @Param('quizId') quizId: string
+  ) {
+    const course = await this.coursesService.deleteQuiz(courseId, quizId);
+    return {
+      message: 'Quiz deleted successfully',
+      course,
+    };
+  }
+  
+
   @Post(':courseId/lectures')
   async addLecture(
     @Param('courseId') courseId: string,

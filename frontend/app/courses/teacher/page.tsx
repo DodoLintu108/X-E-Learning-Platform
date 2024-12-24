@@ -91,7 +91,19 @@ const TeacherCourses = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Edit course modal
   const [isLectureModalOpen, setIsLectureModalOpen] = useState(false); // Add lecture modal
   const [isViewLectureModalOpen, setIsViewLectureModalOpen] = useState(false); // View lectures modal
+  const [isQuizModalOpen, setIsQuizModalOpen] = useState(false); // Quiz modal
   const [expandedLecture, setExpandedLecture] = useState<string | null>(null); // Track expanded lecture
+
+  const [newQuiz, setNewQuiz] = useState({
+    level: "Beginner",
+    questions: [
+      {
+        question: "",
+        options: ["", "", "", ""], // Four options
+        correctAnswer: 0, // Index of correct answer
+      },
+    ],
+  });
 
   const [newCourse, setNewCourse] = useState({
     title: "",
@@ -179,7 +191,42 @@ const TeacherCourses = () => {
       toast.error("No course selected!");
       return;
     }
-
+    const handleAddQuiz = async () => {
+        if (!selectedCourse) {
+          toast.error("No course selected!");
+          return;
+        }
+      
+        const token = localStorage.getItem("accessToken");
+        try {
+          await axios.post(
+            `http://localhost:3000/courses/${selectedCourse._id}/quizzes`,
+            newQuiz,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+      
+          toast.success("Quiz added successfully!");
+          setIsQuizModalOpen(false);
+          setNewQuiz({
+            level: "Beginner",
+            questions: [
+              {
+                question: "",
+                options: ["", "", "", ""],
+                correctAnswer: 0,
+              },
+            ],
+          });
+        } catch (err) {
+          const error = err as AxiosError<{ message: string }>;
+          console.error("Error adding quiz:", error);
+          toast.error(
+            error.response?.data?.message || "Error adding quiz. Please try again."
+          );
+        }
+      };
     const token = localStorage.getItem("accessToken");
     const toggleLectureContent = (lectureTitle: string) => {
         setExpandedLecture(expandedLecture === lectureTitle ? null : lectureTitle);
@@ -215,6 +262,41 @@ const TeacherCourses = () => {
 
   const toggleLectureContent = (lectureTitle: string) => {
     setExpandedLecture(expandedLecture === lectureTitle ? null : lectureTitle);
+  };
+
+  const handleAddQuiz = async () => {
+    if (!selectedCourse) {
+      toast.error("No course selected!");
+      return;
+    }
+  
+    const token = localStorage.getItem("accessToken");
+    try {
+      const response = await axios.post(
+        `http://localhost:3000/courses/${selectedCourse._id}/quizzes`,
+        newQuiz, // The newQuiz object containing questions, level, etc.
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      toast.success("Quiz added successfully!");
+      setIsQuizModalOpen(false); // Close the quiz modal
+      setNewQuiz({
+        level: "Beginner", // Reset to default level
+        questions: [], // Clear questions after submission
+      });
+  
+      fetchTeacherCourses(); // Optionally refresh courses to reflect the new quiz
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>;
+      console.error("Error adding quiz:", error);
+      toast.error(
+        error.response?.data?.message || "Error adding quiz. Please try again."
+      );
+    }
   };
 
   return (
@@ -271,6 +353,23 @@ const TeacherCourses = () => {
               >
                 Edit
               </button>
+              <button
+  onClick={() => {
+    setSelectedCourse(course);
+    setIsQuizModalOpen(true);
+  }}
+  style={{
+    padding: "10px 15px",
+    backgroundColor: "#FF5722",
+    color: "white",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    marginRight: "10px",
+  }}
+>
+  Add Quiz
+</button>
               <button
                 onClick={() => handleDeleteCourse(course._id)}
                 style={{
@@ -474,6 +573,179 @@ const TeacherCourses = () => {
           Add Lecture
         </button>
       </Modal>
+{/* Add Quiz Modal */}
+<Modal isOpen={isQuizModalOpen} onClose={() => setIsQuizModalOpen(false)}>
+  <h2>Add Quiz to {selectedCourse?.title}</h2>
+
+  <div
+    style={{
+      maxHeight: "400px", // Set a maximum height for the scrollable area
+      overflowY: "auto", // Enable vertical scrolling
+      marginBottom: "20px",
+      padding: "10px",
+      border: "1px solid #ccc",
+      borderRadius: "5px",
+    }}
+  >
+    {/* Quiz Level */}
+    <label>
+      Select Level:
+      <select
+        value={newQuiz.level}
+        onChange={(e) => setNewQuiz({ ...newQuiz, level: e.target.value })}
+        style={{
+          display: "block",
+          margin: "10px 0",
+          padding: "8px",
+          borderRadius: "4px",
+          width: "100%",
+        }}
+      >
+        <option value="Beginner">Beginner</option>
+        <option value="Intermediate">Intermediate</option>
+        <option value="Advanced">Advanced</option>
+      </select>
+    </label>
+
+    {/* Questions */}
+    <h3>Questions</h3>
+    {newQuiz.questions.map((q, idx) => (
+      <div
+        key={idx}
+        style={{
+          marginBottom: "20px",
+          padding: "10px",
+          border: "1px solid #ddd",
+          borderRadius: "5px",
+          backgroundColor: "#f9f9f9",
+        }}
+      >
+        <input
+          type="text"
+          placeholder={`Question ${idx + 1}`}
+          value={q.question}
+          onChange={(e) =>
+            setNewQuiz({
+              ...newQuiz,
+              questions: newQuiz.questions.map((question, i) =>
+                i === idx ? { ...question, question: e.target.value } : question
+              ),
+            })
+          }
+          style={{
+            display: "block",
+            marginBottom: "10px",
+            padding: "8px",
+            borderRadius: "4px",
+            width: "100%",
+          }}
+        />
+
+        {/* Options */}
+        {q.options.map((option, optIdx) => (
+          <input
+            key={optIdx}
+            type="text"
+            placeholder={`Option ${optIdx + 1}`}
+            value={option}
+            onChange={(e) =>
+              setNewQuiz({
+                ...newQuiz,
+                questions: newQuiz.questions.map((question, i) =>
+                  i === idx
+                    ? {
+                        ...question,
+                        options: question.options.map((opt, j) =>
+                          j === optIdx ? e.target.value : opt
+                        ),
+                      }
+                    : question
+                ),
+              })
+            }
+            style={{
+              display: "block",
+              marginBottom: "5px",
+              padding: "8px",
+              borderRadius: "4px",
+              width: "100%",
+            }}
+          />
+        ))}
+
+        {/* Correct Answer */}
+        <label>
+          Correct Answer:
+          <select
+            value={q.correctAnswer}
+            onChange={(e) =>
+              setNewQuiz({
+                ...newQuiz,
+                questions: newQuiz.questions.map((question, i) =>
+                  i === idx
+                    ? { ...question, correctAnswer: parseInt(e.target.value) }
+                    : question
+                ),
+              })
+            }
+            style={{
+              display: "block",
+              marginTop: "5px",
+              padding: "8px",
+              borderRadius: "4px",
+              width: "100%",
+            }}
+          >
+            {q.options.map((_, optIdx) => (
+              <option key={optIdx} value={optIdx}>
+                Option {optIdx + 1}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+    ))}
+  </div>
+
+  {/* Add Question */}
+  <button
+    onClick={() =>
+      setNewQuiz({
+        ...newQuiz,
+        questions: [
+          ...newQuiz.questions,
+          { question: "", options: ["", "", "", ""], correctAnswer: 0 },
+        ],
+      })
+    }
+    style={{
+      marginBottom: "20px",
+      padding: "10px",
+      backgroundColor: "#4CAF50",
+      color: "white",
+      border: "none",
+      borderRadius: "5px",
+      cursor: "pointer",
+    }}
+  >
+    Add Question
+  </button>
+
+  {/* Submit Quiz */}
+  <button
+    onClick={handleAddQuiz}
+    style={{
+      padding: "10px 15px",
+      backgroundColor: "#FF5722",
+      color: "white",
+      border: "none",
+      borderRadius: "5px",
+      cursor: "pointer",
+    }}
+  >
+    Submit Quiz
+  </button>
+</Modal>
 
 {/* View Lectures Modal */}
 <Modal

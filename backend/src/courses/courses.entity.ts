@@ -5,6 +5,36 @@ import { v4 as uuidv4 } from 'uuid';
 export type CourseDocument = Course & Document;
 
 @Schema()
+export class Quiz {
+  @Prop({ required: true, default: uuidv4 })
+  quizId: string; // Unique ID for the quiz
+
+  @Prop({ required: true })
+  moduleId: string; // Associated module ID
+
+  @Prop({ required: true })
+  level: string; // Quiz level (Beginner, Intermediate, Advanced)
+
+  @Prop({
+    type: [
+      {
+        question: { type: String, required: true },
+        options: { type: [String], required: true },
+        correctAnswer: { type: Number, required: true },
+      },
+    ],
+    required: true,
+  })
+  questions: Array<{ question: string; options: string[]; correctAnswer: number }>;
+
+  @Prop({ default: Date.now })
+  createdAt: Date; // Timestamp of quiz creation
+}
+
+// Create the Mongoose schema for Quiz
+export const QuizSchema = SchemaFactory.createForClass(Quiz);
+
+@Schema()
 export class Lecture {
   @Prop({ required: true })
   title: string; // Title of the lecture
@@ -17,6 +47,9 @@ export class Lecture {
 
   @Prop({ default: Date.now })
   createdAt: Date; // Timestamp for when the lecture was added
+
+  @Prop({ type: [QuizSchema], default: [] })
+  quizzes: Quiz[]; // Array of quizzes associated with the lecture
 }
 
 // Create the Mongoose schema for Lecture

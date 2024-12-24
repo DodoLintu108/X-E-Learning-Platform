@@ -20,7 +20,6 @@ export class CoursesService {
     difficultyLevel: string;
     courseImage: string;
     courseMaterial: string;
-    rating: number;
   }): Promise<Course> {
     const newCourse = new this.courseModel(data);
     return newCourse.save();
@@ -179,7 +178,6 @@ export class CoursesService {
     await this.courseModel.findByIdAndDelete(courseId);
 
     return true;
-
   }
 
   async getCoursesByRole(role: string): Promise<Course[]> {
@@ -203,45 +201,117 @@ export class CoursesService {
 
   }
 
-async addLectureToCourse(
+  // Add a quiz to a course
+async addQuizToCourse(
   courseId: string,
-  lectureData: { title: string; type: 'video' | 'pdf'; content: string },
-): Promise<Course> {
-  const course = await this.courseModel.findById(courseId); // Assuming you're using Mongoose
-  if (!course) {
-    throw new NotFoundException('Course not found');
+  quizData: {
+    level: string;
+    questions: Array<{ question: string; options: string[]; correctAnswer: number }>;
   }
-
-  // Add lecture data to the course
-  course.lectures.push({
-    title: lectureData.title,
-    type: lectureData.type,
-    content: lectureData.content,
-    createdAt: new Date(), // Add the current timestamp
-  });
-  
-  await course.save();
-  return course;
-}
-
-async addLecture(courseId: string, lectureData: { title: string; type: 'video' | 'pdf'; content: string }) {
+): Promise<any> {
   const course = await this.courseModel.findById(courseId);
 
   if (!course) {
     throw new NotFoundException('Course not found');
   }
 
-  const lecture = {
-    title: lectureData.title,
-    type: lectureData.type,
-    content: lectureData.content,
+  // Create quiz object with moduleId
+  const quiz = {
+    quizId: new Date().toISOString(), // Generate a unique ID
+    moduleId: courseId, // Add the courseId as the moduleId
+    level: quizData.level,
+    questions: quizData.questions,
     createdAt: new Date(),
   };
 
-  course.lectures.push(lecture);
+  // Assuming the course schema contains an array of lectures
+  if (!course.lectures || course.lectures.length === 0) {
+    throw new NotFoundException('No lectures available to add the quiz');
+  }
+
+  // Add quiz to the last lecture (or any specific logic)
+  const targetLecture = course.lectures[course.lectures.length - 1];
+  targetLecture.quizzes = targetLecture.quizzes || [];
+  targetLecture.quizzes.push(quiz);
+
   await course.save();
+  return quiz;
+} 
 
-  return course;
-}
+  // Get all quizzes for a course
+  async getQuizzesByCourse(courseId: string): Promise<any[]> {
+    const course = await this.courseModel.findById(courseId);
 
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    // Collect quizzes from all lectures
+    const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
+    return quizzes;
+  }
+
+  // Get a specific quiz by its ID
+  async getQuizById(courseId: string, quizId: string): Promise<any> {
+    const course = await this.courseModel.findById(courseId);
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    // Find the quiz in the lectures
+    const quiz = course.lectures
+      .flatMap((lecture) => lecture.quizzes || [])
+      .find((q) => q.quizId === quizId);
+
+    if (!quiz) {
+      throw new NotFoundException('Quiz not found');
+    }
+
+    return quiz;
+  }
+
+  // Delete a specific quiz by its ID
+  async deleteQuiz(courseId: string, quizId: string): Promise<Course> {
+    const course = await this.courseModel.findById(courseId);
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    // Find and remove the quiz from lectures
+    course.lectures.forEach((lecture) => {
+      if (lecture.quizzes) {
+        lecture.quizzes = lecture.quizzes.filter((quiz) => quiz.quizId !== quizId);
+      }
+    });
+
+    await course.save();
+    return course;
+  }
+
+  // Add a lecture to a course
+  async addLecture(
+    courseId: string,
+    lectureData: { title: string; type: 'video' | 'pdf'; content: string }
+  ): Promise<Course> {
+    const course = await this.courseModel.findById(courseId);
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    const lecture = {
+      title: lectureData.title,
+      type: lectureData.type,
+      content: lectureData.content,
+      createdAt: new Date(),
+      quizzes: [],
+    };
+
+    course.lectures.push(lecture);
+    await course.save();
+
+    return course;
+  }
 }
