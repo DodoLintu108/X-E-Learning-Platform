@@ -20,6 +20,7 @@ export class CoursesService {
     difficultyLevel: string;
     courseImage: string;
     courseMaterial: string;
+    rating: number;
   }): Promise<Course> {
     const newCourse = new this.courseModel(data);
     return newCourse.save();
@@ -178,6 +179,7 @@ export class CoursesService {
     await this.courseModel.findByIdAndDelete(courseId);
 
     return true;
+
   }
 
   async getCoursesByRole(role: string): Promise<Course[]> {
