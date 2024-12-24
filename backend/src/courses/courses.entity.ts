@@ -3,10 +3,9 @@ import { Document } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 
 export type CourseDocument = Course & Document;
-
 @Schema()
 export class Quiz {
-  @Prop({ required: true, default: uuidv4 })
+  @Prop({ required: true })
   quizId: string; // Unique ID for the quiz
 
   @Prop({ required: true })
@@ -24,16 +23,12 @@ export class Quiz {
         correctAnswer: { type: Number, required: true },
       },
     ],
-    required: true,
   })
   questions: Array<{ question: string; options: string[]; correctAnswer: number }>;
 
   @Prop({ default: Date.now })
   createdAt: Date; // Timestamp of quiz creation
 }
-
-// Create the Mongoose schema for Quiz
-export const QuizSchema = SchemaFactory.createForClass(Quiz);
 
 @Schema()
 export class Lecture {
@@ -42,15 +37,14 @@ export class Lecture {
 
   @Prop({ required: true, enum: ['video', 'pdf'] })
   type: 'video' | 'pdf'; // Type of lecture
-
+  @Prop({ type: [Quiz], default: [] })
+  quizzes: Quiz[]; // Array of quizzes associated with the course
+  
   @Prop({ required: true })
   content: string; // YouTube URL for video or file path for PDF
 
   @Prop({ default: Date.now })
   createdAt: Date; // Timestamp for when the lecture was added
-
-  @Prop({ type: [QuizSchema], default: [] })
-  quizzes: Quiz[]; // Array of quizzes associated with the lecture
 }
 
 // Create the Mongoose schema for Lecture
