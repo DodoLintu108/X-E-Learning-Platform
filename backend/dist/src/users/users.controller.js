@@ -26,7 +26,21 @@ let UsersController = class UsersController {
         return this.usersService.getDashboard(req.user);
     }
     createCourse(req, courseData) {
-        return this.coursesService.createCourse({ ...courseData, createdBy: req.user.userId });
+        return this.coursesService.createCourse({
+            ...courseData,
+            createdBy: req.user.userId,
+        });
+    }
+    async findById(userId) {
+        console.log(userId);
+        const courses = await this.usersService.findById(userId);
+        return courses;
+    }
+    async editUser(userId, updateData) {
+        console.log('User ID:', userId);
+        console.log('Update Data:', updateData);
+        const updatedUser = await this.usersService.editUser(userId, updateData);
+        return updatedUser;
     }
 };
 exports.UsersController = UsersController;
@@ -47,6 +61,21 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "createCourse", null);
+__decorate([
+    (0, common_1.Get)('user/:userId'),
+    __param(0, (0, common_1.Param)('userId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "findById", null);
+__decorate([
+    (0, common_1.Put)('user/:userId'),
+    __param(0, (0, common_1.Param)('userId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "editUser", null);
 exports.UsersController = UsersController = __decorate([
     (0, common_1.Controller)('users'),
     __metadata("design:paramtypes", [users_service_1.UsersService,

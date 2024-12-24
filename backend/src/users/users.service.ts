@@ -68,20 +68,41 @@ export class UsersService {
     const courses = await this.coursesService.getAllCourses();
 
     // Assuming "enrolledStudents" is an array in the course schema
-    return courses.filter((course) => course.enrolledStudents?.includes(userId));
+    return courses.filter((course) =>
+      course.enrolledStudents?.includes(userId),
+    );
   }
 
-  // Fetch created courses for instructors
   private async getCreatedCourses(userId: string): Promise<any[]> {
-    // Call CoursesService to retrieve all courses
     const courses = await this.coursesService.getAllCourses();
 
-    // Filter courses where the instructor (createdBy) matches userId
     return courses.filter((course) => course.createdBy === userId);
   }
 
-  // Fetch total user count
   private async getTotalUsers(): Promise<number> {
     return this.userModel.countDocuments();
+  }
+
+  
+  async editUser(
+    userId: string,
+    updateData: Partial<User>,
+  ): Promise<User | null> {
+    // Find a single user by userId
+    const user = await this.userModel.findOne({ userId: userId });
+
+    // If no user is found, throw a NotFoundException
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Update the user with the provided data
+    Object.assign(user, updateData);
+
+    // Save the updated user
+    await user.save();
+
+    // Return the updated user object
+    return user;
   }
 }

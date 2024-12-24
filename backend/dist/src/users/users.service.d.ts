@@ -12,4 +12,5 @@ export declare class UsersService {
     private getEnrolledCourses;
     private getCreatedCourses;
     private getTotalUsers;
+    editUser(userId: string, updateData: Partial<User>): Promise<User | null>;
 }
