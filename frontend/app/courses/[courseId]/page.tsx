@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation"; // Import the router for navigation
 import axios from "axios";
 import Navbar from "../../components/Navbar";
-import { useSearchParams } from "next/navigation"; // Import useSearchParams to manage URL params
 
 const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
   const [courseDetails, setCourseDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [expandedLecture, setExpandedLecture] = useState<number | null>(null); // Track expanded lecture
-  const searchParams = useSearchParams();
+  const router = useRouter(); // Use Next.js router
 
   useEffect(() => {
     const fetchData = async () => {
@@ -48,6 +48,10 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
     setExpandedLecture(expandedLecture === index ? null : index);
   };
 
+  const handleQuizRedirect = () => {
+    router.push(`/courses/${params.courseId}/student/quiz`); // Redirect to the quiz page
+  };
+
   if (loading) {
     return <p>Loading course details...</p>;
   }
@@ -61,6 +65,23 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
         <p>Category: {courseDetails.category}</p>
         <p>Difficulty: {courseDetails.difficultyLevel}</p>
         <p>Created By: {courseDetails.teacherName}</p>
+
+        {/* Button to redirect to Quizzes and Assessments */}
+        <button
+          onClick={handleQuizRedirect}
+          style={{
+            padding: "10px 20px",
+            backgroundColor: "#007BFF",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+            marginBottom: "20px",
+          }}
+        >
+          Go to Quizzes and Assessments
+        </button>
+
         <h2>Lectures</h2>
         <ul style={{ listStyleType: "none", padding: 0 }}>
           {courseDetails.lectures.map((lecture: any, index: number) => (
@@ -104,18 +125,16 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
                       allowFullScreen
                     ></iframe>
                   ) : lecture.type === "pdf" ? (
-                    <a
-                      href={lecture.content}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <iframe
+                      src={lecture.content}
+                      width="100%"
+                      height="600px"
                       style={{
-                        textDecoration: "none",
-                        color: "#007BFF",
-                        fontWeight: "bold",
+                        border: "1px solid #ccc",
+                        borderRadius: "5px",
                       }}
-                    >
-                      View PDF
-                    </a>
+                      title={lecture.title}
+                    ></iframe>
                   ) : (
                     <p>Unsupported content type</p>
                   )}

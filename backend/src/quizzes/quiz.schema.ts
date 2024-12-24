@@ -1,24 +1,40 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 
+export type QuizDocument = Quiz & Document;
+
 @Schema({ timestamps: true })
-export class Quiz extends Document {
+export class Quiz {
   @Prop({ required: true })
-  title: string;
+  quizId: string; // Unique identifier for the quiz
 
   @Prop({ required: true })
-  courseId: string; // Link to the course
+  courseId: string; // Associated course ID
 
-  
-  @Prop([{ question: String, options: [String], correctAnswer: String }])
-  questions: Array<{
+  @Prop({ required: true })
+  title: string; // Title of the quiz
+
+  @Prop({
+    type: [
+      {
+        question: { type: String, required: true },
+        options: { type: [String], required: true },
+        correctAnswer: { type: Number, required: true }, // Index of correct option
+      },
+    ],
+    required: true,
+  })
+  questions: {
     question: string;
     options: string[];
-    correctAnswer: string;
-  }>;
+    correctAnswer: number;
+  }[];
+  
+  @Prop({ type: [String], default: [] }) // Add submittedBy property
+  submittedBy: string[];
 
-  @Prop({ default: 0 })
-  attempts: number;
+  @Prop({ default: Date.now })
+  createdAt: Date; // Timestamp for quiz creation
 }
 
 export const QuizSchema = SchemaFactory.createForClass(Quiz);

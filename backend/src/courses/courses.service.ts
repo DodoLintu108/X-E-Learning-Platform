@@ -270,7 +270,7 @@ async addQuizToCourse(
 
     return quiz;
   }
-
+  
   // Delete a specific quiz by its ID
   async deleteQuiz(courseId: string, quizId: string): Promise<Course> {
     const course = await this.courseModel.findById(courseId);

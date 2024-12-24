@@ -307,6 +307,14 @@ export class CoursesController {
   }
 
   @Post(':courseId/quizzes')
+
+  async addQuizToCourse(
+    @Param('courseId') courseId: string,
+    @Body() quizData: { level: string; questions: { question: string; options: string[]; correctAnswer: number }[] },
+    ) {
+    return this.coursesService.addQuizToCourse(courseId, quizData);
+    }
+
   async addQuiz(
     @Param('courseId') courseId: string,
     @Body() quizData: {
@@ -320,7 +328,8 @@ export class CoursesController {
       quiz,
     };
   }
-  
+
+
   @Get(':courseId/quizzes')
   async getQuizzes(@Param('courseId') courseId: string) {
     return this.coursesService.getQuizzesByCourse(courseId);
