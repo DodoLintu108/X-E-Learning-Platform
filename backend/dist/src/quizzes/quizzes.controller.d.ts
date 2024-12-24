@@ -9,9 +9,11 @@ export declare class QuizzesController {
     getQuizzesForCourse(courseId: string): Promise<Quiz[]>;
     getQuizById(quizId: string): Promise<Quiz>;
     deleteQuiz(quizId: string): Promise<void>;
+
     submitQuizResponse(quizId: string, responseData: Partial<Response>): Promise<{
         message: string;
         score: number;
     }>;
+
     getAllQuizzes(courseId: string): Promise<Quiz[]>;
 }
