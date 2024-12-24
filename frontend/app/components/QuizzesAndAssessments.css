@@ -67,4 +67,59 @@
   .quiz-button:active {
     background-color: #003f7f;
   }
+  .quizzes-container {
+    margin: 20px;
+  }
+  
+  .quizzes-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .quizzes-list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .quiz-item {
+    margin-bottom: 15px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+  
+  .quiz-info h3 {
+    margin: 0 0 10px 0;
+  }
+  
+  .quiz-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .quiz-container {
+    padding: 20px;
+  }
+  
+  .question-container {
+    margin-bottom: 15px;
+  }
+  
+  .option-label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .submit-button {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
   

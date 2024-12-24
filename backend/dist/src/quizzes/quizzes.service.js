@@ -44,8 +44,31 @@ let QuizzesService = class QuizzesService {
         }
     }
     async submitQuizResponse(responseData) {
-        const response = new this.responseModel(responseData);
-        return response.save();
+        const { quizId, userId, answers } = responseData;
+        const existingResponse = await this.responseModel.findOne({ quizId, userId }).exec();
+        if (existingResponse) {
+            throw new common_1.ForbiddenException('You have already submitted this quiz.');
+        }
+        const quiz = await this.quizModel.findById(quizId).exec();
+        if (!quiz) {
+            throw new common_1.NotFoundException('Quiz not found');
+        }
+        const correctAnswers = quiz.questions.map((q) => q.correctAnswer);
+        const score = answers.reduce((acc, { answer }, index) => {
+            return acc + (answer === correctAnswers[index] ? 1 : 0);
+        }, 0);
+        const response = new this.responseModel({
+            quizId,
+            userId,
+            answers,
+            submittedAt: new Date(),
+        });
+        await response.save();
+        await this.quizModel.updateOne({ _id: quizId }, { $addToSet: { submittedBy: userId } });
+        return {
+            message: 'Quiz submitted successfully',
+            score,
+        };
     }
     async getUnsubmittedQuizzes(userId, courseId) {
         const quizzes = await this.quizModel.find({ courseId }).exec();

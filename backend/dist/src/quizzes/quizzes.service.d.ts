@@ -9,6 +9,9 @@ export declare class QuizzesService {
     getQuizzesForCourse(courseId: string): Promise<Quiz[]>;
     getQuizById(quizId: string): Promise<Quiz>;
     deleteQuiz(quizId: string): Promise<void>;
-    submitQuizResponse(responseData: Partial<Response>): Promise<Response>;
+    submitQuizResponse(responseData: Partial<Response>): Promise<{
+        message: string;
+        score: number;
+    }>;
     getUnsubmittedQuizzes(userId: string, courseId: string): Promise<Quiz[]>;
 }
