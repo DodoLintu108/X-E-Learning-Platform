@@ -18,15 +18,28 @@ interface Course {
   difficultyLevel: string;
   courseImage: File | null;
   courseMaterial: File | null;
-
-  lectures: Lecture[]; // Include lectures
-  isEnded: boolean; // Indicates if the course has ended
+  lectures: Lecture[];
+  isEnded: boolean;
 }
 
 interface Lecture {
+  // For editing a quiz, we might need an _id or quiz array
+  // If your data includes quizzes inside each lecture, define as needed
   title: string;
-  type: "video" | "pdf"; // Determines if it's a video or PDF
-  content: string; // Either YouTube link or PDF URL
+  type: "video" | "pdf";
+  content: string;
+  quizzes?: Quiz[];
+}
+
+interface Quiz {
+  quizId: string;
+  title: string;
+  level: string;
+  questions: {
+    question: string;
+    options: string[];
+    correctAnswer: number;
+  }[];
 }
 
 interface ModalProps {
@@ -36,10 +49,10 @@ interface ModalProps {
 }
 
 interface ErrorResponse {
-  message: string; // Define the shape of your error response
+  message: string;
 }
 
-// Modal component
+// Reusable Modal component
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
 
@@ -56,7 +69,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
         justifyContent: "center",
         alignItems: "center",
         zIndex: 1000,
-      }}>
+      }}
+    >
       <div
         style={{
           backgroundColor: "white",
@@ -64,7 +78,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
           borderRadius: "8px",
           minWidth: "500px",
           position: "relative",
-        }}>
+        }}
+      >
         <button
           onClick={onClose}
           style={{
@@ -78,7 +93,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
             position: "absolute",
             top: "10px",
             right: "10px",
-          }}>
+          }}
+        >
           ✖
         </button>
         {children}
@@ -88,16 +104,82 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
 };
 
 const TeacherCourses = () => {
+  // -----------------------------------
+  // State Hooks
+  // -----------------------------------
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false); // Create course modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Edit course modal
   const [isLectureModalOpen, setIsLectureModalOpen] = useState(false); // Add lecture modal
   const [isViewLectureModalOpen, setIsViewLectureModalOpen] = useState(false); // View lectures modal
-  const [isQuizModalOpen, setIsQuizModalOpen] = useState(false); // Quiz modal
-  const [expandedLecture, setExpandedLecture] = useState<string | null>(null); // Track expanded lecture
+  const [isQuizModalOpen, setIsQuizModalOpen] = useState(false); // Add quiz modal
+  const [expandedLecture, setExpandedLecture] = useState<string | null>(null);
+
+  // NEW - Manage Materials
+  const [isManageFilesOpen, setIsManageFilesOpen] = useState(false);
+  const [newFiles, setNewFiles] = useState<File | null>(null);
+  const [newImage, setNewImage] = useState<File | null>(null);
+
+  // NEW - Edit Quiz
+  const [isEditQuizOpen, setIsEditQuizOpen] = useState(false);
+  const [editLectureId, setEditLectureId] = useState<string>("");
+  const [editQuizId, setEditQuizId] = useState<string>("");
+  const [quizUpdateData, setQuizUpdateData] = useState<{
+    title: string;
+    level: string;
+    questions: { question: string; options: string[]; correctAnswer: number }[];
+  }>({
+    title: "",
+    level: "Beginner",
+    questions: [],
+  });
+
+  // Search
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+
+  // For new quiz creation
+  const [newQuiz, setNewQuiz] = useState({
+    level: "Beginner",
+    questions: [
+      {
+        question: "",
+        options: ["", "", "", ""],
+        correctAnswer: 0,
+      },
+    ],
+  });
+
+  // For new course creation
+  const [newCourse, setNewCourse] = useState<{
+    title: string;
+    description: string;
+    category: string;
+    difficultyLevel: string;
+    courseImage: File | null;
+    courseMaterial: File | null;
+    rating: number;
+  }>({
+    title: "",
+    description: "",
+    category: "Select Course Category",
+    difficultyLevel: "Select Difficulty Level",
+    courseImage: null,
+    courseMaterial: null,
+    rating: 0.0,
+  });
+
+  // For new lecture creation
+  const [newLecture, setNewLecture] = useState<Lecture>({
+    title: "",
+    type: "video",
+    content: "",
+  });
+
+  // -----------------------------------
+  // Effects
+  // -----------------------------------
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(searchQuery);
@@ -110,14 +192,33 @@ const TeacherCourses = () => {
       handleSearch(debouncedQuery);
     }
   }, [debouncedQuery]);
+
+  useEffect(() => {
+    fetchTeacherCourses();
+  }, []);
+
+  // -----------------------------------
+  // API Calls
+  // -----------------------------------
+  const fetchTeacherCourses = async () => {
+    const token = localStorage.getItem("accessToken");
+    try {
+      const response = await axios.get("http://localhost:3000/courses/teacher", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCourses(response.data);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+      toast.error("Error fetching courses.");
+    }
+  };
+
   const handleSearch = async (query: string) => {
     const token = localStorage.getItem("accessToken");
-
     if (!query) {
       setCourses([]);
       return;
     }
-
     try {
       const response = await axios.get(
         `http://localhost:3000/courses/search?query=${searchQuery}`,
@@ -146,61 +247,10 @@ const TeacherCourses = () => {
       }
     }
   };
-  const [newQuiz, setNewQuiz] = useState({
-    level: "Beginner",
-    questions: [
-      {
-        question: "",
-        options: ["", "", "", ""], // Four options
-        correctAnswer: 0, // Index of correct answer
-      },
-    ],
-  });
 
-  const [newCourse, setNewCourse] = useState<{
-    title: string;
-    description: string;
-    category: string;
-    difficultyLevel: string;
-    courseImage: File | null;
-    courseMaterial: File | null;
-    rating: number;
-  }>({
-    title: "",
-    description: "",
-    category: "Select Course Category",
-    difficultyLevel: "Select Difficulty Level",
-    courseImage: null,
-    courseMaterial: null,
-    rating: 0.0,
-  });
-
-  const [newLecture, setNewLecture] = useState<Lecture>({
-    title: "",
-    type: "video",
-    content: "",
-  });
-
-  useEffect(() => {
-    fetchTeacherCourses();
-  }, []);
-
-  const fetchTeacherCourses = async () => {
-    const token = localStorage.getItem("accessToken");
-    try {
-      const response = await axios.get(
-        "http://localhost:3000/courses/teacher",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setCourses(response.data);
-    } catch (error) {
-      console.error("Error fetching courses:", error);
-      toast.error("Error fetching courses.");
-    }
-  };
-
+  // --------------------------
+  // Create / Edit Course
+  // --------------------------
   const handleCreateCourse = async () => {
     const token = localStorage.getItem("accessToken");
     try {
@@ -217,16 +267,13 @@ const TeacherCourses = () => {
   };
 
   const handleEditCourse = async () => {
-    const token = localStorage.getItem("accessToken");
     if (!selectedCourse) return;
-
+    const token = localStorage.getItem("accessToken");
     try {
       await axios.put(
         `http://localhost:3000/courses/${selectedCourse._id}`,
         selectedCourse,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Course updated successfully!");
       fetchTeacherCourses();
@@ -236,24 +283,83 @@ const TeacherCourses = () => {
       toast.error("Error editing course.");
     }
   };
-  const handleViewQuizAnalytics = async (quizId: string) => {
+
+  // --------------------------
+  // Manage Materials
+  // --------------------------
+  const handleManageMaterials = (course: Course) => {
+    setSelectedCourse(course);
+    setIsManageFilesOpen(true);
+  };
+
+  const handleUpdateCourseFiles = async () => {
+    if (!selectedCourse) return;
     const token = localStorage.getItem("accessToken");
 
     try {
-      const response = await axios.get(
-        `http://localhost:3000/analytics/quiz?quizId=${quizId}`,
+      // Use FormData for multipart
+      const formData = new FormData();
+      if (newFiles) formData.append("files", newFiles);
+      if (newImage) formData.append("imagefiles", newImage);
+
+      await axios.put(
+        `http://localhost:3000/courses/${selectedCourse._id}/files`,
+        formData,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
-      const { data } = response;
-      toast.success(`Quiz Average: ${data.averageQuizScore}`);
-    } catch (error) {
-      console.error("Error fetching quiz analytics:", error);
-      toast.error("Error fetching quiz analytics.");
+      toast.success("Course files updated successfully!");
+      setIsManageFilesOpen(false);
+      setNewFiles(null);
+      setNewImage(null);
+      fetchTeacherCourses();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update course files.");
     }
   };
+
+  // --------------------------
+  // End / Delete Course
+  // --------------------------
+  const handleEndCourse = async (courseId: string) => {
+    const token = localStorage.getItem("accessToken");
+    try {
+      await axios.put(
+        `http://localhost:3000/courses/${courseId}/end`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Course has been ended successfully!");
+      fetchTeacherCourses();
+    } catch (error) {
+      console.error("Error ending the course:", error);
+      toast.error("Failed to end the course. Please try again.");
+    }
+  };
+
+  const handleDeleteCourse = async (id: string) => {
+    const token = localStorage.getItem("accessToken");
+    try {
+      await axios.delete(`http://localhost:3000/courses/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success("Course deleted successfully!");
+      fetchTeacherCourses();
+    } catch (error) {
+      console.error("Error deleting course:", error);
+      toast.error("Error deleting course.");
+    }
+  };
+
+  // --------------------------
+  // Course Analytics
+  // --------------------------
   interface LevelStats {
     [level: string]: {
       totalQuizzes: number;
@@ -261,27 +367,8 @@ const TeacherCourses = () => {
     };
   }
 
-  const handleEndCourse = async (courseId: string) => {
-    const token = localStorage.getItem("accessToken");
-    try {
-      const response = await axios.put(
-        `http://localhost:3000/courses/${courseId}/end`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      toast.success("Course has been ended successfully!");
-      fetchTeacherCourses(); // Refresh courses to reflect the updated status
-    } catch (error) {
-      console.error("Error ending the course:", error);
-      toast.error("Failed to end the course. Please try again.");
-    }
-  };
-
   const handleViewCourseAnalytics = async (courseId: string) => {
     const token = localStorage.getItem("accessToken");
-
     try {
       const response = await axios.get(
         `http://localhost:3000/analytics/course?courseId=${courseId}`,
@@ -289,15 +376,14 @@ const TeacherCourses = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       const data: { average: number; levelStats: LevelStats } = response.data;
 
       const levelStats = Object.entries(data.levelStats)
         .map(
           ([level, stats]) =>
-            `${level}: ${
-              stats.totalQuizzes
-            } quizzes, Average: ${stats.average.toFixed(2)}`
+            `${level}: ${stats.totalQuizzes} quizzes, Average: ${stats.average.toFixed(
+              2
+            )}`
         )
         .join("\n");
 
@@ -312,85 +398,33 @@ const TeacherCourses = () => {
     }
   };
 
-  const handleDeleteCourse = async (id: string) => {
+  // --------------------------
+  // Quiz Analytics
+  // --------------------------
+  const handleViewQuizAnalytics = async (quizId: string) => {
     const token = localStorage.getItem("accessToken");
-
     try {
-      await axios.delete(`http://localhost:3000/courses/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      toast.success("Course deleted successfully!");
-      fetchTeacherCourses();
+      const response = await axios.get(
+        `http://localhost:3000/analytics/quiz?quizId=${quizId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const { data } = response;
+      toast.success(`Quiz Average: ${data.averageQuizScore}`);
     } catch (error) {
-      console.error("Error deleting course:", error);
-      toast.error("Error deleting course.");
+      console.error("Error fetching quiz analytics:", error);
+      toast.error("Error fetching quiz analytics.");
     }
   };
 
+  // --------------------------
+  // Adding a Lecture
+  // --------------------------
   const handleAddLecture = async () => {
     if (!selectedCourse) {
       toast.error("No course selected!");
       return;
     }
-    const handleEndCourse = async (courseId: string) => {
-      const token = localStorage.getItem("accessToken");
-      try {
-        const response = await axios.put(
-          `http://localhost:3000/courses/${courseId}/end`,
-          {},
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        toast.success("Course has been ended successfully!");
-        fetchTeacherCourses(); // Refresh courses to reflect the updated status
-      } catch (error) {
-        console.error("Error ending the course:", error);
-        toast.error("Failed to end the course. Please try again.");
-      }
-    };
-
-    const handleAddQuiz = async () => {
-      if (!selectedCourse) {
-        toast.error("No course selected!");
-        return;
-      }
-
-      const token = localStorage.getItem("accessToken");
-      try {
-        const response = await axios.post(
-          `http://localhost:3000/courses/${selectedCourse._id}/quizzes`,
-          newQuiz, // Send the quiz data
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        toast.success("Quiz added successfully!");
-        setIsQuizModalOpen(false); // Close modal
-        setNewQuiz({
-          level: "Beginner",
-          questions: [
-            { question: "", options: ["", "", "", ""], correctAnswer: 0 },
-          ],
-        });
-
-        // Optionally, refresh course list or quiz list
-        fetchTeacherCourses();
-      } catch (error: any) {
-        console.error("Error adding quiz:", error);
-        toast.error(
-          error.response?.data?.message ||
-            "Error adding quiz. Please try again."
-        );
-      }
-    };
     const token = localStorage.getItem("accessToken");
-    const toggleLectureContent = (lectureTitle: string) => {
-      setExpandedLecture(
-        expandedLecture === lectureTitle ? null : lectureTitle
-      );
-    };
     try {
       await axios.post(
         `http://localhost:3000/courses/${selectedCourse._id}/lectures`,
@@ -400,57 +434,46 @@ const TeacherCourses = () => {
           content: newLecture.content,
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
       toast.success("Lecture added successfully!");
       setIsLectureModalOpen(false);
       setNewLecture({ title: "", type: "video", content: "" });
-
-      fetchTeacherCourses(); // Optionally refresh courses
+      fetchTeacherCourses();
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
       console.error("Error adding lecture:", error);
       toast.error(
-        error.response?.data?.message ||
-          "Error adding lecture. Please try again."
+        error.response?.data?.message || "Error adding lecture. Please try again."
       );
     }
   };
 
-  const toggleLectureContent = (lectureTitle: string) => {
-    setExpandedLecture(expandedLecture === lectureTitle ? null : lectureTitle);
-  };
-
+  // --------------------------
+  // Adding a Quiz
+  // --------------------------
   const handleAddQuiz = async () => {
     if (!selectedCourse) {
       toast.error("No course selected!");
       return;
     }
-
     const token = localStorage.getItem("accessToken");
     try {
-      const response = await axios.post(
+      await axios.post(
         `http://localhost:3000/courses/${selectedCourse._id}/quizzes`,
-        newQuiz, // The newQuiz object containing questions, level, etc.
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        newQuiz,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       toast.success("Quiz added successfully!");
-      setIsQuizModalOpen(false); // Close the quiz modal
+      setIsQuizModalOpen(false);
       setNewQuiz({
-        level: "Beginner", // Reset to default level
-        questions: [], // Clear questions after submission
+        level: "Beginner",
+        questions: [{ question: "", options: ["", "", "", ""], correctAnswer: 0 }],
       });
-
-      fetchTeacherCourses(); // Optionally refresh courses to reflect the new quiz
+      fetchTeacherCourses();
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
       console.error("Error adding quiz:", error);
@@ -460,10 +483,65 @@ const TeacherCourses = () => {
     }
   };
 
+  // -----------------------------------
+  // Edit Quiz
+  // -----------------------------------
+  const openEditQuizModal = (
+    course: Course,
+    lectureId: string,
+    quiz: Quiz
+  ) => {
+    setSelectedCourse(course);
+    setEditLectureId(lectureId);
+    setEditQuizId(quiz.quizId);
+    setQuizUpdateData({
+      title: quiz.title,
+      level: quiz.level,
+      questions: quiz.questions.map((q) => ({
+        ...q,
+      })),
+    });
+    setIsEditQuizOpen(true);
+  };
+
+  const handleEditQuizSubmit = async () => {
+    if (!selectedCourse) return;
+    if (!editLectureId || !editQuizId) return;
+
+    const token = localStorage.getItem("accessToken");
+    try {
+      await axios.put(
+        `http://localhost:3000/courses/${selectedCourse._id}/lectures/${editLectureId}/quizzes/${editQuizId}`,
+        quizUpdateData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("Quiz updated successfully!");
+      setIsEditQuizOpen(false);
+      fetchTeacherCourses();
+    } catch (err) {
+      console.error("Error updating quiz:", err);
+      toast.error("Failed to update quiz.");
+    }
+  };
+
+  // -----------------------------------
+  // UI Helpers
+  // -----------------------------------
+  const toggleLectureContent = (lectureTitle: string) => {
+    setExpandedLecture(expandedLecture === lectureTitle ? null : lectureTitle);
+  };
+
+  // -----------------------------------
+  // Render
+  // -----------------------------------
   return (
     <div>
       <Navbar />
       <ToastContainer />
+
+      {/* Manage Courses UI */}
       <div
         style={{
           display: "flex",
@@ -472,12 +550,9 @@ const TeacherCourses = () => {
           marginTop: "40px",
           alignItems: "center",
           gap: "8px",
-        }}>
-        <h1
-          style={{
-            color: "#7F8081",
-            fontSize: "28px",
-          }}>
+        }}
+      >
+        <h1 style={{ color: "#7F8081", fontSize: "28px" }}>
           Manage Your Courses
         </h1>
         <div
@@ -489,14 +564,16 @@ const TeacherCourses = () => {
             alignItems: "start",
             gap: "8px",
             padding: "18px",
-          }}>
+          }}
+        >
           <div
             style={{
               display: "flex",
               flexDirection: "row",
               justifyContent: "flex-start",
               alignItems: "center",
-            }}>
+            }}
+          >
             <button
               style={{
                 width: "100%",
@@ -508,10 +585,12 @@ const TeacherCourses = () => {
                 cursor: "pointer",
                 marginLeft: "25px",
               }}
-              onClick={() => setIsModalOpen(true)}>
+              onClick={() => setIsModalOpen(true)}
+            >
               Create Course
             </button>
           </div>
+
           <div
             style={{
               display: "flex",
@@ -520,7 +599,8 @@ const TeacherCourses = () => {
               padding: "9px",
               borderRadius: "4px",
               width: "100%",
-            }}>
+            }}
+          >
             <input
               style={{
                 width: "20%",
@@ -538,20 +618,18 @@ const TeacherCourses = () => {
             <ul style={{ listStyleType: "none", padding: 0 }}>
               {courses.length > 0 ? (
                 courses.map((course) => (
-                  <li>
+                  <li key={course._id}>
                     <div
                       style={{
                         display: "flex",
                         flexDirection: "column",
-                        justifyContent: "space-between",
                         gap: "13px",
-                      }}>
+                      }}
+                    >
                       <div
-                        key={course._id}
                         style={{
                           display: "flex",
                           flexDirection: "column",
-                          justifyContent: "space-between",
                           alignItems: "center",
                           padding: "9px",
                           borderRadius: "4px",
@@ -565,7 +643,8 @@ const TeacherCourses = () => {
                         }
                         onMouseOut={(e) =>
                           (e.currentTarget.style.transform = "scale(1)")
-                        }>
+                        }
+                      >
                         <div style={{ marginRight: "10px" }}>
                           <Lottie className="h-44" animationData={courseAn} />
                         </div>
@@ -583,20 +662,21 @@ const TeacherCourses = () => {
                             flex: "1",
                             display: "flex",
                             flexDirection: "column",
-                            justifyContent: "space-between",
                             gap: "5px",
                             paddingLeft: "10px",
                             maxWidth: "500px",
                             cursor: "pointer",
                             transition: "transform 0.2s",
-                          }}>
+                          }}
+                        >
                           <h3
                             style={{
                               margin: 0,
                               whiteSpace: "nowrap",
                               overflow: "hidden",
                               textOverflow: "ellipsis",
-                            }}>
+                            }}
+                          >
                             Title: {course.title}
                           </h3>
                           <p
@@ -606,18 +686,18 @@ const TeacherCourses = () => {
                               overflow: "hidden",
                               textOverflow: "ellipsis",
                               maxWidth: "400px",
-                            }}>
+                            }}
+                          >
                             Description: {course.description}
                           </p>
-
-                          <p style={{ margin: 0 }}>
-                            Category: {course.category}
-                          </p>
+                          <p style={{ margin: 0 }}>Category: {course.category}</p>
                           <p style={{ margin: 0 }}>
                             Level: {course.difficultyLevel}
                           </p>
                         </div>
-                        <div className=" flex flex-row">
+
+                        {/* Course Actions */}
+                        <div className="flex flex-row">
                           <button
                             onClick={() =>
                               handleViewCourseAnalytics(course._id)
@@ -631,7 +711,8 @@ const TeacherCourses = () => {
                               textDecoration: "underline",
                               cursor: "pointer",
                               marginRight: "10px",
-                            }}>
+                            }}
+                          >
                             View Course Analytics
                           </button>
                           <button
@@ -646,7 +727,8 @@ const TeacherCourses = () => {
                               cursor: "pointer",
                               marginRight: "10px",
                             }}
-                            disabled={course.isEnded}>
+                            disabled={course.isEnded}
+                          >
                             {course.isEnded ? "Course Ended" : "End Course"}
                           </button>
                           <button
@@ -663,7 +745,8 @@ const TeacherCourses = () => {
                               border: "none",
                               borderRadius: "5px",
                               cursor: "pointer",
-                            }}>
+                            }}
+                          >
                             Edit
                           </button>
                           <button
@@ -680,7 +763,8 @@ const TeacherCourses = () => {
                               cursor: "pointer",
                               textDecoration: "underline",
                               marginRight: "10px",
-                            }}>
+                            }}
+                          >
                             Add Quiz
                           </button>
                           <button
@@ -694,7 +778,8 @@ const TeacherCourses = () => {
                               textDecoration: "underline",
                               cursor: "pointer",
                               marginRight: "10px",
-                            }}>
+                            }}
+                          >
                             Delete
                           </button>
                           <button
@@ -711,7 +796,8 @@ const TeacherCourses = () => {
                               borderRadius: "5px",
                               cursor: "pointer",
                               marginRight: "10px",
-                            }}>
+                            }}
+                          >
                             Add Lecture
                           </button>
                           <button
@@ -727,8 +813,25 @@ const TeacherCourses = () => {
                               borderRadius: "5px",
                               textDecoration: "underline",
                               cursor: "pointer",
-                            }}>
+                              marginRight: "10px",
+                            }}
+                          >
                             View Lectures
+                          </button>
+                          {/* Manage Materials Button */}
+                          <button
+                            onClick={() => handleManageMaterials(course)}
+                            style={{
+                              padding: "10px 15px",
+                              backgroundColor: "#9AA6B2",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "5px",
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Manage Materials
                           </button>
                         </div>
                       </div>
@@ -740,7 +843,7 @@ const TeacherCourses = () => {
               )}
             </ul>
           </div>
-        </div>{" "}
+        </div>
       </div>
 
       {/* Create Course Modal */}
@@ -751,7 +854,8 @@ const TeacherCourses = () => {
             flexDirection: "column",
             padding: "9px",
             borderRadius: "4px",
-          }}>
+          }}
+        >
           <input
             type="text"
             value={newCourse.title}
@@ -779,7 +883,8 @@ const TeacherCourses = () => {
               border: "1px solid #ccc",
               borderRadius: "4px",
             }}
-            placeholder="Description"></textarea>
+            placeholder="Description"
+          ></textarea>
           <select
             style={{
               width: "100%",
@@ -791,7 +896,8 @@ const TeacherCourses = () => {
             value={newCourse.category}
             onChange={(e) =>
               setNewCourse({ ...newCourse, category: e.target.value })
-            }>
+            }
+          >
             <option value="Select Course Category" disabled>
               Select Course Category
             </option>
@@ -811,7 +917,8 @@ const TeacherCourses = () => {
             value={newCourse.difficultyLevel}
             onChange={(e) =>
               setNewCourse({ ...newCourse, difficultyLevel: e.target.value })
-            }>
+            }
+          >
             <option value="Select Difficulty Level" disabled>
               Select Difficulty Level
             </option>
@@ -832,10 +939,12 @@ const TeacherCourses = () => {
             marginLeft: "25px",
             marginTop: "-15px",
           }}
-          onClick={handleCreateCourse}>
+          onClick={handleCreateCourse}
+        >
           submit
         </button>
       </Modal>
+
       {/* Edit Course Modal */}
       <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
         <h2>Edit Course</h2>
@@ -847,7 +956,8 @@ const TeacherCourses = () => {
                 flexDirection: "column",
                 padding: "9px",
                 borderRadius: "4px",
-              }}>
+              }}
+            >
               <input
                 type="text"
                 value={selectedCourse.title}
@@ -881,7 +991,8 @@ const TeacherCourses = () => {
                   border: "1px solid #ccc",
                   borderRadius: "4px",
                 }}
-                placeholder="Description"></textarea>
+                placeholder="Description"
+              ></textarea>
               <select
                 style={{
                   width: "100%",
@@ -896,7 +1007,8 @@ const TeacherCourses = () => {
                     ...selectedCourse,
                     category: e.target.value,
                   })
-                }>
+                }
+              >
                 <option value="Select Course Category" disabled>
                   Select Course Category
                 </option>
@@ -913,13 +1025,14 @@ const TeacherCourses = () => {
                   border: "1px solid #ccc",
                   borderRadius: "4px",
                 }}
-                value={selectedCourse?.difficultyLevel}
+                value={selectedCourse.difficultyLevel}
                 onChange={(e) =>
                   setSelectedCourse({
                     ...selectedCourse,
                     difficultyLevel: e.target.value,
                   })
-                }>
+                }
+              >
                 <option value="Select Difficulty Level" disabled>
                   Select Difficulty Level
                 </option>
@@ -940,16 +1053,19 @@ const TeacherCourses = () => {
                 marginLeft: "25px",
                 marginTop: "-15px",
               }}
-              onClick={handleEditCourse}>
+              onClick={handleEditCourse}
+            >
               submit
             </button>
           </>
         )}
       </Modal>
+
       {/* Add Lecture Modal */}
       <Modal
         isOpen={isLectureModalOpen}
-        onClose={() => setIsLectureModalOpen(false)}>
+        onClose={() => setIsLectureModalOpen(false)}
+      >
         <h2>Add Lecture to {selectedCourse?.title}</h2>
         <div
           style={{
@@ -957,7 +1073,8 @@ const TeacherCourses = () => {
             flexDirection: "column",
             padding: "9px",
             borderRadius: "4px",
-          }}>
+          }}
+        >
           <input
             type="text"
             placeholder="Lecture Title"
@@ -987,7 +1104,8 @@ const TeacherCourses = () => {
                 ...newLecture,
                 type: e.target.value as "video" | "pdf",
               })
-            }>
+            }
+          >
             <option value="video">YouTube Video</option>
             <option value="pdf">PDF</option>
           </select>
@@ -1041,7 +1159,8 @@ const TeacherCourses = () => {
             cursor: "pointer",
             marginLeft: "25px",
             marginTop: "-15px",
-          }}>
+          }}
+        >
           Add Lecture
         </button>
       </Modal>
@@ -1049,17 +1168,16 @@ const TeacherCourses = () => {
       {/* Add Quiz Modal */}
       <Modal isOpen={isQuizModalOpen} onClose={() => setIsQuizModalOpen(false)}>
         <h2>Add Quiz to {selectedCourse?.title}</h2>
-
         <div
           style={{
-            maxHeight: "400px", // Set a maximum height for the scrollable area
-            overflowY: "auto", // Enable vertical scrolling
+            maxHeight: "400px",
+            overflowY: "auto",
             marginBottom: "20px",
             padding: "10px",
             border: "1px solid #ccc",
             borderRadius: "5px",
-          }}>
-          {/* Quiz Level */}
+          }}
+        >
           <label>
             Select Level:
             <select
@@ -1073,14 +1191,14 @@ const TeacherCourses = () => {
                 padding: "8px",
                 borderRadius: "4px",
                 width: "100%",
-              }}>
+              }}
+            >
               <option value="Beginner">Beginner</option>
               <option value="Intermediate">Intermediate</option>
               <option value="Advanced">Advanced</option>
             </select>
           </label>
 
-          {/* Questions */}
           <h3>Questions</h3>
           {newQuiz.questions.map((q, idx) => (
             <div
@@ -1091,7 +1209,8 @@ const TeacherCourses = () => {
                 border: "1px solid #ddd",
                 borderRadius: "5px",
                 backgroundColor: "#f9f9f9",
-              }}>
+              }}
+            >
               <input
                 type="text"
                 placeholder={`Question ${idx + 1}`}
@@ -1171,7 +1290,8 @@ const TeacherCourses = () => {
                     padding: "8px",
                     borderRadius: "4px",
                     width: "100%",
-                  }}>
+                  }}
+                >
                   {q.options.map((_, optIdx) => (
                     <option key={optIdx} value={optIdx}>
                       Option {optIdx + 1}
@@ -1190,7 +1310,11 @@ const TeacherCourses = () => {
               ...newQuiz,
               questions: [
                 ...newQuiz.questions,
-                { question: "", options: ["", "", "", ""], correctAnswer: 0 },
+                {
+                  question: "",
+                  options: ["", "", "", ""],
+                  correctAnswer: 0,
+                },
               ],
             })
           }
@@ -1202,7 +1326,8 @@ const TeacherCourses = () => {
             border: "none",
             borderRadius: "5px",
             cursor: "pointer",
-          }}>
+          }}
+        >
           Add Question
         </button>
 
@@ -1216,30 +1341,59 @@ const TeacherCourses = () => {
             border: "none",
             borderRadius: "5px",
             cursor: "pointer",
-          }}>
+          }}
+        >
           Submit Quiz
         </button>
       </Modal>
+
+      {/* Manage Files Modal */}
+      <Modal isOpen={isManageFilesOpen} onClose={() => setIsManageFilesOpen(false)}>
+        <h2>Manage Materials for {selectedCourse?.title}</h2>
+        <div style={{ marginBottom: "10px" }}>
+          <label>Upload Course Material (PDF or doc):</label>
+          <input
+            type="file"
+            onChange={(e) => {
+              if (e.target.files?.[0]) {
+                setNewFiles(e.target.files[0]);
+              }
+            }}
+          />
+        </div>
+        <div style={{ marginBottom: "10px" }}>
+          <label>Upload Course Image (jpg/png):</label>
+          <input
+            type="file"
+            onChange={(e) => {
+              if (e.target.files?.[0]) {
+                setNewImage(e.target.files[0]);
+              }
+            }}
+          />
+        </div>
+        <button onClick={handleUpdateCourseFiles}>Upload</button>
+      </Modal>
+
       {/* View Lectures Modal */}
       <Modal
         isOpen={isViewLectureModalOpen}
-        onClose={() => setIsViewLectureModalOpen(false)}>
+        onClose={() => setIsViewLectureModalOpen(false)}
+      >
         <h2>Lectures for {selectedCourse?.title}</h2>
         <ul>
           {selectedCourse?.lectures.map((lecture, index) => (
             <li key={index} style={{ marginBottom: "10px" }}>
-              {/* Clickable Lecture Title */}
               <span
                 style={{
                   cursor: "pointer",
                   color: "blue",
                   textDecoration: "underline",
                 }}
-                onClick={() => toggleLectureContent(lecture.title)}>
+                onClick={() => toggleLectureContent(lecture.title)}
+              >
                 {lecture.title}
               </span>
-
-              {/* Expanded Content */}
               {expandedLecture === lecture.title && (
                 <div style={{ marginTop: "10px" }}>
                   {lecture.type === "video" ? (
@@ -1250,7 +1404,8 @@ const TeacherCourses = () => {
                       frameBorder="0"
                       allow="autoplay; encrypted-media"
                       allowFullScreen
-                      title={lecture.title}></iframe>
+                      title={lecture.title}
+                    ></iframe>
                   ) : (
                     <iframe
                       src={lecture.content}
@@ -1261,13 +1416,187 @@ const TeacherCourses = () => {
                         marginTop: "10px",
                         borderRadius: "5px",
                       }}
-                      title={lecture.title}></iframe>
+                      title={lecture.title}
+                    ></iframe>
                   )}
                 </div>
               )}
+
+              {/* If we want to display quizzes inside each lecture */}
+              {lecture.quizzes?.map((quiz) => (
+                <div
+                  key={quiz.quizId}
+                  style={{
+                    marginTop: "10px",
+                    border: "1px solid #ccc",
+                    padding: "10px",
+                    borderRadius: "5px",
+                  }}
+                >
+                  <h4>{quiz.title}</h4>
+                  <p>Level: {quiz.level}</p>
+                  <button
+                    onClick={() =>
+                      handleViewQuizAnalytics(quiz.quizId)
+                    }
+                    style={{
+                      marginRight: "10px",
+                      padding: "6px 10px",
+                      backgroundColor: "#6c757d",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    View Quiz Analytics
+                  </button>
+                  <button
+                    onClick={() =>
+                      openEditQuizModal(
+                        selectedCourse,
+                        // If your lecture has an _id, use that. If not, index.
+                        // Suppose you have an `_id` property:
+                        (lecture as any)._id?.toString() || String(index),
+                        quiz
+                      )
+                    }
+                    style={{
+                      padding: "6px 10px",
+                      backgroundColor: "#FF9800",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Edit Quiz
+                  </button>
+                </div>
+              ))}
             </li>
           ))}
         </ul>
+      </Modal>
+
+      {/* Edit Quiz Modal */}
+      <Modal isOpen={isEditQuizOpen} onClose={() => setIsEditQuizOpen(false)}>
+        <h2>Edit Quiz</h2>
+        <div style={{ marginBottom: "10px" }}>
+          <label>Title</label>
+          <input
+            type="text"
+            value={quizUpdateData.title}
+            onChange={(e) =>
+              setQuizUpdateData({ ...quizUpdateData, title: e.target.value })
+            }
+            style={{
+              display: "block",
+              marginBottom: "10px",
+              width: "100%",
+              padding: "8px",
+            }}
+          />
+          <label>Level</label>
+          <select
+            value={quizUpdateData.level}
+            onChange={(e) =>
+              setQuizUpdateData({ ...quizUpdateData, level: e.target.value })
+            }
+            style={{
+              display: "block",
+              marginBottom: "10px",
+              width: "100%",
+              padding: "8px",
+            }}
+          >
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+        </div>
+
+        {/* Questions */}
+        {quizUpdateData.questions.map((q, idx) => (
+          <div
+            key={idx}
+            style={{
+              marginBottom: "10px",
+              border: "1px solid #ccc",
+              padding: "10px",
+              borderRadius: "5px",
+            }}
+          >
+            <input
+              type="text"
+              value={q.question}
+              onChange={(e) => {
+                const updated = [...quizUpdateData.questions];
+                updated[idx].question = e.target.value;
+                setQuizUpdateData({ ...quizUpdateData, questions: updated });
+              }}
+              style={{
+                display: "block",
+                marginBottom: "10px",
+                width: "100%",
+                padding: "8px",
+              }}
+            />
+            {q.options.map((opt, optIdx) => (
+              <input
+                key={optIdx}
+                type="text"
+                value={opt}
+                onChange={(e) => {
+                  const updated = [...quizUpdateData.questions];
+                  updated[idx].options[optIdx] = e.target.value;
+                  setQuizUpdateData({ ...quizUpdateData, questions: updated });
+                }}
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  width: "100%",
+                  padding: "8px",
+                }}
+              />
+            ))}
+            <label>Correct Answer</label>
+            <select
+              value={q.correctAnswer}
+              onChange={(e) => {
+                const updated = [...quizUpdateData.questions];
+                updated[idx].correctAnswer = parseInt(e.target.value);
+                setQuizUpdateData({ ...quizUpdateData, questions: updated });
+              }}
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "8px",
+                marginBottom: "10px",
+              }}
+            >
+              {q.options.map((_, i) => (
+                <option key={i} value={i}>
+                  Option {i + 1}
+                </option>
+              ))}
+            </select>
+          </div>
+        ))}
+
+        <button
+          onClick={handleEditQuizSubmit}
+          style={{
+            padding: "8px 12px",
+            backgroundColor: "#2196F3",
+            color: "#fff",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+          }}
+        >
+          Save Quiz
+        </button>
       </Modal>
     </div>
   );

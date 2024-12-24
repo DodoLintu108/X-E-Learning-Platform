@@ -20,7 +20,10 @@ interface UserData {
   userId: string;
   createdAt: string;
   __v: number;
+  learningPreference?: string;
+  subjectsOfInterest?: string[];
 }
+
 interface Course {
   _id: string;
   title: string;
@@ -28,22 +31,27 @@ interface Course {
   category: string;
   difficultyLevel: string;
   courseImage?: string;
-  enrolled: boolean; // Used to differentiate between enrolled and available
-  teacherName: string; // Assuming teacherName is returned in the course object
-  isEnded: boolean; // Indicates whether the course has ended
+  enrolled: boolean;
+  teacherName: string;
+  isEnded: boolean;
 }
 
 export default function Profile() {
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [isEditing, setIsEditing] = useState(false); // Toggle for edit mode
+  const [isEditing, setIsEditing] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [userID, setUserID] = useState<string | "">("");
   const [role, setRole] = useState<string | "">("");
   const [allCourses, setAllCourses] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([]);
-  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]); // To store filtered results
-  const [searchQuery, setSearchQuery] = useState(""); // To handle search input
+  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [learningPreference, setLearningPreference] = useState(localStorage.getItem('learningPreference') || '');
+  const [subjectsOfInterest, setSubjectsOfInterest] = useState<string[]>(
+    JSON.parse(localStorage.getItem('subjectsOfInterest') || '[]')
+  );
+
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     const userIDd = localStorage.getItem("userID");
@@ -61,6 +69,19 @@ export default function Profile() {
     fetchCourses();
   }, [accessToken, userID]);
 
+  const handleLearningPreferenceChange = (preference: string) => {
+    setLearningPreference(preference);
+    localStorage.setItem('learningPreference', preference);
+  };
+
+  const handleSubjectChange = (subject: string) => {
+    const updatedSubjects = subjectsOfInterest.includes(subject)
+      ? subjectsOfInterest.filter(s => s !== subject)
+      : [...subjectsOfInterest, subject];
+    setSubjectsOfInterest(updatedSubjects);
+    localStorage.setItem('subjectsOfInterest', JSON.stringify(updatedSubjects));
+  };
+
   const getUserData = async (userID: string) => {
     try {
       const response = await axios.get<UserData>(
@@ -76,6 +97,7 @@ export default function Profile() {
       toast.error("Error fetching user data!");
     }
   };
+
   const getTeacherCourses = async (userId: string | null) => {
     try {
       console.log("access token", accessToken);
@@ -97,7 +119,6 @@ export default function Profile() {
         );
         if (statusCode === 401) {
           toast.error("Session expired. Redirecting to Login...");
-          // window.location.href = "/Login";
           return;
         }
       } else {
@@ -106,8 +127,9 @@ export default function Profile() {
       }
     }
   };
+
   const fetchCourses = async () => {
-    const token = localStorage.getItem("accessToken"); // Assuming JWT token is stored in localStorage
+    const token = localStorage.getItem("accessToken");
     setLoading(true);
 
     try {
@@ -127,6 +149,7 @@ export default function Profile() {
       setLoading(false);
     }
   };
+
   const handleSave = async () => {
     try {
       if (!userData) return;
@@ -269,11 +292,64 @@ export default function Profile() {
                   ) : (
                     userData.role
                   )}
-                </p>{" "}
+                </p>
                 <p>
                   <strong>Created At:</strong>{" "}
                   {new Date(userData.createdAt).toLocaleString()}
                 </p>
+
+                {/* Learning Preferences Section */}
+                <div style={{ marginTop: "20px" }}>
+                  <p><strong>Learning Preference:</strong></p>
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <button
+                      onClick={() => handleLearningPreferenceChange('pdf')}
+                      style={{
+                        padding: "5px 10px",
+                        backgroundColor: learningPreference === 'pdf' ? '#007bff' : '#e9ecef',
+                        color: learningPreference === 'pdf' ? 'white' : 'black',
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                      }}>
+                      PDF
+                    </button>
+                    <button
+                      onClick={() => handleLearningPreferenceChange('video')}
+                      style={{
+                        padding: "5px 10px",
+                        backgroundColor: learningPreference === 'video' ? '#007bff' : '#e9ecef',
+                        color: learningPreference === 'video' ? 'white' : 'black',
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                      }}>
+                      Video
+                    </button>
+                  </div>
+                </div>
+
+                {/* Subjects of Interest Section */}
+                <div style={{ marginTop: "20px" }}>
+                  <p><strong>Subjects of Interest:</strong></p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                    {["Mathematics", "Machine Learning", "Physics", "Chemistry"].map((subject) => (
+                      <button
+                        key={subject}
+                        onClick={() => handleSubjectChange(subject)}
+                        style={{
+                          padding: "5px 10px",
+                          backgroundColor: subjectsOfInterest.includes(subject) ? '#007bff' : '#e9ecef',
+                          color: subjectsOfInterest.includes(subject) ? 'white' : 'black',
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                        }}>
+                        {subject}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
               <div style={{ marginTop: "20px" }}>
                 {isEditing ? (
@@ -331,26 +407,26 @@ export default function Profile() {
       {role == "student" && (
         <div
           style={{
-            display: "flex", // Enables flexbox
-            flexWrap: "wrap", // Allows wrapping to the next line if needed
-            gap: "16px", // Adds space between the cards
-            justifyContent: "space-around", // Distributes the cards evenly
-            padding: "16px", // Adds padding around the container
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "16px",
+            justifyContent: "space-around",
+            padding: "16px",
           }}>
           <div>
             <h2 className="font-bold text-2xl">Explore All Your Courses</h2>
           </div>
           <div
             style={{
-              display: "flex", // Enables flexbox for horizontal alignment
-              alignItems: "start", // Aligns items at the top
-              justifyContent: "flex-start", // Ensures cards start from the left
-              flexWrap: "nowrap", // Prevents wrapping to the next line
-              gap: "16px", // Space between cards
-              overflowX: "scroll", // Allows horizontal scrolling if needed
-              padding: "16px", // Adds padding around the container
-              scrollbarWidth: "none", // Hides scrollbar in Firefox
-              msOverflowStyle: "none", // Hides scrollbar in IE/Edge
+              display: "flex",
+              alignItems: "start",
+              justifyContent: "flex-start",
+              flexWrap: "nowrap",
+              gap: "16px",
+              overflowX: "scroll",
+              padding: "16px",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
             }}>
             {enrolledCourses &&
               enrolledCourses.map((course: any) => {
@@ -361,7 +437,6 @@ export default function Profile() {
                       display: "flex",
                       flexDirection: "row",
                       height: "250px",
-
                       justifyContent: "space-between",
                       alignItems: "center",
                       padding: "9px",
@@ -370,8 +445,8 @@ export default function Profile() {
                       boxShadow: "1px 4px 6px rgba(0, 0, 0, 0.5)",
                       cursor: "pointer",
                       transition: "transform 0.2s",
-                      width: "400px", // Fixed width for consistency
-                      flexShrink: 0, // Prevents shrinking of cards in flexbox
+                      width: "400px",
+                      flexShrink: 0,
                     }}
                     onMouseOver={(e) =>
                       (e.currentTarget.style.transform = "scale(1.02)")

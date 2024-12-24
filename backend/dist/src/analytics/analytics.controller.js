@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnalyticsController = void 0;
 const common_1 = require("@nestjs/common");
 const analytics_service_1 = require("./analytics.service");
+const auth_guard_1 = require("../auth/auth.guard");
 let AnalyticsController = class AnalyticsController {
     constructor(analyticsService) {
         this.analyticsService = analyticsService;
@@ -26,7 +27,20 @@ let AnalyticsController = class AnalyticsController {
         };
     }
     async getCourseAverageScore(courseId) {
-        return await this.analyticsService.getCourseAverageScore(courseId);
+        return this.analyticsService.getCourseAverageScore(courseId);
+    }
+    async getQuizAnalytics(quizId) {
+        return {
+            quizId,
+            averageQuizScore: await this.analyticsService.getQuizAnalytics(quizId),
+        };
+    }
+    async getStudentAnalytics(req, courseId) {
+        const userId = req.user.userId;
+        if (!courseId) {
+            throw new common_1.NotFoundException('courseId is required');
+        }
+        return this.analyticsService.getStudentAnalytics(courseId, userId);
     }
 };
 exports.AnalyticsController = AnalyticsController;
@@ -44,8 +58,24 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], AnalyticsController.prototype, "getCourseAverageScore", null);
+__decorate([
+    (0, common_1.Get)('quiz'),
+    __param(0, (0, common_1.Query)('quizId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AnalyticsController.prototype, "getQuizAnalytics", null);
+__decorate([
+    (0, common_1.Get)('student'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('courseId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], AnalyticsController.prototype, "getStudentAnalytics", null);
 exports.AnalyticsController = AnalyticsController = __decorate([
     (0, common_1.Controller)('analytics'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
     __metadata("design:paramtypes", [analytics_service_1.AnalyticsService])
 ], AnalyticsController);
 //# sourceMappingURL=analytics.controller.js.map

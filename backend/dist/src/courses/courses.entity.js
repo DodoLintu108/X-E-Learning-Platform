@@ -9,8 +9,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CourseSchema = exports.Course = exports.Quiz = void 0;
+exports.CourseSchema = exports.Course = exports.Feedback = exports.Lecture = exports.Quiz = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
+const mongoose_2 = require("mongoose");
 const uuid_1 = require("uuid");
 let Quiz = class Quiz {
 };
@@ -52,6 +53,11 @@ exports.Quiz = Quiz = __decorate([
 ], Quiz);
 let Lecture = class Lecture {
 };
+exports.Lecture = Lecture;
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, auto: true, required: false }),
+    __metadata("design:type", mongoose_2.Types.ObjectId)
+], Lecture.prototype, "_id", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true, default: 'Untitled Quiz' }),
     __metadata("design:type", String)
@@ -65,34 +71,34 @@ __decorate([
     __metadata("design:type", String)
 ], Lecture.prototype, "content", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({
-        type: [
-            {
-                quizId: { type: String, required: true },
-                title: { type: String, required: true, default: 'Untitled Quiz' },
-                level: { type: String, required: true },
-                questions: [
-                    {
-                        question: { type: String, required: true },
-                        options: { type: [String], required: true },
-                        correctAnswer: { type: Number, required: true },
-                    },
-                ],
-                submittedBy: { type: [Object], default: [] },
-                createdAt: { type: Date, default: Date.now },
-            },
-        ],
-        default: [],
-    }),
-    __metadata("design:type", Array)
-], Lecture.prototype, "quizzes", void 0);
-__decorate([
     (0, mongoose_1.Prop)({ default: Date.now }),
     __metadata("design:type", Date)
 ], Lecture.prototype, "createdAt", void 0);
-Lecture = __decorate([
+__decorate([
+    (0, mongoose_1.Prop)({ type: [mongoose_1.SchemaFactory.createForClass(Quiz)], default: [] }),
+    __metadata("design:type", Array)
+], Lecture.prototype, "quizzes", void 0);
+exports.Lecture = Lecture = __decorate([
     (0, mongoose_1.Schema)()
 ], Lecture);
+let Feedback = class Feedback {
+};
+exports.Feedback = Feedback;
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Feedback.prototype, "userId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Feedback.prototype, "comment", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true, default: Date.now }),
+    __metadata("design:type", Date)
+], Feedback.prototype, "submittedAt", void 0);
+exports.Feedback = Feedback = __decorate([
+    (0, mongoose_1.Schema)()
+], Feedback);
 let Course = class Course {
 };
 exports.Course = Course;
@@ -137,9 +143,17 @@ __decorate([
     __metadata("design:type", Date)
 ], Course.prototype, "createdAt", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: [Lecture], default: [] }),
+    (0, mongoose_1.Prop)({ type: [mongoose_1.SchemaFactory.createForClass(Lecture)], default: [] }),
     __metadata("design:type", Array)
 ], Course.prototype, "lectures", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: false }),
+    __metadata("design:type", Boolean)
+], Course.prototype, "isEnded", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [Feedback], default: [] }),
+    __metadata("design:type", Array)
+], Course.prototype, "feedback", void 0);
 exports.Course = Course = __decorate([
     (0, mongoose_1.Schema)()
 ], Course);

@@ -6,6 +6,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Navbar from "@/app/components/Navbar";
 import "../../globals.css";
+
 // BackupManager Component
 const BackupManager = () => {
   const handleCreateBackup = async () => {
@@ -50,14 +51,7 @@ const BackupManager = () => {
   };
 
   return (
-    <div
-      style={{
-        marginTop: "40px",
-        display: "flex",
-        flexDirection: "row",
-        gap: "8px",
-      }}>
-     
+    <div className="mt-10 flex flex-row gap-2">
       <button onClick={handleCreateBackup} className="button blue">
         Create Backup
       </button>
@@ -81,6 +75,15 @@ const AdminDashboard = () => {
   const [allStudents, setAllStudents] = useState<any[]>([]);
   const [allTeachers, setAllTeachers] = useState<any[]>([]);
   const [error, setError] = useState("");
+  const [userLogs, setUserLogs] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
+  const [newCourseData, setNewCourseData] = useState({
+    title: "",
+    description: "",
+    category: "",
+    difficultyLevel: ""
+  });
 
   const fetchData = async (
     endpoint: string,
@@ -111,7 +114,7 @@ const AdminDashboard = () => {
     }
 
     try {
-      await axios.delete(`http://localhost:3000/${endpoint}/${id}`, {
+      await axios.delete(`http://localhost:3000/users/${endpoint}/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success(`${endpoint.slice(0, -1)} deleted successfully.`);
@@ -124,57 +127,200 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchLogs = async (userId: string) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get(
+        `http://localhost:3000/users/user/${userId}/access-logs`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setUserLogs(response.data.logs);
+      setSelectedUserId(userId);
+      toast.success("Logs fetched successfully");
+    } catch (error) {
+      toast.error("Failed to fetch access logs");
+    }
+  };
+
+  const resetFailedLogins = async (userId: string) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      await axios.put(
+        `http://localhost:3000/users/user/${userId}/reset-failed-logins`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("Failed login attempts reset");
+    } catch (error) {
+      toast.error("Failed to reset login attempts");
+    }
+  };
+
+  const handleCreateCourse = async () => {
+    const token = localStorage.getItem("accessToken");
+    try {
+      await axios.post("http://localhost:3000/courses/create", newCourseData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success("Course created successfully");
+      fetchData("courses/all", setAllCourses);
+      setNewCourseData({
+        title: "",
+        description: "",
+        category: "",
+        difficultyLevel: ""
+      });
+    } catch (error) {
+      console.error("Error creating course:", error);
+      toast.error("Failed to create course");
+    }
+  };
+
+  const handleEndCourse = async (courseId: string) => {
+    const token = localStorage.getItem("accessToken");
+    try {
+      await axios.put(
+        `http://localhost:3000/courses/${courseId}/end`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("Course ended successfully");
+      fetchData("courses/all", setAllCourses);
+    } catch (error) {
+      console.error("Error ending course:", error);
+      toast.error("Failed to end course");
+    }
+  };
+
+  const handleAssignCourse = async (courseId: string, userId: string) => {
+    const token = localStorage.getItem("accessToken");
+    try {
+      await axios.post(
+        `http://localhost:3000/courses/${courseId}/assign/${userId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("Course assigned successfully");
+      fetchData("courses/all", setAllCourses);
+    } catch (error) {
+      console.error("Error assigning course:", error);
+      toast.error("Failed to assign course");
+    }
+  };
+
   return (
     <div>
       <Navbar />
       <ToastContainer />
-      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>
-        Admin Dashboard
-      </h1>
+      <h1 className="text-center mb-5">Admin Dashboard</h1>
 
-      {error && (
-        <div style={{ color: "red", marginBottom: "20px" }}>{error}</div>
-      )}
+      {error && <div className="text-red-500 mb-5">{error}</div>}
 
-      <div
-        style={{
-          marginBottom: "20px",
-          textAlign: "center",
-          display: "flex",
-          flexDirection: "row",
-          gap: "8px",
-        }}>
+      {/* Course Creation Form */}
+      <div className="mb-5 p-4 border rounded">
+        <h2 className="mb-3">Create New Course</h2>
+        <div className="flex flex-col gap-2">
+          <input
+            type="text"
+            placeholder="Course Title"
+            value={newCourseData.title}
+            onChange={(e) =>
+              setNewCourseData({ ...newCourseData, title: e.target.value })
+            }
+            className="p-2 border rounded"
+          />
+          <input
+            type="text"
+            placeholder="Description"
+            value={newCourseData.description}
+            onChange={(e) =>
+              setNewCourseData({ ...newCourseData, description: e.target.value })
+            }
+            className="p-2 border rounded"
+          />
+          <input
+            type="text"
+            placeholder="Category"
+            value={newCourseData.category}
+            onChange={(e) =>
+              setNewCourseData({ ...newCourseData, category: e.target.value })
+            }
+            className="p-2 border rounded"
+          />
+          <select
+            value={newCourseData.difficultyLevel}
+            onChange={(e) =>
+              setNewCourseData({
+                ...newCourseData,
+                difficultyLevel: e.target.value,
+              })
+            }
+            className="p-2 border rounded"
+          >
+            <option value="">Select Difficulty</option>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+          <button onClick={handleCreateCourse} className="button blue">
+            Create Course
+          </button>
+        </div>
+      </div>
+
+      {/* Data Fetch Buttons */}
+      <div className="mb-5 text-center flex flex-row gap-2">
         <button
           onClick={() => fetchData("courses/all", setAllCourses)}
-          className="button blue">
+          className="button blue"
+        >
           Get All Courses
         </button>
         <button
           onClick={() => fetchData("users/teachers", setAllTeachers)}
-          className="button green">
+          className="button green"
+        >
           Get All Teachers
         </button>
         <button
           onClick={() => fetchData("users/students", setAllStudents)}
-          className="button orange">
+          className="button orange"
+        >
           Get All Students
         </button>
       </div>
 
       {/* Courses Section */}
-      <div>
+      <div className="mb-5">
         <h2>All Courses</h2>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+        <div className="flex flex-wrap gap-5">
           {allCourses.length > 0 ? (
             allCourses.map((course) => (
               <div key={course._id} className="card">
                 <h3>{course.title}</h3>
                 <p>{course.description}</p>
-                <button
-                  onClick={() => handleDelete("courses", course._id)}
-                  className="button red">
-                  Delete
-                </button>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => handleDelete("courses", course._id)}
+                    className="button red"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => handleEndCourse(course._id)}
+                    className="button orange"
+                  >
+                    End Course
+                  </button>
+                </div>
               </div>
             ))
           ) : (
@@ -184,18 +330,37 @@ const AdminDashboard = () => {
       </div>
 
       {/* Teachers Section */}
-      <div>
+      <div className="mb-5">
         <h2>All Teachers</h2>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+        <div className="flex flex-wrap gap-5">
           {allTeachers.length > 0 ? (
             allTeachers.map((teacher) => (
               <div key={teacher._id} className="card">
                 <h3>{teacher.name}</h3>
                 <p>{teacher.email}</p>
+
+                {/* Delete Button */}
                 <button
                   onClick={() => handleDelete("teachers", teacher._id)}
-                  className="button red">
+                  className="button red"
+                >
                   Delete
+                </button>
+
+                {/* View Logs Button */}
+                <button
+                  onClick={() => fetchLogs(teacher._id)}
+                  className="button blue"
+                >
+                  View Logs
+                </button>
+
+                {/* Reset Failed Logins Button */}
+                <button
+                  onClick={() => resetFailedLogins(teacher._id)}
+                  className="button orange"
+                >
+                  Reset Failed Logins
                 </button>
               </div>
             ))
@@ -206,18 +371,37 @@ const AdminDashboard = () => {
       </div>
 
       {/* Students Section */}
-      <div>
+      <div className="mb-5">
         <h2>All Students</h2>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+        <div className="flex flex-wrap gap-5">
           {allStudents.length > 0 ? (
             allStudents.map((student) => (
               <div key={student._id} className="card">
                 <h3>{student.name}</h3>
                 <p>{student.email}</p>
+
+                {/* Delete Button */}
                 <button
                   onClick={() => handleDelete("students", student._id)}
-                  className="button red">
+                  className="button red"
+                >
                   Delete
+                </button>
+
+                {/* View Logs Button */}
+                <button
+                  onClick={() => fetchLogs(student._id)}
+                  className="button blue"
+                >
+                  View Logs
+                </button>
+
+                {/* Reset Failed Logins Button */}
+                <button
+                  onClick={() => resetFailedLogins(student._id)}
+                  className="button orange"
+                >
+                  Reset Failed Logins
                 </button>
               </div>
             ))

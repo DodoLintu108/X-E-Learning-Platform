@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.QuizSchema = exports.Quiz = exports.AnalyticsSchema = exports.Analytics = void 0;
+exports.QuizSchema = exports.AnalyticsSchema = exports.Quiz = exports.Analytics = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
 let Analytics = class Analytics {
 };
@@ -77,7 +77,6 @@ __decorate([
 exports.Analytics = Analytics = __decorate([
     (0, mongoose_1.Schema)()
 ], Analytics);
-exports.AnalyticsSchema = mongoose_1.SchemaFactory.createForClass(Analytics);
 let Quiz = class Quiz {
 };
 exports.Quiz = Quiz;
@@ -96,5 +95,6 @@ __decorate([
 exports.Quiz = Quiz = __decorate([
     (0, mongoose_1.Schema)()
 ], Quiz);
+exports.AnalyticsSchema = mongoose_1.SchemaFactory.createForClass(Analytics);
 exports.QuizSchema = mongoose_1.SchemaFactory.createForClass(Quiz);
 //# sourceMappingURL=analytics.schema.js.map

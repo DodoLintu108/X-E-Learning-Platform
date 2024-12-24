@@ -18,9 +18,11 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const users_entity_1 = require("./users.entity");
 const courses_service_1 = require("../courses/courses.service");
+const users_entity_2 = require("./users.entity");
 let UsersService = class UsersService {
-    constructor(userModel, coursesService) {
+    constructor(userModel, logModel, coursesService) {
         this.userModel = userModel;
+        this.logModel = logModel;
         this.coursesService = coursesService;
     }
     async createUser(userData) {
@@ -37,13 +39,35 @@ let UsersService = class UsersService {
         }
         return user;
     }
+    async updateUser(userId, updateData) {
+        const user = await this.userModel.findOne({ userId }).exec();
+        if (!user) {
+            throw new common_1.NotFoundException('User not found');
+        }
+        if (updateData.name)
+            user.name = updateData.name;
+        if (updateData.email)
+            user.email = updateData.email;
+        if (updateData.role)
+            user.role = updateData.role;
+        if (updateData.learningPreference) {
+            user.learningPreference = updateData.learningPreference;
+        }
+        if (updateData.subjectsOfInterest) {
+            user.subjectsOfInterest = updateData.subjectsOfInterest;
+        }
+        return user.save();
+    }
     async getDashboard(user) {
         if (user.role === 'student') {
             const enrolledCourses = await this.getEnrolledCourses(user.userId);
+            const userPreferences = await this.findById(user.userId);
             return {
                 message: `Welcome to your student dashboard, ${user.name}`,
                 role: user.role,
                 enrolledCourses,
+                learningPreference: userPreferences.learningPreference,
+                subjectsOfInterest: userPreferences.subjectsOfInterest,
             };
         }
         else if (user.role === 'instructor') {
@@ -79,15 +103,13 @@ let UsersService = class UsersService {
     async getTotalUsers() {
         return this.userModel.countDocuments();
     }
-    async findAllByRole(role) {
-        return this.userModel.find({ role }).exec();
-    }
     async deleteTeacher(userId) {
-        const user = await this.userModel.findOne({ _id: userId, role: 'teacher' }).exec();
+        const user = await this.userModel.findOne({ _id: userId, role: 'teacher' });
         if (!user) {
             throw new common_1.NotFoundException('Teacher not found');
         }
         await this.userModel.deleteOne({ _id: userId });
+        return true;
     }
     async deleteStudent(userId) {
         const user = await this.userModel.findOne({ _id: userId, role: 'student' }).exec();
@@ -97,18 +119,57 @@ let UsersService = class UsersService {
         await this.userModel.deleteOne({ _id: userId });
     }
     async deleteUser(userId) {
-        const user = await this.userModel.findById(userId).exec();
-        if (!user) {
+        const result = await this.userModel.findByIdAndDelete(userId);
+        if (!result) {
             throw new common_1.NotFoundException('User not found');
         }
-        await this.userModel.deleteOne({ _id: userId });
+    }
+    async findAllByRole(role) {
+        return this.userModel.find({ role })
+            .select('-passwordHash')
+            .exec();
+    }
+    async logFailedLogin(userId, ipAddress) {
+        const user = await this.userModel.findOne({ userId });
+        if (user) {
+            user.failedLoginAttempts += 1;
+            user.unauthorizedAccessLogs.push({
+                date: new Date(),
+                ipAddress,
+            });
+            await user.save();
+        }
+    }
+    async resetFailedLogin(userId) {
+        await this.userModel.findOneAndUpdate({ userId }, { failedLoginAttempts: 0 });
+    }
+    async getFailedLoginAttempts(userId) {
+        const user = await this.userModel.findOne({ userId });
+        return user ? user.failedLoginAttempts : 0;
+    }
+    async getUnauthorizedLogs(userId) {
+        const user = await this.userModel.findOne({ userId });
+        return user ? user.unauthorizedAccessLogs : [];
+    }
+    async resetFailedLogins(userId, role) {
+        const user = await this.userModel.findOne({ _id: userId, role });
+        if (!user)
+            return false;
+        user.failedLoginAttempts = 0;
+        await user.save();
+        return true;
+    }
+    async getUserLogs(userId) {
+        return this.logModel.find({ userId }).exec();
     }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(users_entity_1.User.name)),
+    __param(1, (0, mongoose_1.InjectModel)(users_entity_2.Log.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model,
         courses_service_1.CoursesService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

@@ -32,6 +32,20 @@ import mongoose from 'mongoose';
 @UseGuards(AuthGuard)
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) { }
+  
+  
+  @Post(':id/feedback')
+  async submitFeedback(
+    @Param('id') courseId: string,
+    @Body('comment') comment: string,
+    @Req() req,
+  ) {
+    const userId = req.user.userId;
+    if (!userId) {
+      throw new NotFoundException('User not found.');
+    }
+    return this.coursesService.submitFeedback(courseId, userId, comment);
+  }
 
   @Post('create')
   @UseInterceptors(
@@ -70,6 +84,7 @@ export class CoursesController {
       },
     },
   })
+
   @Post('create')
   @UseInterceptors(
     FileFieldsInterceptor(
@@ -107,7 +122,7 @@ export class CoursesController {
       },
     },
   })
-  
+
   async createCourse(
     @Req() req, // To access the logged-in user's data
     @Body() createCourseDto: CreateCourseDto,
@@ -133,7 +148,7 @@ export class CoursesController {
 
     return {
       message: 'Course created successfully',
-      course: newCourse,    
+      course: newCourse,
     };
   }
   @Put(':courseId')
@@ -329,7 +344,7 @@ export class CoursesController {
       quiz,
     };
   }
-  
+
   @Put(':id/end')
   async endCourse(@Param('id') id: string) {
     try {
@@ -339,7 +354,7 @@ export class CoursesController {
       throw new HttpException('Failed to end the course', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-  
+
   @Post(':courseId/quizzes/:quizId/submit')
   async submitQuiz(
     @Param('courseId') courseId: string,
@@ -348,9 +363,11 @@ export class CoursesController {
     body: { userId: string; answers: Array<{ questionId: string; answer: number }> }
   ): Promise<{ score: number }> {
     const { userId, answers } = body;
-    return this.coursesService.submitQuizResponse(courseId, quizId, userId, answers);
+    const submission = await this.coursesService.submitQuizResponse(courseId, quizId, userId, answers);
+    return submission;  // Ensure the updated score is returned
   }
   
+
 
 
   @Get(':courseId/quizzes')
@@ -416,5 +433,77 @@ export class CoursesController {
   async getQuizzesForCourse(@Param('courseId') courseId: string) {
     return this.coursesService.getAllQuizzesForCourse(courseId);
   }
+  @Put('edit/:courseId')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'files', maxCount: 2 },
+        { name: 'imagefiles', maxCount: 2 },
+      ],
+      multerOptions,
+    ),
+  )
+  async editCourse(
+    @Param('courseId') courseId: string,
+    @Body() updateData: Partial<Course>,
+    @UploadedFiles()
+    files: {
+      files?: Express.Multer.File[];
+      imagefiles?: Express.Multer.File[];
+    },
+  ) {
+    const courseMaterial = files?.files?.[0]?.filename || updateData.courseMaterial;
+    const courseImage = files?.imagefiles?.[0]?.filename || updateData.courseImage;
+
+    const courseData = {
+      ...updateData,
+      courseMaterial,
+      courseImage,
+    };
+
+    const updatedCourse = await this.coursesService.editCourse(courseId, courseData);
+    return {
+      message: 'Course updated successfully',
+      course: updatedCourse,
+    };
+  }
+
+  @Delete('delete/:courseId')
+  async deleteCourseById(@Param('courseId') courseId: string) {
+    await this.coursesService.deleteCourseById(courseId);
+    return {
+      message: 'Course deleted successfully',
+    };
+  }
+
+  @Put(':courseId/lectures/:lectureId/quizzes/:quizId')
+  async updateQuiz(
+    @Param('courseId') courseId: string,
+    @Param('lectureId') lectureId: string,
+    @Param('quizId') quizId: string,
+    @Body()
+    quizUpdateData: {
+      title?: string;
+      level?: string;
+      questions?: Array<{
+        question: string;
+        options: string[];
+        correctAnswer: number;
+      }>;
+    },
+  ) {
+    const updatedCourse = await this.coursesService.updateQuiz(
+      courseId,
+      lectureId,
+      quizId,
+      quizUpdateData,
+    );
+    return {
+      message: 'Quiz updated successfully',
+      course: updatedCourse,
+    };
+  }
+
+  
 
 }

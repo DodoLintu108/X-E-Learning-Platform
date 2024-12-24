@@ -12,13 +12,18 @@ const mongoose_1 = require("@nestjs/mongoose");
 const analytics_controller_1 = require("./analytics.controller");
 const analytics_service_1 = require("./analytics.service");
 const analytics_schema_1 = require("./analytics.schema");
+const courses_entity_1 = require("../courses/courses.entity");
 let AnalyticsModule = class AnalyticsModule {
 };
 exports.AnalyticsModule = AnalyticsModule;
 exports.AnalyticsModule = AnalyticsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            mongoose_1.MongooseModule.forFeature([{ name: analytics_schema_1.Analytics.name, schema: analytics_schema_1.AnalyticsSchema }]),
+            mongoose_1.MongooseModule.forFeature([
+                { name: analytics_schema_1.Analytics.name, schema: analytics_schema_1.AnalyticsSchema },
+                { name: courses_entity_1.Course.name, schema: courses_entity_1.CourseSchema },
+                { name: analytics_schema_1.Quiz.name, schema: analytics_schema_1.QuizSchema },
+            ]),
         ],
         controllers: [analytics_controller_1.AnalyticsController],
         providers: [analytics_service_1.AnalyticsService],

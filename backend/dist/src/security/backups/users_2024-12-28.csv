@@ -1,0 +1,8 @@
+"_id","name","email","passwordHash","role","userId","createdAt","__v"
+"6740512065e24b05a16cf2c5","test123","test123@gmail.com","$2b$10$Bl0IU8papbK9bwNpywONteR9Ysjtt7vGNh7GYcO6GTP8lYz2Nr3K2","instructor","76be38c9-b33a-47f5-aafe-7c06cb344af2","2024-11-22T09:38:40.619Z",0
+"6765a49f9e8a369748168a84","ttt ttt","ttt","$2b$10$2rxfZDozDj73QbUcCpIE5.M5g9hkj7P.OUZGxVOfGLbjLhWB2Gvhe","instructor","1891bc44-8418-4691-8d7f-01527ad06506","2024-12-20T17:08:47.762Z",0
+"6765a4ab9e8a369748168a87","xxx xxx","xxx","$2b$10$qug3Yc7wLUXpnmFGDOXYvOAUzefW2V7JmzLX/yJrkzPn354kPvOom","admin","92491e41-8876-4619-ab59-570ab7c7adf3","2024-12-20T17:08:59.241Z",0
+"6769d4a0ffab7d9ce984b100","Admin Admin","Admin@gmail.com","$2b$10$lKG5OaCMSMyYi/XZ0QWtnOfNVNK7dgQhrZIcWXu1VSKthW82Ydedi","admin","11fab80f-2d1e-4d10-8ee8-e9b300efd4b3","2024-12-23T21:22:40.465Z",0
+"676a8d156d5e860fa9b00c46","teacher teacher","teacher@gmail.com","$2b$10$ZomELLRclGZJevBYLbMaleWCyAVjgLiV/qhxr3uzOQWTrAlftNv1u","teacher","684b0bdb-63c1-4b18-8618-c7e5ba335ef7","2024-12-24T10:29:41.504Z",0
+"676ad59eafd6b6f7195a2dbc","student student","student@gmail.com","$2b$10$M5KCvu7ECwXMzguPll9wReViYble6zKvaM8/SHdSGnNeNKgiBHwEy","student","481c526f-96bd-4b44-970b-0bb094b7d6ab","2024-12-24T15:39:10.096Z",1
+"676b593b276adf0dcc329944","Ahmed Alaa","test@giu.com","$2b$10$6IxxXQDItZOJg3xTLUgd8u1mafU7E3Tn9bXzaIZ9Kds.dLQ868enu","teacher","f38d9547-9bea-40b6-b06b-59cf9a1274d7","2024-12-25T01:00:43.509Z",0

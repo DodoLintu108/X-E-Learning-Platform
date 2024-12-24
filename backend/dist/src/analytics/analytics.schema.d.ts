@@ -1,12 +1,13 @@
 import { Document } from 'mongoose';
 export type AnalyticsDocument = Analytics & Document;
+export type QuizDocument = Quiz & Document;
 export declare class Analytics {
     moduleId: string;
-    submittedBy: {
+    submittedBy: Array<{
         userId: string;
         score: number;
         submittedAt: Date;
-    }[];
+    }>;
     level: string;
     analyticsId: string;
     userId: string;
@@ -23,6 +24,15 @@ export declare class Analytics {
     reportUrl?: string;
     createdAt: Date;
 }
+export declare class Quiz {
+    moduleId: string;
+    level: string;
+    submittedBy: Array<{
+        userId: string;
+        score: number;
+        submittedAt: Date;
+    }>;
+}
 export declare const AnalyticsSchema: import("mongoose").Schema<Analytics, import("mongoose").Model<Analytics, any, any, any, Document<unknown, any, Analytics> & Analytics & {
     _id: import("mongoose").Types.ObjectId;
 } & {
@@ -32,15 +42,6 @@ export declare const AnalyticsSchema: import("mongoose").Schema<Analytics, impor
 } & {
     __v: number;
 }>;
-export declare class Quiz {
-    moduleId: string;
-    level: string;
-    submittedBy: {
-        userId: string;
-        score: number;
-        submittedAt: Date;
-    }[];
-}
 export declare const QuizSchema: import("mongoose").Schema<Quiz, import("mongoose").Model<Quiz, any, any, any, Document<unknown, any, Quiz> & Quiz & {
     _id: import("mongoose").Types.ObjectId;
 } & {
