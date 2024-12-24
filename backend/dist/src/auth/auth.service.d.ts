@@ -13,5 +13,6 @@ export declare class AuthService {
     login(email: string, password: string): Promise<{
         accessToken: string;
         role: string;
+        user: import("../users/users.entity").User;
     }>;
 }

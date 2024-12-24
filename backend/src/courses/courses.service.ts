@@ -11,7 +11,7 @@ export class CoursesService {
     @InjectModel(Course.name) private courseModel: Model<CourseDocument>,
     @InjectModel(Module.name) private moduleModel: Model<ModuleDocument>,
     @InjectModel(Version.name) private versionModel: Model<VersionDocument>,
-  ) {}
+  ) { }
 
   async createCourse(data: {
     title: string;
@@ -76,7 +76,19 @@ export class CoursesService {
 
   // Get courses taught by a teacher
   async getCoursesByTeacher(teacherId: string): Promise<Course[]> {
-    return this.courseModel.find({ createdBy: teacherId }).exec();
+        const courses = await this.courseModel
+          .find({ createdBy: teacherId })
+          .exec();
+        const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
+        return courses.map((course) => {
+          if (course.courseImage) {
+            course.courseImage = `${baseUrl}/uploads/${course.courseImage}`;
+          }
+          if (course.courseMaterial) {
+            course.courseMaterial = `${baseUrl}/uploads/${course.courseMaterial}`;
+          }
+          return course;
+        });
   }
 
 
@@ -186,7 +198,7 @@ export class CoursesService {
     else if (role === 'teacher') roleCriteria.forTeachers = true;
     else if (role === 'admin') roleCriteria.forAdmins = true;
     else throw new NotFoundException('Invalid role');
-  
+
     const courses = await this.courseModel.find(roleCriteria).exec();
     const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
     return courses.map((course) => ({
@@ -202,41 +214,41 @@ export class CoursesService {
   }
 
   // Add a quiz to a course
-async addQuizToCourse(
-  courseId: string,
-  quizData: {
-    level: string;
-    questions: Array<{ question: string; options: string[]; correctAnswer: number }>;
+  async addQuizToCourse(
+    courseId: string,
+    quizData: {
+      level: string;
+      questions: Array<{ question: string; options: string[]; correctAnswer: number }>;
+    }
+  ): Promise<any> {
+    const course = await this.courseModel.findById(courseId);
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    // Create quiz object with moduleId
+    const quiz = {
+      quizId: new Date().toISOString(), // Generate a unique ID
+      moduleId: courseId, // Add the courseId as the moduleId
+      level: quizData.level,
+      questions: quizData.questions,
+      createdAt: new Date(),
+    };
+
+    // Assuming the course schema contains an array of lectures
+    if (!course.lectures || course.lectures.length === 0) {
+      throw new NotFoundException('No lectures available to add the quiz');
+    }
+
+    // Add quiz to the last lecture (or any specific logic)
+    const targetLecture = course.lectures[course.lectures.length - 1];
+    targetLecture.quizzes = targetLecture.quizzes || [];
+    targetLecture.quizzes.push(quiz);
+
+    await course.save();
+    return quiz;
   }
-): Promise<any> {
-  const course = await this.courseModel.findById(courseId);
-
-  if (!course) {
-    throw new NotFoundException('Course not found');
-  }
-
-  // Create quiz object with moduleId
-  const quiz = {
-    quizId: new Date().toISOString(), // Generate a unique ID
-    moduleId: courseId, // Add the courseId as the moduleId
-    level: quizData.level,
-    questions: quizData.questions,
-    createdAt: new Date(),
-  };
-
-  // Assuming the course schema contains an array of lectures
-  if (!course.lectures || course.lectures.length === 0) {
-    throw new NotFoundException('No lectures available to add the quiz');
-  }
-
-  // Add quiz to the last lecture (or any specific logic)
-  const targetLecture = course.lectures[course.lectures.length - 1];
-  targetLecture.quizzes = targetLecture.quizzes || [];
-  targetLecture.quizzes.push(quiz);
-
-  await course.save();
-  return quiz;
-}
 
   // Get all quizzes for a course
   async getQuizzesByCourse(courseId: string): Promise<any[]> {
@@ -319,7 +331,7 @@ async addQuizToCourse(
     if (!course) {
       throw new NotFoundException('Course not found');
     }
-  
+
     // Example structure returned
     return {
       title: course.title,
@@ -331,6 +343,7 @@ async addQuizToCourse(
       createdAt: course.createdAt,
     };
   }
+
   
   async getAllQuizzesForCourse(courseId: string): Promise<any[]> {
     // Fetch the course by ID
@@ -346,5 +359,6 @@ async addQuizToCourse(
     return quizzes; // Return all quizzes as a flat array
   }
   
+
 }
 

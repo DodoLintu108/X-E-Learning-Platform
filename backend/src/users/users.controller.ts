@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Delete, Param, Req, Body, UseGuards } from '@nestjs/common';
-import { Roles } from './roles.decorator'; // Ensure this decorator checks roles
+import { Roles } from './roles.decorator'; // Ensure you created this custom decorator
 import { UsersService } from './users.service';
 import { CoursesService } from '../courses/courses.service'; // Import CoursesService
+import { User, UserDocument } from './users.entity';
+import { Controller, Get, Post, Delete, Param, Req, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard'; // Ensure you use an AuthGuard to protect routes
 
 @Controller('users')
@@ -51,6 +52,28 @@ export class UsersController {
   @Post('create-course')
   @Roles('teacher') // Only teachers can create courses
   createCourse(@Req() req, @Body() courseData) {
-    return this.coursesService.createCourse({ ...courseData, createdBy: req.user.userId }); // Pass course creation to CoursesService
+    return this.coursesService.createCourse({
+      ...courseData,
+      createdBy: req.user.userId,
+    }); // Pass course creation to CoursesService
+  }
+  @Get('user/:userId')
+  async findById(@Param('userId') userId: string): Promise<User | null> {
+    console.log(userId);
+    const courses = await this.usersService.findById(userId);
+    return courses;
+  }
+
+  @Put('user/:userId')
+  async editUser(
+    @Param('userId') userId: string, // Get userId from the URL parameter
+    @Body() updateData: Partial<User>, // Get the update data from the request body
+  ): Promise<User | null> {
+    console.log('User ID:', userId);
+    console.log('Update Data:', updateData);
+
+    const updatedUser = await this.usersService.editUser(userId, updateData);
+
+    return updatedUser;
   }
 }
