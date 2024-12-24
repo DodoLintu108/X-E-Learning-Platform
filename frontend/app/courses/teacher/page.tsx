@@ -7,6 +7,8 @@ import "../../globals.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+
+
 // Interfaces
 interface Course {
   _id: string;

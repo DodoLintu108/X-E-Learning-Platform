@@ -32,6 +32,8 @@ const ManageCourses = ({
     }
   };
 
+
+  
   return (
     <div>
       <h1>{title}</h1>
