@@ -2,103 +2,84 @@
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import ManageCourses from "../../components/ManageCourses";
+import { useRouter } from "next/navigation";
 
-const AdminCourses = () => {
+const AdminDashboard = () => {
   const [allCourses, setAllCourses] = useState([]);
   const [allTeachers, setAllTeachers] = useState([]);
+  const [allStudents, setAllStudents] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
+  const [showCourses, setShowCourses] = useState(false);
+  const [showTeachers, setShowTeachers] = useState(false);
+  const [showStudents, setShowStudents] = useState(false);
+  const [showUsers, setShowUsers] = useState(false);
+
+  const router = useRouter();
 
   useEffect(() => {
-    getAllCourses();
-  }, []);
+    // Check if access token and role exist in local storage
+    const token = localStorage.getItem("accessToken");
+    const role = localStorage.getItem("userRole");
 
-  const getAllCourses = async () => {
-    const token = localStorage.getItem("accessToken"); // Retrieve token from localStorage
-    if (!token) {
-      console.error("Access token is missing. Please log in.");
-      return;
+    if (!token || role !== "admin") {
+      alert("Access token or role is missing. Redirecting to home...");
+      router.push("/"); // Redirect to home page
     }
-    try {
-      const response = await axios.get("http://localhost:3000/courses/all", {
-        headers: { Authorization: `Bearer ${token}` }, // Include the token in the request header
-      });
-      setAllCourses(response.data); // Ensure response contains an array of courses
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        console.error("Unauthorized access. Redirecting to login...");
-        window.location.href = "/login"; // Redirect to login page if unauthorized
-      } else {
-        console.error("Error fetching admin courses:", error);
+  }, [router]);
+
+  const toggleData = async (
+    entity: string,
+    setData: React.Dispatch<React.SetStateAction<any[]>>,
+    toggle: boolean,
+    setToggle: React.Dispatch<React.SetStateAction<boolean>>
+  ) => {
+    if (!toggle) {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        console.error("Access token is missing. Please log in.");
+        return;
       }
+      try {
+        const response = await axios.get(`http://localhost:3000/${entity}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setData(response.data);
+      } catch (error) {
+        handleAuthError(error);
+      }
+    } else {
+      setData([]); // Clear the data to hide
+    }
+    setToggle(!toggle);
+  };
+
+  const handleAuthError = (error: any) => {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      console.error("Unauthorized access. Redirecting to login...");
+      router.push("/"); // Redirect to home page
+    } else {
+      console.error("Error fetching data:", error);
     }
   };
 
-  const getAllTeachers = async () => {
+  const handleDelete = async (entity: string, id: string | number) => {
     const token = localStorage.getItem("accessToken");
     if (!token) {
       console.error("Access token is missing. Please log in.");
       return;
     }
     try {
-      const response = await axios.get("http://localhost:3000/users/teachers", {
+      await axios.delete(`http://localhost:3000/${entity}/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setAllTeachers(response.data);
+      alert(`${entity.slice(0, -1).toUpperCase()} with ID: ${id} deleted successfully.`);
+      // Refresh the respective data
+      if (entity === "courses/all") toggleData("courses/all", setAllCourses, false, setShowCourses);
+      if (entity === "users/teachers") toggleData("users/teachers", setAllTeachers, false, setShowTeachers);
+      if (entity === "users/students") toggleData("users/students", setAllStudents, false, setShowStudents);
+      if (entity === "users/all") toggleData("users/all", setAllUsers, false, setShowUsers);
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        console.error("Unauthorized access. Redirecting to login...");
-        window.location.href = "/login"; // Redirect to login page if unauthorized
-      } else {
-        console.error("Error fetching teachers information :", error);
-      }
-    }
-  };
-
-  const getAllUsers = async () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      console.error("Access token is missing. Please log in.");
-      return;
-    }
-    try {
-      const response = await axios.get("http://localhost:3000/users/all", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setAllUsers(response.data);
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        console.error("Unauthorized access. Redirecting to login...");
-        window.location.href = "/login"; // Redirect to login page if unauthorized
-      } else {
-        console.error("Error fetching users information :", error);
-      }
-    }
-  };
-
-  const handleDelete = async (entity: string, courseId: string | number) => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      console.error("Access token is missing. Please log in.");
-      return;
-    }
-    try {
-      await axios.delete(`http://localhost:3000/courses/${courseId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      alert(`ID: ${courseId} has been deleted successfully.`);
-      // Refresh the data after deletion
-      if (entity === "courses") getAllCourses();
-      if (entity === "users/teachers") getAllTeachers();
-      if (entity === "users/all") getAllUsers();
-    } catch (error) {
-      console.log(courseId);
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        console.error("Unauthorized access. Redirecting to login...");
-        window.location.href = "/login";
-      } else {
-        console.error("Error:", error);
-      }
+      handleAuthError(error);
     }
   };
 
@@ -106,27 +87,56 @@ const AdminCourses = () => {
     <div style={styles.page}>
       <h1 style={styles.heading}>Admin Dashboard</h1>
       <div style={styles.buttonContainer}>
-        <button style={styles.button} onClick={getAllCourses}>
-          Get All Courses
+        <button
+          style={styles.button}
+          onClick={() => toggleData("courses/all", setAllCourses, showCourses, setShowCourses)}
+        >
+          {showCourses ? "Hide Courses" : "Get All Courses"}
         </button>
-        <button style={styles.button} onClick={getAllTeachers}>
-          Get All Teachers
+        <button
+          style={styles.button}
+          onClick={() => toggleData("users/teachers", setAllTeachers, showTeachers, setShowTeachers)}
+        >
+          {showTeachers ? "Hide Teachers" : "Get All Teachers"}
         </button>
-        <button style={styles.button} onClick={getAllUsers}>
-          Get All Users
+        <button
+          style={styles.button}
+          onClick={() => toggleData("users/students", setAllStudents, showStudents, setShowStudents)}
+        >
+          {showStudents ? "Hide Students" : "Get All Students"}
+        </button>
+        <button
+          style={styles.button}
+          onClick={() => toggleData("users/all", setAllUsers, showUsers, setShowUsers)}
+        >
+          {showUsers ? "Hide Users" : "Get All Users"}
         </button>
       </div>
       <div>
-        <h2 style={styles.subheading}>All Courses</h2>
-        <CardLayout data={allCourses} entity="courses" onDelete={handleDelete} />
-        <h2 style={styles.subheading}>All Teachers</h2>
-        <CardLayout
-          data={allTeachers}
-          entity="users/teachers"
-          onDelete={handleDelete}
-        />
-        <h2 style={styles.subheading}>All Users</h2>
-        <CardLayout data={allUsers} entity="users/all" onDelete={handleDelete} />
+        {showCourses && (
+          <div>
+            <h2 style={styles.subheading}>All Courses</h2>
+            <CardLayout data={allCourses} entity="courses/all" onDelete={handleDelete} />
+          </div>
+        )}
+        {showTeachers && (
+          <div>
+            <h2 style={styles.subheading}>All Teachers</h2>
+            <CardLayout data={allTeachers} entity="users/teachers" onDelete={handleDelete} />
+          </div>
+        )}
+        {showStudents && (
+          <div>
+            <h2 style={styles.subheading}>All Students</h2>
+            <CardLayout data={allStudents} entity="users/students" onDelete={handleDelete} />
+          </div>
+        )}
+        {showUsers && (
+          <div>
+            <h2 style={styles.subheading}>All Users</h2>
+            <CardLayout data={allUsers} entity="users/all" onDelete={handleDelete} />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -148,7 +158,7 @@ const CardLayout = ({
           <div key={item._id} style={styles.card}>
             <h3 style={styles.cardTitle}>{item.title || item.name}</h3>
             <p style={styles.cardDescription}>
-              {item.description || item.email}
+              {item.description || item.email || item.role}
             </p>
             <button
               onClick={() => onDelete(entity, item._id)}
@@ -241,6 +251,6 @@ const styles = {
   },
 };
 
+export default AdminDashboard;
 
 
-export default AdminCourses;

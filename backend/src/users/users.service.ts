@@ -84,4 +84,30 @@ export class UsersService {
   private async getTotalUsers(): Promise<number> {
     return this.userModel.countDocuments();
   }
+
+  async getAllUsers() {
+    return this.userModel.find().exec(); // Fetch all users
+  }
+
+  // Get all teachers
+  async getAllTeachers() {
+    return this.userModel.find({ role: 'teacher' }).exec(); // Fetch teachers
+  }
+
+  // Get all students
+  async getAllStudents() {
+    return this.userModel.find({ role: 'student' }).exec(); // Fetch students
+  }
+
+  // Delete a user by ID
+  async deleteUser(userId: string) {
+    const result = await this.userModel.deleteOne({ userId }).exec();
+    if (result.deletedCount === 0) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+    return { message: `User with ID ${userId} deleted successfully` };
+  }
+
+  
+
 }

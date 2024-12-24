@@ -44,6 +44,14 @@ export declare class CoursesController {
         message: string;
         course: Course;
     }>;
+    addQuizToCourse(courseId: string, quizData: {
+        level: string;
+        questions: {
+            question: string;
+            options: string[];
+            correctAnswer: number;
+        }[];
+    }): Promise<any>;
     addQuiz(courseId: string, quizData: {
         level: string;
         questions: Array<{
@@ -74,4 +82,5 @@ export declare class CoursesController {
         course: Course;
     }>;
     getCourseDetails(courseId: string): Promise<any>;
+    getQuizzesForCourse(courseId: string): Promise<any[]>;
 }
