@@ -44,9 +44,10 @@ export class QuizzesController {
     @Param('quizId') quizId: string,
     @Body() responseData: Partial<Response>,
   ): Promise<{ message: string; score: number }> {
-    const result = await this.quizzesService.submitQuizResponse({ ...responseData, quizId });
-    return result;
+    return this.quizzesService.submitQuizResponse({ ...responseData, quizId });
   }
+  
+  
   
   @Get(':courseId/quizzes')
   async getAllQuizzes(@Param('courseId') courseId: string) {

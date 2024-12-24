@@ -77,13 +77,19 @@ export const QuizzesAndAssessments: React.FC<QuizzesAndAssessmentsProps> = () =>
 
   const handleSubmit = async () => {
     if (!selectedQuiz) return;
-
+  
+    // Validate that all questions are answered
+    if (Object.keys(answers).length !== selectedQuiz.questions.length) {
+      setError("Please answer all questions before submitting.");
+      return;
+    }
+  
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) {
         throw new Error("No access token found");
       }
-
+  
       const response = await fetch(
         `http://localhost:3000/courses/${courseId}/quizzes/${selectedQuiz.id}/submit`,
         {
@@ -101,7 +107,7 @@ export const QuizzesAndAssessments: React.FC<QuizzesAndAssessmentsProps> = () =>
           }),
         }
       );
-
+  
       if (!response.ok) {
         if (response.status === 403) {
           throw new Error("You have already submitted this quiz.");
@@ -111,7 +117,7 @@ export const QuizzesAndAssessments: React.FC<QuizzesAndAssessmentsProps> = () =>
         }
         throw new Error("Failed to submit quiz.");
       }
-
+  
       const data = await response.json();
       setScore(data.score);
     } catch (error: any) {
