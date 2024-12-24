@@ -5,8 +5,10 @@ export declare class QuizzesController {
     private readonly quizzesService;
     constructor(quizzesService: QuizzesService);
     createQuiz(courseId: string, quizData: Partial<Quiz>): Promise<Quiz>;
+    getUnsubmittedQuizzes(courseId: string, req: any): Promise<Quiz[]>;
     getQuizzesForCourse(courseId: string): Promise<Quiz[]>;
     getQuizById(quizId: string): Promise<Quiz>;
     deleteQuiz(quizId: string): Promise<void>;
     submitQuizResponse(quizId: string, responseData: Partial<Response>): Promise<Response>;
+    getAllQuizzes(courseId: string): Promise<Quiz[]>;
 }

@@ -10,4 +10,5 @@ export declare class QuizzesService {
     getQuizById(quizId: string): Promise<Quiz>;
     deleteQuiz(quizId: string): Promise<void>;
     submitQuizResponse(responseData: Partial<Response>): Promise<Response>;
+    getUnsubmittedQuizzes(userId: string, courseId: string): Promise<Quiz[]>;
 }
