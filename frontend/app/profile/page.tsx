@@ -8,6 +8,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Lottie from "lottie-react";
 import profile from "../../public/profile.json";
+import { Separator } from "@/components/ui/separator";
 
 interface UserData {
   _id: string;
@@ -25,6 +26,7 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(false); // Toggle for edit mode
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [userID, setUserID] = useState<string | "">("");
+  const [allCourses, setAllCourses] = useState([]);
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -36,6 +38,7 @@ export default function Profile() {
   useEffect(() => {
     if (accessToken && userID) {
       getUserData(userID);
+      getTeacherCourses(userID);
     }
   }, [accessToken, userID]);
 
@@ -52,6 +55,36 @@ export default function Profile() {
       setUserData(response.data);
     } catch (error) {
       toast.error("Error fetching user data!");
+    }
+  };
+  const getTeacherCourses = async (userId: string | null) => {
+    try {
+      console.log("access token", accessToken);
+      const response = await axios.get(
+        `http://localhost:3000/courses/student/${userId}`,
+        {
+          headers: {
+            authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      setAllCourses(response.data.assigned);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const statusCode = error.response?.status;
+        toast.error(
+          "Error creating course!",
+          error.response?.data || error.message
+        );
+        if (statusCode === 401) {
+          toast.error("Session expired. Redirecting to Login...");
+          // window.location.href = "/Login";
+          return;
+        }
+      } else {
+        console.error("Error:", error);
+        toast.error("Error getting course!");
+      }
     }
   };
 
@@ -247,10 +280,116 @@ export default function Profile() {
                   </button>
                 )}
               </div>
+              <div> </div>
             </>
           ) : (
             <p>Loading user data...</p>
           )}
+        </div>
+      </div>
+      <Separator />
+      <div>
+        <h2 className="font-bold text-2xl">Explore All Your Courses</h2>
+      </div>
+      <div
+        style={{
+          display: "flex", // Enables flexbox
+          flexWrap: "wrap", // Allows wrapping to the next line if needed
+          gap: "16px", // Adds space between the cards
+          justifyContent: "space-around", // Distributes the cards evenly
+          padding: "16px", // Adds padding around the container
+        }}>
+        <div
+          style={{
+            display: "flex", // Enables flexbox for horizontal alignment
+            alignItems: "start", // Aligns items at the top
+            justifyContent: "flex-start", // Ensures cards start from the left
+            flexWrap: "nowrap", // Prevents wrapping to the next line
+            gap: "16px", // Space between cards
+            overflowX: "scroll", // Allows horizontal scrolling if needed
+            padding: "16px", // Adds padding around the container
+            scrollbarWidth: "none", // Hides scrollbar in Firefox
+            msOverflowStyle: "none", // Hides scrollbar in IE/Edge
+          }}>
+          {allCourses &&
+            allCourses.map((course: any) => {
+              return (
+                <div
+                  key={course._id}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    height: "250px",
+
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "9px",
+                    borderRadius: "4px",
+                    border: "1px solid #7F8081",
+                    boxShadow: "1px 4px 6px rgba(0, 0, 0, 0.5)",
+                    cursor: "pointer",
+                    transition: "transform 0.2s",
+                    width: "400px", // Fixed width for consistency
+                    flexShrink: 0, // Prevents shrinking of cards in flexbox
+                  }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.transform = "scale(1.02)")
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.transform = "scale(1)")
+                  }>
+                  <div>
+                    <img
+                      src={`${course.courseImage}`}
+                      alt="course"
+                      width={100}
+                      height={100}
+                      style={{
+                        borderRadius: "4px",
+                      }}
+                    />
+                  </div>
+                  <div
+                    onClick={() =>
+                      (window.location.href = `/courses/specificCourse/?courseId=${course._id}&accessToken=${accessToken}`)
+                    }
+                    style={{
+                      flex: "1",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      gap: "5px",
+                      paddingLeft: "10px",
+                      maxWidth: "500px",
+                      cursor: "pointer",
+                      transition: "transform 0.2s",
+                    }}>
+                    <h3
+                      style={{
+                        margin: 0,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}>
+                      Title: {course.title}
+                    </h3>
+                    <p
+                      style={{
+                        margin: 0,
+                        whiteSpace: "normal",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        maxWidth: "400px",
+                      }}>
+                      Description: {course.description}
+                    </p>
+
+                    <p style={{ margin: 0 }}>Category: {course.category}</p>
+                    <p style={{ margin: 0 }}>Level: {course.difficultyLevel}</p>
+                  </div>
+                </div>
+              );
+            })}
         </div>
       </div>
     </div>

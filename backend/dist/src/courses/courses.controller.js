@@ -62,11 +62,9 @@ let CoursesController = class CoursesController {
             },
         };
     }
-    async getStudentCourses(req) {
-        const userId = req.user.userId;
+    async getStudentCourses(userId) {
         const assignedCourses = await this.coursesService.getAssignedCourses(userId);
-        const availableCourses = await this.coursesService.getAvailableCourses(userId);
-        return { assigned: assignedCourses, available: availableCourses };
+        return { assigned: assignedCourses };
     }
     async getTeacherCourses(userId) {
         console.log(userId);
@@ -156,6 +154,18 @@ let CoursesController = class CoursesController {
             course: updatedCourse,
         };
     }
+    async enrollStudent(courseId, studentId) {
+        try {
+            const updatedCourse = await this.coursesService.enrollStudent(courseId, studentId);
+            return updatedCourse;
+        }
+        catch (error) {
+            if (error instanceof common_1.NotFoundException) {
+                throw error;
+            }
+            throw new Error('Unexpected error');
+        }
+    }
 };
 exports.CoursesController = CoursesController;
 __decorate([
@@ -211,10 +221,10 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "updateCourse", null);
 __decorate([
-    (0, common_1.Get)('student'),
-    __param(0, (0, common_1.Req)()),
+    (0, common_1.Get)('student/:userId'),
+    __param(0, (0, common_1.Param)('userId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "getStudentCourses", null);
 __decorate([
@@ -338,6 +348,14 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "addLecture", null);
+__decorate([
+    (0, common_1.Put)('enroll/:courseId/:studentId'),
+    __param(0, (0, common_1.Param)('courseId')),
+    __param(1, (0, common_1.Param)('studentId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "enrollStudent", null);
 exports.CoursesController = CoursesController = __decorate([
     (0, common_1.Controller)('courses'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard),

@@ -140,16 +140,13 @@ export class CoursesController {
   }
 
   // Get courses for students
-  @Get('student')
+  @Get('student/:userId')
   async getStudentCourses(
-    @Req() req,
-  ): Promise<{ assigned: Course[]; available: Course[] }> {
-    const userId = req.user.userId;
+    @Param('userId') userId: string,
+  ): Promise<{ assigned: Course[] }> {
     const assignedCourses =
       await this.coursesService.getAssignedCourses(userId);
-    const availableCourses =
-      await this.coursesService.getAvailableCourses(userId);
-    return { assigned: assignedCourses, available: availableCourses };
+    return { assigned: assignedCourses };
   }
 
   @Get('teacher/:userId')
@@ -327,5 +324,24 @@ export class CoursesController {
       message: 'Lecture added successfully',
       course: updatedCourse,
     };
+  }
+  @Put('enroll/:courseId/:studentId')
+  async enrollStudent(
+    @Param('courseId') courseId: string, // Get courseId from the URL parameter
+    @Param('studentId') studentId: string, // Get studentId from the URL parameter
+  ): Promise<Course> {
+    try {
+      // Call the enrollStudent service method to enroll the student
+      const updatedCourse = await this.coursesService.enrollStudent(
+        courseId,
+        studentId,
+      );
+      return updatedCourse; // Return the updated course
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new Error('Unexpected error');
+    }
   }
 }

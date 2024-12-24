@@ -14,6 +14,8 @@ const ManageCourses = () => {
   const [category, setCategory] = useState("Select Course Category");
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const searchParams = useSearchParams();
+  const [userID, setUserID] = useState<string | "">("");
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -40,6 +42,9 @@ const ManageCourses = () => {
   } | null>(null);
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
+    const userIDd = localStorage.getItem("userID");
+    setUserID(userIDd || "");
+
     setAccessToken(token);
     console.log("Extracted Token:", token);
   }, [searchParams]);
@@ -425,6 +430,48 @@ const ManageCourses = () => {
     });
     setIsModalOpen(true);
   };
+  const [enrollmentStatus, setEnrollmentStatus] = useState<string | null>(null); // To show enrollment status
+
+  const handleEnroll = async (courseId: string) => {
+    if (!accessToken || !userID) {
+      toast.error("You must be logged in to enroll.");
+      return;
+    }
+
+    try {
+      // Call the API to enroll the student in the course
+      const response = await axios.put(
+        `http://localhost:3000/courses/enroll/${courseId}/${userID}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      setEnrollmentStatus("Enrolled successfully!");
+      toast.success("Enrolled in the course successfully!");
+
+      // Optionally, you can redirect the user to another page after successful enrollment
+      // router.push('/some-other-page');
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const statusCode = error.response?.status;
+        toast.error(
+          "Error creating course!",
+          error.response?.data || error.message
+        );
+        if (statusCode === 401) {
+          toast.error("Session expired. Redirecting to Login...");
+          window.location.href = "/Login";
+          return;
+        }
+      } else {
+        console.error("Error:", error);
+      }
+      toast.error("Error updating course!");
+    }
+  };
   return (
     <div>
       <Navbar />
@@ -604,7 +651,7 @@ const ManageCourses = () => {
                               cursor: "pointer",
                             }}
                             onClick={() => {
-                              handleOpenEditModal(course._id);
+                              handleEnroll(course._id);
                             }}>
                             Enroll
                           </button>
@@ -726,7 +773,7 @@ const ManageCourses = () => {
                               cursor: "pointer",
                             }}
                             onClick={() => {
-                              handleOpenEditModal(course._id);
+                              handleEnroll(course._id);
                             }}>
                             Enroll
                           </button>
@@ -846,7 +893,7 @@ const ManageCourses = () => {
                               cursor: "pointer",
                             }}
                             onClick={() => {
-                              handleOpenEditModal(course._id);
+                              handleEnroll(course._id);
                             }}>
                             Enroll
                           </button>
@@ -969,7 +1016,7 @@ const ManageCourses = () => {
                               cursor: "pointer",
                             }}
                             onClick={() => {
-                              handleOpenEditModal(course._id);
+                              handleEnroll(course._id);
                             }}>
                             Enroll
                           </button>
@@ -1090,7 +1137,7 @@ const ManageCourses = () => {
                               cursor: "pointer",
                             }}
                             onClick={() => {
-                              handleOpenEditModal(course._id);
+                              handleEnroll(course._id);
                             }}>
                             Enroll
                           </button>

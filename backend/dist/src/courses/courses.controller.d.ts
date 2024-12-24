@@ -17,9 +17,8 @@ export declare class CoursesController {
         files?: Express.Multer.File[];
         imagefiles?: Express.Multer.File[];
     }): Promise<any>;
-    getStudentCourses(req: any): Promise<{
+    getStudentCourses(userId: string): Promise<{
         assigned: Course[];
-        available: Course[];
     }>;
     getTeacherCourses(userId: string): Promise<Course[]>;
     addModule(courseId: string, body: {
@@ -69,4 +68,5 @@ export declare class CoursesController {
         message: string;
         course: Course;
     }>;
+    enrollStudent(courseId: string, studentId: string): Promise<Course>;
 }
