@@ -169,6 +169,35 @@ let CoursesService = class CoursesService {
                 : null,
         }));
     }
+    async addLectureToCourse(courseId, lectureData) {
+        const course = await this.courseModel.findById(courseId);
+        if (!course) {
+            throw new common_1.NotFoundException('Course not found');
+        }
+        course.lectures.push({
+            title: lectureData.title,
+            type: lectureData.type,
+            content: lectureData.content,
+            createdAt: new Date(),
+        });
+        await course.save();
+        return course;
+    }
+    async addLecture(courseId, lectureData) {
+        const course = await this.courseModel.findById(courseId);
+        if (!course) {
+            throw new common_1.NotFoundException('Course not found');
+        }
+        const lecture = {
+            title: lectureData.title,
+            type: lectureData.type,
+            content: lectureData.content,
+            createdAt: new Date(),
+        };
+        course.lectures.push(lecture);
+        await course.save();
+        return course;
+    }
 };
 exports.CoursesService = CoursesService;
 exports.CoursesService = CoursesService = __decorate([

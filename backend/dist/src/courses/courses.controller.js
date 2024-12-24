@@ -25,22 +25,20 @@ let CoursesController = class CoursesController {
     constructor(coursesService) {
         this.coursesService = coursesService;
     }
-    async createCourse(createCourseDto, files) {
-        const courseMaterial = files.files?.[0]?.filename || null;
-        const courseImage = files.imagefiles?.[0]?.filename || null;
+    async createCourse(req, createCourseDto, files) {
+        const courseMaterial = files?.files?.[0]?.filename || null;
+        const courseImage = files?.imagefiles?.[0]?.filename || null;
+        const teacherId = req.user.userId;
         const courseData = {
             ...createCourseDto,
             courseMaterial,
             courseImage,
+            createdBy: teacherId,
         };
         const newCourse = await this.coursesService.createCourse(courseData);
         return {
             message: 'Course created successfully',
             course: newCourse,
-            files: {
-                material: courseMaterial,
-                image: courseImage,
-            },
         };
     }
     async getStudentCourses(req) {
@@ -51,7 +49,8 @@ let CoursesController = class CoursesController {
     }
     async getTeacherCourses(req) {
         const userId = req.user.userId;
-        return this.coursesService.getCoursesByTeacher(userId);
+        const courses = await this.coursesService.getCoursesByTeacher(userId);
+        return courses;
     }
     async addModule(courseId, body) {
         const moduleData = { courseId, ...body };
@@ -100,6 +99,25 @@ let CoursesController = class CoursesController {
     async getCoursesByRole(role) {
         return this.coursesService.getCoursesByRole(role);
     }
+    async addFiles(courseId, files) {
+        const courseMaterial = files?.files?.[0]?.filename || null;
+        const courseImage = files?.imagefiles?.[0]?.filename || null;
+        const updatedCourse = await this.coursesService.updateCourse(courseId, {
+            courseMaterial,
+            courseImage,
+        });
+        return {
+            message: 'Files added successfully',
+            course: updatedCourse,
+        };
+    }
+    async addLecture(courseId, lectureData) {
+        const updatedCourse = await this.coursesService.addLecture(courseId, lectureData);
+        return {
+            message: 'Lecture added successfully',
+            course: updatedCourse,
+        };
+    }
 };
 exports.CoursesController = CoursesController;
 __decorate([
@@ -135,10 +153,43 @@ __decorate([
             },
         },
     }),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, common_1.UploadedFiles)()),
+    (0, common_1.Post)('create'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileFieldsInterceptor)([
+        { name: 'files', maxCount: 2 },
+        { name: 'imagefiles', maxCount: 2 },
+    ], multer_config_1.multerOptions)),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
+    (0, swagger_1.ApiBody)({
+        description: 'Create a new course with materials and image',
+        schema: {
+            type: 'object',
+            properties: {
+                title: { type: 'string' },
+                description: { type: 'string' },
+                category: { type: 'string' },
+                difficultyLevel: { type: 'string' },
+                files: {
+                    type: 'array',
+                    items: {
+                        type: 'string',
+                        format: 'binary',
+                    },
+                },
+                imagefiles: {
+                    type: 'array',
+                    items: {
+                        type: 'string',
+                        format: 'binary',
+                    },
+                },
+            },
+        },
+    }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.UploadedFiles)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_course_dto_1.CreateCourseDto, Object]),
+    __metadata("design:paramtypes", [Object, create_course_dto_1.CreateCourseDto, Object]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "createCourse", null);
 __decorate([
@@ -226,6 +277,26 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "getCoursesByRole", null);
+__decorate([
+    (0, common_1.Put)(':courseId/files'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileFieldsInterceptor)([
+        { name: 'files', maxCount: 2 },
+        { name: 'imagefiles', maxCount: 2 },
+    ], multer_config_1.multerOptions)),
+    __param(0, (0, common_1.Param)('courseId')),
+    __param(1, (0, common_1.UploadedFiles)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "addFiles", null);
+__decorate([
+    (0, common_1.Post)(':courseId/lectures'),
+    __param(0, (0, common_1.Param)('courseId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "addLecture", null);
 exports.CoursesController = CoursesController = __decorate([
     (0, common_1.Controller)('courses'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard),

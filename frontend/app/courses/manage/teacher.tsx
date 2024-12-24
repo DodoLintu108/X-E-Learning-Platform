@@ -6,14 +6,26 @@ import Navbar from "../../components/Navbar";
 import "../../globals.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
+
+// Interface for a Course object
+interface Course {
+  _id: string; // Unique ID for the course
+  title: string; // Title of the course
+  description: string; // Description of the course
+  category: string; // Category of the course (e.g., Mathematics, Physics)
+  difficultyLevel: string; // Difficulty level (Beginner, Intermediate, Advanced)
 }
 
+// Interface for the Modal properties
+interface ModalProps {
+  isOpen: boolean; // Determines if the modal is open
+  onClose: () => void; // Function to close the modal
+  children: React.ReactNode; // Content inside the modal
+}
+
+// Modal component to handle the create course form popup
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
-  if (!isOpen) return null;
+  if (!isOpen) return null; // If modal is not open, do not render anything
 
   return (
     <div
@@ -23,11 +35,11 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
         left: 0,
         width: "100%",
         height: "100%",
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        backgroundColor: "rgba(0, 0, 0, 0.5)", // Dimmed background
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        zIndex: 1000,
+        zIndex: 1000, // Ensure it appears on top
       }}
     >
       <div
@@ -40,7 +52,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
         }}
       >
         <button
-          onClick={onClose}
+          onClick={onClose} // Close modal when button clicked
           style={{
             background: "white",
             color: "red",
@@ -56,439 +68,148 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
         >
           ✖
         </button>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            marginTop: "40px",
-          }}
-        >
-          <h2 style={{ fontSize: "20px", fontWeight: "500" }}>
-            Create New Course
-          </h2>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            marginTop: "15px",
-          }}
-        >
-          {children}
-        </div>
+        {children}
       </div>
     </div>
   );
 };
 
-const ManageCourses = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [category, setCategory] = useState("Select Course Category");
+// Main component for managing teacher courses
+const TeacherCourses = () => {
+  const [courses, setCourses] = useState<Course[]>([]); // State to store courses
+  const [isModalOpen, setIsModalOpen] = useState(false); // State to handle modal visibility
+  const [newCourse, setNewCourse] = useState({
+    title: "", // New course title
+    description: "", // New course description
+    category: "Select Course Category", // Default category placeholder
+    difficultyLevel: "Select Difficulty Level", // Default difficulty level placeholder
+  });
 
+  // Fetch teacher-specific courses on component mount
   useEffect(() => {
-    getAllCourses();
+    fetchTeacherCourses();
   }, []);
 
-  const [allCourses, setAllCourses] = useState([]);
-  const getAllCourses = async () => {
+  // Function to fetch courses created by the teacher
+  const fetchTeacherCourses = async () => {
+    const token = localStorage.getItem("accessToken"); 
     try {
-      const response = await axios.get("http://localhost:3000/courses/all");
-      setAllCourses(response.data);
+      const response = await axios.get("http://localhost:3000/courses/teacher", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("API Response:", response.data); // Add this to debug the response
+      setCourses(response.data); 
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error("Error:", error.response?.data || error.message);
-        toast.error(
-          "Error getting course!",
-          error.response?.data || error.message
-        );
-      } else {
-        console.error("Error:", error);
-      }
-      toast.error("Error getting course!");
+      console.error("Error fetching courses:", error);
+      toast.error("Error fetching courses."); 
     }
   };
-  const [newCourse, setNewCourse] = useState<{
-    title: string;
-    description: string;
-    category: string;
-    difficultyLevel: string;
-    courseImage: File | null;
-    courseMaterial: File | null;
-  }>({
-    title: "",
-    description: "",
-    category: "Select Course Category",
-    difficultyLevel: "Select Difficulty Level",
-    courseImage: null,
-    courseMaterial: null,
-  });
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  
 
-  const handleCreateCourse = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const formData = new FormData();
-
-    formData.append("title", newCourse.title);
-    formData.append("description", newCourse.description);
-    formData.append("category", newCourse.category);
-    formData.append("difficultyLevel", newCourse.difficultyLevel);
-    if (newCourse.courseImage) {
-      formData.append("imagefiles", newCourse.courseImage); // Key must match backend
-    }
-    if (newCourse.courseMaterial) {
-      formData.append("files", newCourse.courseMaterial); // Key must match backend
-    }
-
+  // Function to handle creating a new course
+  const handleCreateCourse = async () => {
+    const token = localStorage.getItem("accessToken"); // Get access token from localStorage
     try {
       const response = await axios.post(
         "http://localhost:3000/courses/create",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        newCourse, // Send new course data to the API
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include token in the request header
+          },
+        }
       );
-      toast.success(response.data.message);
+      toast.success("Course created successfully!"); // Show success notification
+      fetchTeacherCourses(); // Refresh the courses list
       setIsModalOpen(false); // Close the modal
-      getAllCourses(); // Refresh the list
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error("Error:", error.response?.data || error.message);
-        toast.error(
-          "Error creating course!",
-          error.response?.data || error.message
-        );
-      } else {
-        console.error("Error:", error);
-      }
-      toast.error("Error creating course!");
+      console.error("Error creating course:", error);
+      toast.error("Error creating course."); // Show error notification
     }
   };
-  const handleDelete = async (id: string) => {
-    try {
-      const response = await axios.delete(
-        `http://localhost:3000/courses/${id}`
-      );
-      toast.success(response.data.message);
-      getAllCourses();
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error("Error:", error.response?.data || error.message);
-        toast.error(
-          "Error deleting course!",
-          error.response?.data || error.message
-        );
-      } else {
-        console.error("Error:", error);
-      }
-      toast.error("Error deleting course!");
-    }
-  };
+
   return (
     <div>
-      <Navbar />
-      <ToastContainer />
-      <div
+      <Navbar /> {/* Navbar component */}
+      <ToastContainer /> {/* Toast notifications */}
+      <h1>Teacher Courses</h1> {/* Page heading */}
+      <button
+        onClick={() => setIsModalOpen(true)} // Open modal when clicked
         style={{
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          marginTop: "40px",
-          alignItems: "center",
-          gap: "8px",
+          padding: "10px 20px",
+          backgroundColor: "#7AB2D3",
+          color: "white",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
         }}
       >
-        <h1
-          style={{
-            color: "#7F8081",
-            fontSize: "28px",
-          }}
-        >
-          Manage Courses
-        </h1>
-      </div>
+        Create Course {/* Button text */}
+      </button>
 
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "start",
-          marginTop: "40px",
-          alignItems: "start",
-          gap: "8px",
-          padding: "18px",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "flex-start",
-            alignItems: "center",
-          }}
-        >
-          <button
-            style={{
-              width: "100%",
-              padding: "10px",
-              backgroundColor: "#7AB2D3",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              marginLeft: "25px",
-            }}
-            onClick={() => setIsModalOpen(true)}
-          >
-            Create Course
-          </button>
-        </div>
-        <h1 className="">Courses</h1>
+      {/* List of courses */}
+      <ul>
+        {courses.length > 0 ? (
+          courses.map((course) => (
+            <li key={course._id}> {/* Use _id as unique key */}
+              <h3>{course.title}</h3> {/* Course title */}
+              <p>{course.description}</p> {/* Course description */}
+              <p>Category: {course.category}</p> {/* Course category */}
+              <p>Difficulty: {course.difficultyLevel}</p> {/* Course difficulty */}
+            </li>
+          ))
+        ) : (
+          <p>No courses available</p> // Display when no courses are available
+        )}
+      </ul>
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            border: "2px solid #7F8081",
-            padding: "9px",
-            borderRadius: "4px",
-            width: "100%",
-          }}
-        >
-          <input
-            style={{
-              width: "20%",
-              padding: "10px",
-              marginBottom: "10px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-            }}
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for courses..."
-          />
-          {
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "5px" }}
-            >
-              {allCourses.map((course: any) => {
-                return (
-                  <div
-                    key={course._id}
-                    style={{
-                      display: "flex",
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "9px",
-                      borderRadius: "4px",
-                      border: "1px solid #7F8081",
-                      boxShadow: "1px 4px 6px rgba(0, 0, 0, 0.5)",
-                    }}
-                  >
-                    <div>
-                      <img
-                        src={`${course.courseImage}`}
-                        alt="course"
-                        width={100}
-                        height={100}
-                        style={{
-                          borderRadius: "4px",
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <h3>Title: {course.title}</h3>
-                      <p>Description : {course.description}</p>
-                      <p>Category:{course.category}</p>
-                      <p>Level : {course.difficultyLevel}</p>
-                    </div>
-                    <div>
-                      <button
-                        style={{
-                          width: "100%",
-                          padding: "10px",
-                          backgroundColor: "#7AB2D3",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        style={{
-                          width: "100%",
-                          padding: "10px",
-                          backgroundColor: "#7AB2D3",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          marginTop: "5px",
-                        }}
-                        onClick={() => handleDelete(course._id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-              <div></div>
-            </div>
-          }
-        </div>
-      </div>
+      {/* Modal for creating a new course */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            padding: "9px",
-            borderRadius: "4px",
-          }}
-        >
-          <input
-            type="text"
-            value={newCourse.title}
-            style={{
-              width: "100%",
-              padding: "10px",
-              marginBottom: "10px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-            }}
-            onChange={(e) =>
-              setNewCourse({ ...newCourse, title: e.target.value })
-            }
-            placeholder="Title"
-          />
-          <textarea
-            value={newCourse.description}
-            onChange={(e) =>
-              setNewCourse({ ...newCourse, description: e.target.value })
-            }
-            style={{
-              width: "100%",
-              padding: "10px",
-              marginBottom: "10px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-            }}
-            placeholder="Description"
-          ></textarea>
-          <select
-            style={{
-              width: "100%",
-              padding: "10px",
-              marginBottom: "20px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-            }}
-            value={newCourse.category}
-            onChange={(e) =>
-              setNewCourse({ ...newCourse, category: e.target.value })
-            }
-          >
-            <option value="Select Course Category" disabled>
-              Select Course Category
-            </option>
-            <option value="Mathematics">Mathematics</option>
-            <option value="Machine Learning">Machine Learning</option>
-            <option value="Physics">Physics</option>
-            <option value="Chemistry">Chemistry</option>
-          </select>
-          <select
-            style={{
-              width: "100%",
-              padding: "10px",
-              marginBottom: "20px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-            }}
-            value={newCourse.difficultyLevel}
-            onChange={(e) =>
-              setNewCourse({ ...newCourse, difficultyLevel: e.target.value })
-            }
-          >
-            <option value="Select Difficulty Level" disabled>
-              Select Difficulty Level
-            </option>
-            <option value="Beginner">Beginner</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Advanced">Advanced</option>
-          </select>
-        </div>
-        <label
-          style={{
-            fontWeight: "bold",
-            marginBottom: "8px",
-          }}
-        >
-          Upload Course Materials (PDF, Docs, etc.):
-        </label>
+        <h2>Create New Course</h2>
         <input
-          type="file"
-          multiple
-          style={{
-            padding: "10px",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            marginBottom: "20px",
-          }}
+          type="text"
+          placeholder="Title"
+          value={newCourse.title}
           onChange={(e) =>
-            setNewCourse({
-              ...newCourse,
-              courseMaterial: e.target.files ? e.target.files[0] : null,
-            })
-          }
+            setNewCourse({ ...newCourse, title: e.target.value })
+          } // Update title in state
         />
-        <label
-          style={{
-            fontWeight: "bold",
-            marginBottom: "8px",
-          }}
-        >
-          Upload Course Image:
-        </label>
-        <input
-          type="file"
-          accept="image/*"
-          multiple={false}
-          style={{
-            padding: "10px",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            marginBottom: "20px",
-          }}
+        <textarea
+          placeholder="Description"
+          value={newCourse.description}
           onChange={(e) =>
-            setNewCourse({
-              ...newCourse,
-              courseImage: e.target.files ? e.target.files[0] : null,
-            })
-          }
-        />
-        <button
-          style={{
-            width: "85%",
-            padding: "4px 5px",
-            backgroundColor: "#7AB2D3",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            marginLeft: "25px",
-            marginTop: "-15px",
-          }}
-          onClick={handleCreateCourse}
+            setNewCourse({ ...newCourse, description: e.target.value })
+          } // Update description in state
+        ></textarea>
+        <select
+          value={newCourse.category}
+          onChange={(e) =>
+            setNewCourse({ ...newCourse, category: e.target.value })
+          } // Update category in state
         >
-          submit
-        </button>
+          <option disabled>Select Course Category</option>
+          <option value="Mathematics">Mathematics</option>
+          <option value="Machine Learning">Machine Learning</option>
+          <option value="Physics">Physics</option>
+          <option value="Chemistry">Chemistry</option>
+        </select>
+        <select
+          value={newCourse.difficultyLevel}
+          onChange={(e) =>
+            setNewCourse({ ...newCourse, difficultyLevel: e.target.value })
+          } // Update difficulty level in state
+        >
+          <option disabled>Select Difficulty Level</option>
+          <option value="Beginner">Beginner</option>
+          <option value="Intermediate">Intermediate</option>
+          <option value="Advanced">Advanced</option>
+        </select>
+        <button onClick={handleCreateCourse}>Submit</button>
       </Modal>
     </div>
   );
 };
 
-export default ManageCourses;
+export default TeacherCourses; // Export the component
