@@ -26,7 +26,10 @@ let CoursesService = class CoursesService {
         this.versionModel = versionModel;
     }
     async createCourse(data) {
-        const newCourse = new this.courseModel(data);
+        const newCourse = new this.courseModel({
+            ...data,
+            isEnded: data.isEnded ?? false,
+        });
         return newCourse.save();
     }
     async addModule(data) {
@@ -190,6 +193,30 @@ let CoursesService = class CoursesService {
         await course.save();
         return newQuiz;
     }
+    async getCourseDetailsForStudent(courseId, studentId) {
+        const course = await this.courseModel.findById(courseId).exec();
+        if (!course) {
+            throw new common_1.NotFoundException('Course not found');
+        }
+        const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
+        const submissions = quizzes.flatMap((quiz) => quiz.submittedBy.filter((submission) => submission.userId === studentId));
+        const totalScore = submissions.reduce((sum, sub) => sum + sub.score, 0);
+        const averageScore = submissions.length ? totalScore / submissions.length : 0;
+        return {
+            title: course.title,
+            description: course.description,
+            category: course.category,
+            difficultyLevel: course.difficultyLevel,
+            teacherName: course.createdBy,
+            lectures: course.lectures,
+            createdAt: course.createdAt,
+            isEnded: course.isEnded,
+            averageScore: averageScore.toFixed(2),
+        };
+    }
+    async endCourse(id) {
+        return this.courseModel.findByIdAndUpdate(id, { isEnded: true }, { new: true }).exec();
+    }
     async submitQuizResponse(courseId, quizId, userId, answers) {
         const course = await this.courseModel.findById(courseId);
         if (!course) {
@@ -279,6 +306,7 @@ let CoursesService = class CoursesService {
             teacherName: course.createdBy,
             lectures: course.lectures,
             createdAt: course.createdAt,
+            isEnded: { type: Boolean, default: false },
         };
     }
     async getAllQuizzesForCourse(courseId) {

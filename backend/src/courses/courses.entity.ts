@@ -102,8 +102,16 @@ export class Course {
 
   @Prop({ type: [Lecture], default: [] })
   lectures: Lecture[]; // Array of lectures
-}
 
+
+}
+export interface Course {
+  title: string;
+  description: string;
+  category: string;
+  difficultyLevel: string;
+  isEnded: boolean; // Add this line
+}
 // Create the Mongoose schema for Course
 export type CourseDocument = Course & Document;
 export const CourseSchema = SchemaFactory.createForClass(Course);

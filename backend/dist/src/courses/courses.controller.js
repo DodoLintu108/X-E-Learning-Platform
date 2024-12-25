@@ -138,6 +138,15 @@ let CoursesController = class CoursesController {
             quiz,
         };
     }
+    async endCourse(id) {
+        try {
+            const course = await this.coursesService.endCourse(id);
+            return { message: 'Course has been ended successfully', course };
+        }
+        catch (error) {
+            throw new common_1.HttpException('Failed to end the course', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
     async submitQuiz(courseId, quizId, body) {
         const { userId, answers } = body;
         return this.coursesService.submitQuizResponse(courseId, quizId, userId, answers);
@@ -365,6 +374,13 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "addQuiz", null);
+__decorate([
+    (0, common_1.Put)(':id/end'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "endCourse", null);
 __decorate([
     (0, common_1.Post)(':courseId/quizzes/:quizId/submit'),
     __param(0, (0, common_1.Param)('courseId')),

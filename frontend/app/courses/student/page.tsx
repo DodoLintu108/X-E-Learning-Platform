@@ -17,7 +17,9 @@ interface Course {
   courseImage?: string;
   enrolled: boolean; // Used to differentiate between enrolled and available
   teacherName: string; // Assuming teacherName is returned in the course object
+  isEnded: boolean; // Indicates whether the course has ended
 }
+
 
 const StudentPage = () => {
   const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
@@ -38,7 +40,7 @@ const StudentPage = () => {
       const filtered = availableCourses.filter(
         (course) =>
           course.title.toLowerCase().includes(searchQuery.toLowerCase()) //||
-         //course.teacherName.toLowerCase().includes(searchQuery.toLowerCase())
+        //course.teacherName.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredCourses(filtered);
     }
@@ -119,6 +121,7 @@ const StudentPage = () => {
         />
 
         <h2>Your Enrolled Courses</h2>
+        <h2>Your Enrolled Courses</h2>
         {enrolledCourses.length > 0 ? (
           <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
             {enrolledCourses.map((course) => (
@@ -147,20 +150,38 @@ const StudentPage = () => {
                 <p>{course.description}</p>
                 <p>Category: {course.category}</p>
                 <p>Difficulty: {course.difficultyLevel}</p>
-                <Link href={`/courses/${course._id}`} passHref>
-                  <button
+
+                {/* Check if the course has ended */}
+                {course.isEnded ? (
+                  <div
                     style={{
-                      padding: "10px 20px",
-                      backgroundColor: "#007BFF",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "5px",
-                      cursor: "pointer",
+                      backgroundColor: "#E8F5E9",
+                      padding: "15px",
+                      borderRadius: "8px",
+                      marginTop: "10px",
+                      textAlign: "center",
+                      color: "#4CAF50",
+                      fontWeight: "bold",
                     }}
                   >
-                    View Details
-                  </button>
-                </Link>
+                    🎉 Congratulations on completing this course! 🎉
+                  </div>
+                ) : (
+                  <Link href={`/courses/${course._id}`} passHref>
+                    <button
+                      style={{
+                        padding: "10px 20px",
+                        backgroundColor: "#007BFF",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "5px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      View Details
+                    </button>
+                  </Link>
+                )}
               </div>
             ))}
           </div>
