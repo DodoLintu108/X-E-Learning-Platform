@@ -1,5 +1,7 @@
 import { Document, Schema as MongooseSchema } from 'mongoose';
+
 export type QuizDocument = Quiz & Document;
+
 export declare class Quiz {
     quizId: string;
     courseId: string;
@@ -12,6 +14,7 @@ export declare class Quiz {
     submittedBy: string[];
     createdAt: Date;
 }
+
 export declare class Response {
     userId: string;
     quizId: string;
@@ -21,6 +24,7 @@ export declare class Response {
     }[];
     submittedAt: Date;
 }
+
 export declare const QuizSchema: MongooseSchema<Quiz, import("mongoose").Model<Quiz, any, any, any, Document<unknown, any, Quiz> & Quiz & {
     _id: import("mongoose").Types.ObjectId;
 } & {
