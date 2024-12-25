@@ -5,6 +5,14 @@ export type AnalyticsDocument = Analytics & Document;
 
 @Schema()
 export class Analytics {
+
+  @Prop({ required: true })
+  moduleId: string;
+  @Prop({ type: [{ userId: String, score: Number, submittedAt: Date }] })
+  submittedBy: { userId: string; score: number; submittedAt: Date }[];
+
+  @Prop({ required: true })
+  level: string;
   // Unique identifier for analytics entry
   @Prop({ required: true, unique: true })
   analyticsId: string;
@@ -58,3 +66,17 @@ export class Analytics {
 }
 
 export const AnalyticsSchema = SchemaFactory.createForClass(Analytics);
+@Schema()
+export class Quiz {
+  @Prop({ required: true })
+  moduleId: string;
+
+  @Prop({ required: true })
+  level: string;
+
+  @Prop({ type: [{ userId: String, score: Number, submittedAt: Date }] })
+  submittedBy: { userId: string; score: number; submittedAt: Date }[];
+}
+
+export const QuizSchema = SchemaFactory.createForClass(Quiz);
+
