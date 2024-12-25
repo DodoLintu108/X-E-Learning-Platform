@@ -12,4 +12,6 @@ export declare class UsersService {
     private getEnrolledCourses;
     private getCreatedCourses;
     private getTotalUsers;
+    findAllByRole(role: string): Promise<User[]>;
+    deleteUser(userId: string): Promise<void>;
 }
