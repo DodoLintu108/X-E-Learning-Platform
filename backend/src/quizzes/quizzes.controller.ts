@@ -50,4 +50,7 @@ export class QuizzesController {
 async getAllQuizzes(@Param('courseId') courseId: string) {
   return this.quizzesService.getQuizzesForCourse(courseId);
 }
+
+
+
 }
