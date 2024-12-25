@@ -16,16 +16,33 @@ interface Course {
   difficultyLevel: string;
   courseImage?: string;
   enrolled: boolean; // Used to differentiate between enrolled and available
+  teacherName: string; // Assuming teacherName is returned in the course object
 }
 
 const StudentPage = () => {
   const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
   const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([]);
+  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]); // To store filtered results
+  const [searchQuery, setSearchQuery] = useState(""); // To handle search input
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchCourses();
   }, []);
+
+  useEffect(() => {
+    // Filter availableCourses based on the search query
+    if (searchQuery.trim() === "") {
+      setFilteredCourses(availableCourses);
+    } else {
+      const filtered = availableCourses.filter(
+        (course) =>
+          course.title.toLowerCase().includes(searchQuery.toLowerCase()) //||
+         //course.teacherName.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredCourses(filtered);
+    }
+  }, [searchQuery, availableCourses]);
 
   const fetchCourses = async () => {
     const token = localStorage.getItem("accessToken"); // Assuming JWT token is stored in localStorage
@@ -39,6 +56,7 @@ const StudentPage = () => {
       const { assigned, available } = response.data;
       setEnrolledCourses(assigned);
       setAvailableCourses(available);
+      setFilteredCourses(available); // Set initially filtered courses
     } catch (error) {
       console.error("Error fetching courses:", error);
       toast.error("Failed to fetch courses.");
@@ -78,120 +96,130 @@ const StudentPage = () => {
     return <p>No courses available or you are not enrolled in any courses yet.</p>;
   }
 
-    return (
-        <div>
-            <Navbar />
-            <ToastContainer />
-            <div style={{ padding: "20px" }}>
-                <h1 style={{ marginBottom: "20px" }}>Welcome, Student</h1>
+  return (
+    <div>
+      <Navbar />
+      <ToastContainer />
+      <div style={{ padding: "20px" }}>
+        <h1 style={{ marginBottom: "20px" }}>Welcome, Student</h1>
 
-                <h2>Your Enrolled Courses</h2>
-                {enrolledCourses.length > 0 ? (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
-                        {enrolledCourses.map((course) => (
-                            <div
-                                key={course._id}
-                                style={{
-                                    border: "1px solid #ccc",
-                                    padding: "20px",
-                                    borderRadius: "8px",
-                                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                                    maxWidth: "300px",
-                                }}
-                            >
-                                <img
-                                    src={course.courseImage || "default-image.jpg"}
-                                    alt={course.title}
-                                    style={{
-                                        width: "100%",
-                                        height: "150px",
-                                        objectFit: "cover",
-                                        borderRadius: "8px",
-                                        marginBottom: "10px",
-                                    }}
-                                />
-                                <h3>{course.title}</h3>
-                                <p>{course.description}</p>
-                                <p>Category: {course.category}</p>
-                                <p>Difficulty: {course.difficultyLevel}</p>
-                                {/* Replace button with a Link component */}
-                                <Link
-                                    href={`/courses/${course._id}`} // Update to match your folder structure
-                                    passHref
-                                >
-                                    <button
-                                        style={{
-                                            padding: "10px 20px",
-                                            backgroundColor: "#007BFF",
-                                            color: "white",
-                                            border: "none",
-                                            borderRadius: "5px",
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        View Details
-                                    </button>
-                                </Link>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <p>You are not enrolled in any courses yet.</p>
-                )}
+        {/* Search Bar */}
+        <input
+          type="text"
+          placeholder="Search courses by name or teacher..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px",
+            borderRadius: "5px",
+            border: "1px solid #ccc",
+            marginBottom: "20px",
+          }}
+        />
 
-                <h2 style={{ marginTop: "40px" }}>Available Courses</h2>
-                {availableCourses.length > 0 ? (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
-                        {availableCourses.map((course) => (
-                            <div
-                                key={course._id}
-                                style={{
-                                    border: "1px solid #ccc",
-                                    padding: "20px",
-                                    borderRadius: "8px",
-                                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                                    maxWidth: "300px",
-                                }}
-                            >
-                                <img
-                                    src={course.courseImage || "default-image.jpg"}
-                                    alt={course.title}
-                                    style={{
-                                        width: "100%",
-                                        height: "150px",
-                                        objectFit: "cover",
-                                        borderRadius: "8px",
-                                        marginBottom: "10px",
-                                    }}
-                                />
-                                <h3>{course.title}</h3>
-                                <p>{course.description}</p>
-                                <p>Category: {course.category}</p>
-                                <p>Difficulty: {course.difficultyLevel}</p>
-                                <button
-                                    onClick={() => enrollInCourse(course._id)}
-                                    style={{
-                                        padding: "10px 20px",
-                                        backgroundColor: "#4CAF50",
-                                        color: "white",
-                                        border: "none",
-                                        borderRadius: "5px",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    Enroll
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <p>No courses available for enrollment.</p>
-                )}
-            </div>
-        </div>
-    );
+        <h2>Your Enrolled Courses</h2>
+        {enrolledCourses.length > 0 ? (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+            {enrolledCourses.map((course) => (
+              <div
+                key={course._id}
+                style={{
+                  border: "1px solid #ccc",
+                  padding: "20px",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                  maxWidth: "300px",
+                }}
+              >
+                <img
+                  src={course.courseImage || "default-image.jpg"}
+                  alt={course.title}
+                  style={{
+                    width: "100%",
+                    height: "150px",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                    marginBottom: "10px",
+                  }}
+                />
+                <h3>{course.title}</h3>
+                <p>{course.description}</p>
+                <p>Category: {course.category}</p>
+                <p>Difficulty: {course.difficultyLevel}</p>
+                <Link href={`/courses/${course._id}`} passHref>
+                  <button
+                    style={{
+                      padding: "10px 20px",
+                      backgroundColor: "#007BFF",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "5px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    View Details
+                  </button>
+                </Link>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>You are not enrolled in any courses yet.</p>
+        )}
+
+        <h2 style={{ marginTop: "40px" }}>Available Courses</h2>
+        {filteredCourses.length > 0 ? (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+            {filteredCourses.map((course) => (
+              <div
+                key={course._id}
+                style={{
+                  border: "1px solid #ccc",
+                  padding: "20px",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                  maxWidth: "300px",
+                }}
+              >
+                <img
+                  src={course.courseImage || "default-image.jpg"}
+                  alt={course.title}
+                  style={{
+                    width: "100%",
+                    height: "150px",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                    marginBottom: "10px",
+                  }}
+                />
+                <h3>{course.title}</h3>
+                <p>{course.description}</p>
+                <p>Category: {course.category}</p>
+                <p>Difficulty: {course.difficultyLevel}</p>
+
+                <button
+                  onClick={() => enrollInCourse(course._id)}
+                  style={{
+                    padding: "10px 20px",
+                    backgroundColor: "#4CAF50",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Enroll
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>No courses match your search query.</p>
+        )}
+      </div>
+    </div>
+  );
 };
 
-
 export default StudentPage;
-
