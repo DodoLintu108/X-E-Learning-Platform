@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation"; // Import the router for navigation
 import axios from "axios";
 import Navbar from "../../components/Navbar";
 
-
-
 const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
   const [courseDetails, setCourseDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);

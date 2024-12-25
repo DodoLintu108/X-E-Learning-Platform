@@ -75,11 +75,6 @@ let QuizzesService = class QuizzesService {
         const unsubmittedQuizzes = quizzes.filter((quiz) => !quiz.submittedBy.includes(userId));
         return unsubmittedQuizzes;
     }
-    async getUnsubmittedQuizzes(userId, courseId) {
-        const quizzes = await this.quizModel.find({ courseId }).exec();
-        const unsubmittedQuizzes = quizzes.filter((quiz) => !quiz.submittedBy.includes(userId));
-        return unsubmittedQuizzes;
-    }
 };
 exports.QuizzesService = QuizzesService;
 exports.QuizzesService = QuizzesService = __decorate([

@@ -168,6 +168,7 @@ let CoursesController = class CoursesController {
             }
             throw new Error('Unexpected error');
         }
+    }
     async enrollInCourse(courseId, req) {
         const userId = req.user.userId;
         const updatedCourse = await this.coursesService.enrollStudent(courseId, userId);
@@ -383,7 +384,7 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "enrollStudent", null);
-
+__decorate([
     (0, common_1.Post)(':courseId/enroll'),
     __param(0, (0, common_1.Param)('courseId')),
     __param(1, (0, common_1.Req)()),

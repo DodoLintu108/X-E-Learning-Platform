@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation"; // If using client-side routing
+import { useParams } from "next/navigation";
 import "./QuizzesAndAssessments.css"; // Import your CSS file
 
 interface Quiz {
-  id: string;
+  quizId: string; // Updated to match your backend structure
   title: string;
-  lecture: string; // Link quizzes to their lecture
+  level: string; // Assuming level exists in your schema
   questions: Array<{
     question: string;
     options: string[];
-    correctAnswer: number;
   }>;
 }
 
@@ -17,7 +16,7 @@ interface QuizzesAndAssessmentsProps {}
 
 export const QuizzesAndAssessments: React.FC<QuizzesAndAssessmentsProps> = () => {
   const params = useParams();
-  const courseId = Array.isArray(params?.courseId) ? params.courseId[0] : params.courseId; // Ensure it's a string
+  const courseId = Array.isArray(params?.courseId) ? params.courseId[0] : params.courseId;
 
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,37 +25,44 @@ export const QuizzesAndAssessments: React.FC<QuizzesAndAssessmentsProps> = () =>
   const [score, setScore] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch quizzes for the course
   useEffect(() => {
     if (!courseId) {
       console.error("Course ID is missing");
       return;
     }
-
+  
     const fetchQuizzes = async () => {
       try {
         const token = localStorage.getItem("accessToken");
+        const userId = localStorage.getItem("userID"); // Retrieve userId from localStorage
+  
         if (!token) {
           throw new Error("No access token found");
         }
-
-        const response = await fetch(
-          `http://localhost:3000/courses/${courseId}/quizzes`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
+  
+        if (!userId) {
+          throw new Error("User ID not found in localStorage");
+        }
+  
+        const response = await fetch(`http://localhost:3000/courses/${courseId}/quizzes`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+  
         if (!response.ok) {
-          if (response.status === 401) {
-            throw new Error("Unauthorized - Check your token");
-          }
           throw new Error("Failed to fetch quizzes");
         }
-
+  
         const data = await response.json();
-        setQuizzes(data);
+  
+        // Filter out quizzes that have been submitted by the user
+        const availableQuizzes = data.filter((quiz: any) => {
+          return !quiz.submittedBy?.some((submission: any) => submission.userId === userId);
+        });
+  
+        setQuizzes(availableQuizzes);
       } catch (error) {
         console.error("Error fetching quizzes:", error);
         setError("Failed to load quizzes.");
@@ -64,10 +70,12 @@ export const QuizzesAndAssessments: React.FC<QuizzesAndAssessmentsProps> = () =>
         setLoading(false);
       }
     };
-
+  
     fetchQuizzes();
   }, [courseId]);
+  
 
+  // Handle answer change
   const handleAnswerChange = (questionIndex: number, optionIndex: number) => {
     setAnswers((prev) => ({
       ...prev,
@@ -75,10 +83,10 @@ export const QuizzesAndAssessments: React.FC<QuizzesAndAssessmentsProps> = () =>
     }));
   };
 
+  // Handle quiz submission
   const handleSubmit = async () => {
     if (!selectedQuiz) return;
   
-    // Validate that all questions are answered
     if (Object.keys(answers).length !== selectedQuiz.questions.length) {
       setError("Please answer all questions before submitting.");
       return;
@@ -86,12 +94,18 @@ export const QuizzesAndAssessments: React.FC<QuizzesAndAssessmentsProps> = () =>
   
     try {
       const token = localStorage.getItem("accessToken");
+      const userId = localStorage.getItem("userID"); // Retrieve userId from localStorage
+  
       if (!token) {
         throw new Error("No access token found");
       }
   
+      if (!userId) {
+        throw new Error("User ID not found in localStorage");
+      }
+  
       const response = await fetch(
-        `http://localhost:3000/courses/${courseId}/quizzes/${selectedQuiz.id}/submit`,
+        `http://localhost:3000/courses/${courseId}/quizzes/${selectedQuiz.quizId}/submit`,
         {
           method: "POST",
           headers: {
@@ -99,9 +113,9 @@ export const QuizzesAndAssessments: React.FC<QuizzesAndAssessmentsProps> = () =>
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            userId: localStorage.getItem("userId"), // Replace with actual user ID logic
-            answers: Object.entries(answers).map(([questionIndex, answer]) => ({
-              questionId: questionIndex,
+            userId, // Use the retrieved userId
+            answers: Object.entries(answers).map(([questionId, answer]) => ({
+              questionId,
               answer,
             })),
           }),
@@ -109,13 +123,7 @@ export const QuizzesAndAssessments: React.FC<QuizzesAndAssessmentsProps> = () =>
       );
   
       if (!response.ok) {
-        if (response.status === 403) {
-          throw new Error("You have already submitted this quiz.");
-        }
-        if (response.status === 401) {
-          throw new Error("Unauthorized - Check your token");
-        }
-        throw new Error("Failed to submit quiz.");
+        throw new Error("Failed to submit quiz");
       }
   
       const data = await response.json();
@@ -125,6 +133,8 @@ export const QuizzesAndAssessments: React.FC<QuizzesAndAssessmentsProps> = () =>
       setError(error.message);
     }
   };
+  
+  
 
   if (loading) {
     return <div>Loading quizzes...</div>;
@@ -158,9 +168,7 @@ export const QuizzesAndAssessments: React.FC<QuizzesAndAssessmentsProps> = () =>
                           name={`question-${questionIndex}`}
                           value={optionIndex}
                           checked={answers[questionIndex] === optionIndex}
-                          onChange={() =>
-                            handleAnswerChange(questionIndex, optionIndex)
-                          }
+                          onChange={() => handleAnswerChange(questionIndex, optionIndex)}
                         />
                         {option}
                       </label>
@@ -177,10 +185,10 @@ export const QuizzesAndAssessments: React.FC<QuizzesAndAssessmentsProps> = () =>
       ) : (
         <ul className="quizzes-list">
           {quizzes.map((quiz) => (
-            <li key={quiz.id} className="quiz-item">
+            <li key={quiz.quizId} className="quiz-item">
               <div className="quiz-info">
                 <h3>{quiz.title}</h3>
-                <p>Lecture: {quiz.lecture}</p>
+                <p>Level: {quiz.level}</p>
                 <p>{quiz.questions.length} questions</p>
               </div>
               <button

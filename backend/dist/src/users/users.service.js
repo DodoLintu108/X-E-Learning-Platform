@@ -88,6 +88,7 @@ let UsersService = class UsersService {
         Object.assign(user, updateData);
         await user.save();
         return user;
+    }
     async getAllUsers() {
         return this.userModel.find().exec();
     }

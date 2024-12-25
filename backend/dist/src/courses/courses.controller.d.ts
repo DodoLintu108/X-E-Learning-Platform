@@ -77,7 +77,6 @@ export declare class CoursesController {
         course: Course;
     }>;
     enrollStudent(courseId: string, studentId: string): Promise<Course>;
-
     enrollInCourse(courseId: string, req: any): Promise<{
         message: string;
         course: Course;
