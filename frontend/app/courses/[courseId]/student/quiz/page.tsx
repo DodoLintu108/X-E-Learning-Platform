@@ -15,7 +15,7 @@ const QuizPage = () => {
     <div style={{ padding: "20px" }}>
       <h1>Quizzes and Assessments</h1>
       {/* Pass courseId as a prop to QuizzesAndAssessments */}
-      <QuizzesAndAssessments courseId={courseId} />
+      <QuizzesAndAssessments  />
     </div>
   );
 };

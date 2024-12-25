@@ -9,6 +9,8 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
   const [courseDetails, setCourseDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [expandedLecture, setExpandedLecture] = useState<number | null>(null); // Track expanded lecture
+  const [isNotesVisible, setIsNotesVisible] = useState(false); // State for sidebar toggle
+  const [notes, setNotes] = useState<string>(""); // Notes content
   const router = useRouter(); // Use Next.js router
 
   useEffect(() => {
@@ -18,6 +20,11 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
 
       if (courseId) {
         fetchCourseDetails(courseId);
+        // Load saved notes from localStorage
+        const savedNotes = localStorage.getItem(`notes-${courseId}`);
+        if (savedNotes) {
+          setNotes(savedNotes);
+        }
       } else {
         console.error("Course ID not found in the URL");
       }
@@ -48,6 +55,16 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
     setExpandedLecture(expandedLecture === index ? null : index);
   };
 
+  const toggleNotes = () => {
+    setIsNotesVisible(!isNotesVisible); // Toggle visibility of the notes sidebar
+  };
+
+  const handleNoteChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newNotes = event.target.value;
+    setNotes(newNotes);
+    localStorage.setItem(`notes-${params.courseId}`, newNotes); // Save notes specific to the course
+  };
+
   const handleQuizRedirect = () => {
     router.push(`/courses/${params.courseId}/student/quiz`); // Redirect to the quiz page
   };
@@ -59,7 +76,13 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
   return (
     <div>
       <Navbar />
-      <div style={{ padding: "20px" }}>
+      <div
+        style={{
+          padding: "20px",
+          marginRight: isNotesVisible ? "300px" : "0", // Adjust margin when notes are visible
+          transition: "margin-right 0.3s ease", // Smooth transition
+        }}
+      >
         <h1>{courseDetails.title}</h1>
         <p>{courseDetails.description}</p>
         <p>Category: {courseDetails.category}</p>
@@ -80,6 +103,23 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
           }}
         >
           Go to Quizzes and Assessments
+        </button>
+
+        {/* Button to toggle Notes Sidebar */}
+        <button
+          onClick={toggleNotes}
+          style={{
+            padding: "10px 20px",
+            backgroundColor: isNotesVisible ? "#FF5722" : "#4CAF50",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+            marginBottom: "20px",
+            marginLeft: "10px",
+          }}
+        >
+          {isNotesVisible ? "Close Notes" : "Open Notes"}
         </button>
 
         <h2>Lectures</h2>
@@ -144,6 +184,40 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
           ))}
         </ul>
       </div>
+
+      {/* Notes Sidebar */}
+      {isNotesVisible && (
+        <div
+          style={{
+            position: "fixed",
+            top: "0",
+            right: "0",
+            width: "300px",
+            height: "100%",
+            backgroundColor: "#f9f9f9",
+            borderLeft: "1px solid #ccc",
+            padding: "20px",
+            boxShadow: "-2px 0px 5px rgba(0,0,0,0.2)",
+            zIndex: 1000,
+          }}
+        >
+          <h2>Notes</h2>
+          <textarea
+            style={{
+              width: "100%",
+              height: "80%",
+              padding: "10px",
+              borderRadius: "5px",
+              border: "1px solid #ccc",
+              fontSize: "14px",
+              resize: "none",
+            }}
+            placeholder="Write your notes here..."
+            value={notes}
+            onChange={handleNoteChange}
+          />
+        </div>
+      )}
     </div>
   );
 };
