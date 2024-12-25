@@ -17,6 +17,7 @@ const files_module_1 = require("./files/files.module");
 const platform_express_1 = require("@nestjs/platform-express");
 const serve_static_1 = require("@nestjs/serve-static");
 const path_1 = require("path");
+const backup_module_1 = require("./security/backup/backup.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -24,6 +25,7 @@ exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
             mongoose_1.MongooseModule.forRoot('mongodb+srv://abdelrhmanmersal:merso2003@main.y2sz6.mongodb.net/main?retryWrites=true&w=majority'),
+            backup_module_1.BackupModule,
             auth_module_1.AuthModule,
             platform_express_1.MulterModule.register({
                 dest: '../uploads',
