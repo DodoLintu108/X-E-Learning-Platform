@@ -1,15 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './users.entity';
-import { CoursesService } from '../courses/courses.service'; // Import CoursesService
-import { NotFoundException } from '@nestjs/common';
+import { CoursesService } from '../courses/courses.service'; // For course handling
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-    private coursesService: CoursesService, // Inject CoursesService
+    private readonly coursesService: CoursesService, // For course management
   ) {}
 
   // Create a new user
@@ -32,7 +31,7 @@ export class UsersService {
     return user;
   }
 
-  // Dashboard logic based on user role
+  // Dashboard Logic
   async getDashboard(user: any): Promise<any> {
     if (user.role === 'student') {
       const enrolledCourses = await this.getEnrolledCourses(user.userId);
@@ -64,37 +63,50 @@ export class UsersService {
 
   // Fetch enrolled courses for students
   private async getEnrolledCourses(userId: string): Promise<any[]> {
-    // Call CoursesService to retrieve all courses
     const courses = await this.coursesService.getAllCourses();
-
-    // Assuming "enrolledStudents" is an array in the course schema
     return courses.filter((course) => course.enrolledStudents?.includes(userId));
   }
 
   // Fetch created courses for instructors
   private async getCreatedCourses(userId: string): Promise<any[]> {
-    // Call CoursesService to retrieve all courses
     const courses = await this.coursesService.getAllCourses();
-
-    // Filter courses where the instructor (createdBy) matches userId
     return courses.filter((course) => course.createdBy === userId);
   }
 
-  // Fetch total user count
+  // Total User Count
   private async getTotalUsers(): Promise<number> {
     return this.userModel.countDocuments();
   }
 
+  // Fetch users by role
   async findAllByRole(role: string): Promise<User[]> {
     return this.userModel.find({ role }).exec();
   }
-  
+
+  // Delete a teacher
+  async deleteTeacher(userId: string): Promise<void> {
+    const user = await this.userModel.findOne({ _id: userId, role: 'teacher' }).exec();
+    if (!user) {
+      throw new NotFoundException('Teacher not found');
+    }
+    await this.userModel.deleteOne({ _id: userId });
+  }
+
+  // Delete a student
+  async deleteStudent(userId: string): Promise<void> {
+    const user = await this.userModel.findOne({ _id: userId, role: 'student' }).exec();
+    if (!user) {
+      throw new NotFoundException('Student not found');
+    }
+    await this.userModel.deleteOne({ _id: userId });
+  }
+
+  // Reuse this generic delete function for other roles if needed
   async deleteUser(userId: string): Promise<void> {
-    const user = await this.findById(userId);
+    const user = await this.userModel.findById(userId).exec();
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    await this.userModel.deleteOne({ userId });
+    await this.userModel.deleteOne({ _id: userId });
   }
-  
 }

@@ -2,6 +2,9 @@
 
 import React, { useState } from "react";
 import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 // BackupManager Component
 const BackupManager = () => {
   const handleCreateBackup = async () => {
@@ -14,10 +17,10 @@ const BackupManager = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      alert("Backup created successfully");
+      toast.success("Backup created successfully");
     } catch (error) {
       console.error("Error creating backup:", error);
-      alert("Failed to create backup");
+      toast.error("Failed to create backup");
     }
   };
 
@@ -28,7 +31,7 @@ const BackupManager = () => {
         `http://localhost:3000/backup/download/${type}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-          responseType: "blob", // Important for file downloads
+          responseType: "blob",
         }
       );
 
@@ -41,7 +44,7 @@ const BackupManager = () => {
       link.remove();
     } catch (error) {
       console.error("Error downloading backup:", error);
-      alert("Failed to download backup");
+      toast.error("Failed to download backup");
     }
   };
 
@@ -50,52 +53,31 @@ const BackupManager = () => {
       <h3>Backup Management</h3>
       <button
         onClick={handleCreateBackup}
-        style={{
-          backgroundColor: "blue",
-          color: "white",
-          padding: "10px",
-          margin: "10px",
-          border: "none",
-          borderRadius: "5px",
-        }}
+        className="button blue"
       >
         Create Backup
       </button>
       <button
         onClick={() => handleDownloadBackup("users")}
-        style={{
-          backgroundColor: "green",
-          color: "white",
-          padding: "10px",
-          margin: "10px",
-          border: "none",
-          borderRadius: "5px",
-        }}
+        className="button green"
       >
         Download User Backup
       </button>
       <button
         onClick={() => handleDownloadBackup("courses")}
-        style={{
-          backgroundColor: "orange",
-          color: "white",
-          padding: "10px",
-          margin: "10px",
-          border: "none",
-          borderRadius: "5px",
-        }}
+        className="button orange"
       >
         Download Course Backup
       </button>
     </div>
   );
 };
-// Main AdminDashboard Component
+
+// AdminDashboard Component
 const AdminDashboard = () => {
   const [allCourses, setAllCourses] = useState<any[]>([]);
   const [allStudents, setAllStudents] = useState<any[]>([]);
   const [allTeachers, setAllTeachers] = useState<any[]>([]);
-
   const [error, setError] = useState("");
 
   const fetchData = async (
@@ -104,8 +86,7 @@ const AdminDashboard = () => {
   ) => {
     const token = localStorage.getItem("accessToken");
     if (!token) {
-      console.error("Access token is missing. Please log in.");
-      setError("Access token is missing. Please log in.");
+      toast.error("Access token is missing. Please log in.");
       return;
     }
 
@@ -113,31 +94,17 @@ const AdminDashboard = () => {
       const response = await axios.get(`http://localhost:3000/${endpoint}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log("API Response:", response.data);
       setData(response.data);
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        console.error("Unauthorized access. Redirecting to login...");
-        setError("Unauthorized access. Please log in again.");
-        window.location.href = "/login";
-      } else {
-        console.error(`Error fetching ${endpoint}:`, error);
-        setError(`Error fetching ${endpoint}: ${error}`);
-      }
+      console.error(`Error fetching ${endpoint}:`, error);
+      setError(`Error fetching ${endpoint}.`);
     }
   };
 
   const handleDelete = async (endpoint: string, id: string | undefined) => {
-    if (!id) {
-      console.error("ID is missing for deletion.");
-      setError("ID is missing for deletion.");
-      return;
-    }
-
     const token = localStorage.getItem("accessToken");
-    if (!token) {
-      console.error("Access token is missing. Please log in.");
-      setError("Access token is missing. Please log in.");
+    if (!id || !token) {
+      toast.error("Failed to delete: Missing ID or token.");
       return;
     }
 
@@ -145,33 +112,40 @@ const AdminDashboard = () => {
       await axios.delete(`http://localhost:3000/${endpoint}/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log(`${endpoint.slice(0, -1)} deleted successfully.`);
-
+      toast.success(`${endpoint.slice(0, -1)} deleted successfully.`);
       if (endpoint === "courses") fetchData("courses/all", setAllCourses);
       if (endpoint === "students") fetchData("users/students", setAllStudents);
       if (endpoint === "teachers") fetchData("users/teachers", setAllTeachers);
-
-      setError("");
     } catch (error) {
       console.error(`Error deleting ${endpoint.slice(0, -1)}:`, error);
-      setError(`Error deleting ${endpoint.slice(0, -1)}.`);
+      toast.error(`Failed to delete ${endpoint.slice(0, -1)}.`);
     }
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Admin Dashboard</h1>
+    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+      <ToastContainer />
+      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Admin Dashboard</h1>
 
       {error && <div style={{ color: "red", marginBottom: "20px" }}>{error}</div>}
 
-      <div style={{ marginBottom: "20px" }}>
-        <button onClick={() => fetchData("courses/all", setAllCourses)} style={{ marginRight: "10px" }}>
+      <div style={{ marginBottom: "20px", textAlign: "center" }}>
+        <button
+          onClick={() => fetchData("courses/all", setAllCourses)}
+          className="button blue"
+        >
           Get All Courses
         </button>
-        <button onClick={() => fetchData("users/teachers", setAllTeachers)} style={{ marginRight: "10px" }}>
+        <button
+          onClick={() => fetchData("users/teachers", setAllTeachers)}
+          className="button green"
+        >
           Get All Teachers
         </button>
-        <button onClick={() => fetchData("users/students", setAllStudents)}>
+        <button
+          onClick={() => fetchData("users/students", setAllStudents)}
+          className="button orange"
+        >
           Get All Students
         </button>
       </div>
@@ -183,20 +157,14 @@ const AdminDashboard = () => {
           {allCourses.length > 0 ? (
             allCourses.map((course) => (
               <div
-                key={course.courseId}
-                style={{
-                  border: "1px solid #ccc",
-                  borderRadius: "10px",
-                  padding: "10px",
-                  minWidth: "200px",
-                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                }}
+                key={course._id}
+                className="card"
               >
                 <h3>{course.title}</h3>
                 <p>{course.description}</p>
                 <button
-                  style={{ background: "red", color: "white", border: "none", padding: "5px 10px" }}
-                  onClick={() => handleDelete("courses", course.courseId)}
+                  onClick={() => handleDelete("courses", course._id)}
+                  className="button red"
                 >
                   Delete
                 </button>
@@ -215,20 +183,14 @@ const AdminDashboard = () => {
           {allTeachers.length > 0 ? (
             allTeachers.map((teacher) => (
               <div
-                key={teacher.id}
-                style={{
-                  border: "1px solid #ccc",
-                  borderRadius: "10px",
-                  padding: "10px",
-                  minWidth: "200px",
-                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                }}
+                key={teacher._id}
+                className="card"
               >
                 <h3>{teacher.name}</h3>
                 <p>{teacher.email}</p>
                 <button
-                  style={{ background: "red", color: "white", border: "none", padding: "5px 10px" }}
-                  onClick={() => handleDelete("teachers", teacher.id)}
+                  onClick={() => handleDelete("teachers", teacher._id)}
+                  className="button red"
                 >
                   Delete
                 </button>
@@ -247,20 +209,14 @@ const AdminDashboard = () => {
           {allStudents.length > 0 ? (
             allStudents.map((student) => (
               <div
-                key={student.id}
-                style={{
-                  border: "1px solid #ccc",
-                  borderRadius: "10px",
-                  padding: "10px",
-                  minWidth: "200px",
-                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                }}
+                key={student._id}
+                className="card"
               >
                 <h3>{student.name}</h3>
                 <p>{student.email}</p>
                 <button
-                  style={{ background: "red", color: "white", border: "none", padding: "5px 10px" }}
-                  onClick={() => handleDelete("students", student.id)}
+                  onClick={() => handleDelete("students", student._id)}
+                  className="button red"
                 >
                   Delete
                 </button>
@@ -270,12 +226,13 @@ const AdminDashboard = () => {
             <p>No students available</p>
           )}
         </div>
-        
       </div>
-            {/* Backup Section */}
+
+      {/* Backup Section */}
       <BackupManager />
     </div>
   );
 };
 
 export default AdminDashboard;
+

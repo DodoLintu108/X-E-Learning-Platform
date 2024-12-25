@@ -8,5 +8,6 @@ export declare class UsersController {
     createCourse(req: any, courseData: any): Promise<import("../courses/courses.entity").Course>;
     getAllStudents(): Promise<import("./users.entity").User[]>;
     getAllTeachers(): Promise<import("./users.entity").User[]>;
-    deleteUser(userId: string): Promise<void>;
+    deleteTeacher(userId: string): Promise<void>;
+    deleteStudent(userId: string): Promise<void>;
 }

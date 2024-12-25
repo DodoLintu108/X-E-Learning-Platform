@@ -73,3 +73,38 @@
     @apply bg-background text-foreground;
   }
 }
+.card {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 15px;
+  min-width: 250px;
+  max-width: 300px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+.button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.button.blue {
+  background-color: #007bff;
+}
+
+.button.green {
+  background-color: #28a745;
+}
+
+.button.orange {
+  background-color: #ff9800;
+}
+
+.button.red {
+  background-color: #f44336;
+}

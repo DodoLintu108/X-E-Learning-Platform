@@ -18,7 +18,6 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const users_entity_1 = require("./users.entity");
 const courses_service_1 = require("../courses/courses.service");
-const common_2 = require("@nestjs/common");
 let UsersService = class UsersService {
     constructor(userModel, coursesService) {
         this.userModel = userModel;
@@ -34,7 +33,7 @@ let UsersService = class UsersService {
     async findById(userId) {
         const user = await this.userModel.findOne({ userId }).exec();
         if (!user) {
-            throw new common_2.NotFoundException('User not found');
+            throw new common_1.NotFoundException('User not found');
         }
         return user;
     }
@@ -66,7 +65,7 @@ let UsersService = class UsersService {
             };
         }
         else {
-            throw new common_2.NotFoundException('Invalid role');
+            throw new common_1.NotFoundException('Invalid role');
         }
     }
     async getEnrolledCourses(userId) {
@@ -83,12 +82,26 @@ let UsersService = class UsersService {
     async findAllByRole(role) {
         return this.userModel.find({ role }).exec();
     }
-    async deleteUser(userId) {
-        const user = await this.findById(userId);
+    async deleteTeacher(userId) {
+        const user = await this.userModel.findOne({ _id: userId, role: 'teacher' }).exec();
         if (!user) {
-            throw new common_2.NotFoundException('User not found');
+            throw new common_1.NotFoundException('Teacher not found');
         }
-        await this.userModel.deleteOne({ userId });
+        await this.userModel.deleteOne({ _id: userId });
+    }
+    async deleteStudent(userId) {
+        const user = await this.userModel.findOne({ _id: userId, role: 'student' }).exec();
+        if (!user) {
+            throw new common_1.NotFoundException('Student not found');
+        }
+        await this.userModel.deleteOne({ _id: userId });
+    }
+    async deleteUser(userId) {
+        const user = await this.userModel.findById(userId).exec();
+        if (!user) {
+            throw new common_1.NotFoundException('User not found');
+        }
+        await this.userModel.deleteOne({ _id: userId });
     }
 };
 exports.UsersService = UsersService;
