@@ -40,6 +40,19 @@ __decorate([
     __metadata("design:type", Array)
 ], Quiz.prototype, "questions", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({
+        type: [
+            {
+                userId: { type: String, required: true },
+                score: { type: Number, required: true },
+                submittedAt: { type: Date, default: Date.now },
+            },
+        ],
+        default: [],
+    }),
+    __metadata("design:type", Array)
+], Quiz.prototype, "submittedBy", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ default: Date.now }),
     __metadata("design:type", Date)
 ], Quiz.prototype, "createdAt", void 0);

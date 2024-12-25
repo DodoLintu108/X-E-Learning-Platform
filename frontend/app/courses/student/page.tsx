@@ -78,6 +78,8 @@ const StudentPage = () => {
     return <p>No courses available or you are not enrolled in any courses yet.</p>;
   }
 
+
+  
     return (
         <div>
             <Navbar />

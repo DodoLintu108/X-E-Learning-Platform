@@ -5,7 +5,7 @@ import { Response } from './responses.entity';
 
 @Controller('courses/:courseId/quizzes')
 export class QuizzesController {
-  constructor(private readonly quizzesService: QuizzesService) {}
+  constructor(private readonly quizzesService: QuizzesService) { }
 
   @Post()
   async createQuiz(
@@ -22,7 +22,7 @@ export class QuizzesController {
     const userId = req.user.userId; // Replace with actual user ID retrieval
     return this.quizzesService.getUnsubmittedQuizzes(userId, courseId);
   }
-  
+
   @Get()
   async getQuizzesForCourse(@Param('courseId') courseId: string): Promise<Quiz[]> {
     return this.quizzesService.getQuizzesForCourse(courseId);
@@ -38,18 +38,21 @@ export class QuizzesController {
     return this.quizzesService.deleteQuiz(quizId);
   }
 
+  // In the controller
   @Post(':quizId/submit')
   async submitQuizResponse(
     @Param('quizId') quizId: string,
     @Body() responseData: Partial<Response>,
-  ): Promise<Response> {
+  ): Promise<{ message: string; score: number }> {
     return this.quizzesService.submitQuizResponse({ ...responseData, quizId });
   }
-
+  
+  
+  
   @Get(':courseId/quizzes')
-async getAllQuizzes(@Param('courseId') courseId: string) {
-  return this.quizzesService.getQuizzesForCourse(courseId);
-}
+  async getAllQuizzes(@Param('courseId') courseId: string) {
+    return this.quizzesService.getQuizzesForCourse(courseId);
+  }
 
 
 

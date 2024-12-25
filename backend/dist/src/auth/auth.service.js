@@ -36,6 +36,7 @@ let AuthService = class AuthService {
         return {
             accessToken,
             role: user.role,
+            user,
         };
     }
 };

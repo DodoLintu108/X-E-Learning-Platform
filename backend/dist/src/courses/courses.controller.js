@@ -25,10 +25,11 @@ let CoursesController = class CoursesController {
     constructor(coursesService) {
         this.coursesService = coursesService;
     }
-    async createCourse(req, createCourseDto, files) {
+    async createCourse(createCourseDto, files) {
         const courseMaterial = files?.files?.[0]?.filename || null;
         const courseImage = files?.imagefiles?.[0]?.filename || null;
-        const teacherId = req.user.userId;
+        const teacherId = createCourseDto.createdBy;
+        console.log('teacherId', teacherId);
         const courseData = {
             ...createCourseDto,
             courseMaterial,
@@ -61,14 +62,12 @@ let CoursesController = class CoursesController {
             },
         };
     }
-    async getStudentCourses(req) {
-        const userId = req.user.userId;
+    async getStudentCourses(userId) {
         const assignedCourses = await this.coursesService.getAssignedCourses(userId);
-        const availableCourses = await this.coursesService.getAvailableCourses(userId);
-        return { assigned: assignedCourses, available: availableCourses };
+        return { assigned: assignedCourses };
     }
-    async getTeacherCourses(req) {
-        const userId = req.user.userId;
+    async getTeacherCourses(userId) {
+        console.log(userId);
         const courses = await this.coursesService.getCoursesByTeacher(userId);
         return courses;
     }
@@ -158,6 +157,18 @@ let CoursesController = class CoursesController {
             course: updatedCourse,
         };
     }
+    async enrollStudent(courseId, studentId) {
+        try {
+            const updatedCourse = await this.coursesService.enrollStudent(courseId, studentId);
+            return updatedCourse;
+        }
+        catch (error) {
+            if (error instanceof common_1.NotFoundException) {
+                throw error;
+            }
+            throw new Error('Unexpected error');
+        }
+    }
     async enrollInCourse(courseId, req) {
         const userId = req.user.userId;
         const updatedCourse = await this.coursesService.enrollStudent(courseId, userId);
@@ -211,43 +222,10 @@ __decorate([
             },
         },
     }),
-    (0, common_1.Post)('create'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FileFieldsInterceptor)([
-        { name: 'files', maxCount: 2 },
-        { name: 'imagefiles', maxCount: 2 },
-    ], multer_config_1.multerOptions)),
-    (0, swagger_1.ApiConsumes)('multipart/form-data'),
-    (0, swagger_1.ApiBody)({
-        description: 'Create a new course with materials and image',
-        schema: {
-            type: 'object',
-            properties: {
-                title: { type: 'string' },
-                description: { type: 'string' },
-                category: { type: 'string' },
-                difficultyLevel: { type: 'string' },
-                files: {
-                    type: 'array',
-                    items: {
-                        type: 'string',
-                        format: 'binary',
-                    },
-                },
-                imagefiles: {
-                    type: 'array',
-                    items: {
-                        type: 'string',
-                        format: 'binary',
-                    },
-                },
-            },
-        },
-    }),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Body)()),
-    __param(2, (0, common_1.UploadedFiles)()),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.UploadedFiles)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, create_course_dto_1.CreateCourseDto, Object]),
+    __metadata("design:paramtypes", [create_course_dto_1.CreateCourseDto, Object]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "createCourse", null);
 __decorate([
@@ -264,17 +242,17 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "updateCourse", null);
 __decorate([
-    (0, common_1.Get)('student'),
-    __param(0, (0, common_1.Req)()),
+    (0, common_1.Get)('student/:userId'),
+    __param(0, (0, common_1.Param)('userId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "getStudentCourses", null);
 __decorate([
-    (0, common_1.Get)('teacher'),
-    __param(0, (0, common_1.Req)()),
+    (0, common_1.Get)('teacher/:userId'),
+    __param(0, (0, common_1.Param)('userId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "getTeacherCourses", null);
 __decorate([
@@ -398,6 +376,14 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "addLecture", null);
+__decorate([
+    (0, common_1.Put)('enroll/:courseId/:studentId'),
+    __param(0, (0, common_1.Param)('courseId')),
+    __param(1, (0, common_1.Param)('studentId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "enrollStudent", null);
 __decorate([
     (0, common_1.Post)(':courseId/enroll'),
     __param(0, (0, common_1.Param)('courseId')),

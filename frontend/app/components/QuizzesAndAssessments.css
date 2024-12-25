@@ -1,4 +1,5 @@
 .quizzes-container {
+<<<<<<< Updated upstream
     padding: 20px;
     max-width: 800px;
     margin: 0 auto;
@@ -67,4 +68,184 @@
   .quiz-button:active {
     background-color: #003f7f;
   }
+  .quizzes-container {
+    margin: 20px;
+  }
   
+  .quizzes-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .quizzes-list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .quiz-item {
+    margin-bottom: 15px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+  
+  .quiz-info h3 {
+    margin: 0 0 10px 0;
+  }
+  
+  .quiz-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .quiz-container {
+    padding: 20px;
+  }
+  
+  .question-container {
+    margin-bottom: 15px;
+  }
+  
+  .option-label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .submit-button {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+=======
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.quizzes-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.quizzes-list {
+  list-style: none;
+  padding: 0;
+}
+
+.quiz-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffffff;
+  margin-bottom: 15px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+.quiz-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.quiz-info h3 {
+  font-size: 18px;
+  color: #444;
+  margin: 0;
+}
+
+.quiz-info p {
+  font-size: 14px;
+  color: #666;
+  margin: 5px 0;
+}
+
+.quiz-button {
+  background-color: #007bff;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.quiz-button:hover {
+  background-color: #0056b3;
+}
+
+.quiz-button:active {
+  background-color: #003f7f;
+}
+.quizzes-container {
+  margin: 20px;
+}
+
+.quizzes-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.quizzes-list {
+  list-style: none;
+  padding: 0;
+}
+
+.quiz-item {
+  margin-bottom: 15px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.quiz-info h3 {
+  margin: 0 0 10px 0;
+}
+
+.quiz-button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.quiz-container {
+  padding: 20px;
+}
+
+.question-container {
+  margin-bottom: 15px;
+}
+
+.option-label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.submit-button {
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+>>>>>>> Stashed changes

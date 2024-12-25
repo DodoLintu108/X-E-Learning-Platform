@@ -3,6 +3,7 @@ import { Document } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 
 export type CourseDocument = Course & Document;
+
 @Schema()
 export class Quiz {
   @Prop({ required: true })
@@ -14,7 +15,6 @@ export class Quiz {
   @Prop({ required: true })
   level: string; // Quiz level (Beginner, Intermediate, Advanced)
 
-  
   @Prop({
     type: [
       {
@@ -25,6 +25,18 @@ export class Quiz {
     ],
   })
   questions: Array<{ question: string; options: string[]; correctAnswer: number }>;
+
+  @Prop({
+    type: [
+      {
+        userId: { type: String, required: true },
+        score: { type: Number, required: true },
+        submittedAt: { type: Date, default: Date.now },
+      },
+    ],
+    default: [],
+  })
+  submittedBy: Array<{ userId: string; score: number; submittedAt: Date }>; // Track user submissions
 
   @Prop({ default: Date.now })
   createdAt: Date; // Timestamp of quiz creation
@@ -37,9 +49,10 @@ export class Lecture {
 
   @Prop({ required: true, enum: ['video', 'pdf'] })
   type: 'video' | 'pdf'; // Type of lecture
+
   @Prop({ type: [Quiz], default: [] })
   quizzes: Quiz[]; // Array of quizzes associated with the course
-  
+
   @Prop({ required: true })
   content: string; // YouTube URL for video or file path for PDF
 
