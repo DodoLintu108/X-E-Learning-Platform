@@ -84,4 +84,17 @@ export class UsersService {
   private async getTotalUsers(): Promise<number> {
     return this.userModel.countDocuments();
   }
+
+  async findAllByRole(role: string): Promise<User[]> {
+    return this.userModel.find({ role }).exec();
+  }
+  
+  async deleteUser(userId: string): Promise<void> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    await this.userModel.deleteOne({ userId });
+  }
+  
 }

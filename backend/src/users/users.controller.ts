@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Req, Body } from '@nestjs/common'; // Import NestJS decorators
+import { Controller, Get, Post, Req, Body, Param } from '@nestjs/common'; // Import NestJS decorators
 import { Roles } from './roles.decorator'; // Ensure you created this custom decorator
 import { UsersService } from './users.service';
 import { CoursesService } from '../courses/courses.service'; // Import CoursesService
@@ -21,4 +21,20 @@ export class UsersController {
   createCourse(@Req() req, @Body() courseData) {
     return this.coursesService.createCourse({ ...courseData, createdBy: req.user.userId }); // Pass course creation to CoursesService
   }
+
+
+  @Get('students')
+async getAllStudents() {
+  return this.usersService.findAllByRole('student');
+}
+
+@Get('teachers')
+async getAllTeachers() {
+  return this.usersService.findAllByRole('teacher');
+}
+
+@Post('delete/:userId')
+async deleteUser(@Param('userId') userId: string) {
+  return this.usersService.deleteUser(userId);
+}
 }

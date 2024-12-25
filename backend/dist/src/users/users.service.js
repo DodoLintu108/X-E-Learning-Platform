@@ -80,6 +80,16 @@ let UsersService = class UsersService {
     async getTotalUsers() {
         return this.userModel.countDocuments();
     }
+    async findAllByRole(role) {
+        return this.userModel.find({ role }).exec();
+    }
+    async deleteUser(userId) {
+        const user = await this.findById(userId);
+        if (!user) {
+            throw new common_2.NotFoundException('User not found');
+        }
+        await this.userModel.deleteOne({ userId });
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
