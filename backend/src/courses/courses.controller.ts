@@ -14,6 +14,8 @@ import {
   Req,
   BadRequestException,
   NotFoundException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
@@ -105,6 +107,7 @@ export class CoursesController {
       },
     },
   })
+  
   async createCourse(
     @Req() req, // To access the logged-in user's data
     @Body() createCourseDto: CreateCourseDto,
@@ -130,7 +133,7 @@ export class CoursesController {
 
     return {
       message: 'Course created successfully',
-      course: newCourse,
+      course: newCourse,    
     };
   }
   @Put(':courseId')
@@ -327,7 +330,16 @@ export class CoursesController {
     };
   }
   
-
+  @Put(':id/end')
+  async endCourse(@Param('id') id: string) {
+    try {
+      const course = await this.coursesService.endCourse(id); // Define this method in the service
+      return { message: 'Course has been ended successfully', course };
+    } catch (error) {
+      throw new HttpException('Failed to end the course', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+  
   @Post(':courseId/quizzes/:quizId/submit')
   async submitQuiz(
     @Param('courseId') courseId: string,

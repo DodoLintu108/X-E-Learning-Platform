@@ -53,6 +53,10 @@ export declare class CoursesController {
             correctAnswer: number;
         }>;
     }): Promise<any>;
+    endCourse(id: string): Promise<{
+        message: string;
+        course: Course;
+    }>;
     submitQuiz(courseId: string, quizId: string, body: {
         userId: string;
         answers: Array<{

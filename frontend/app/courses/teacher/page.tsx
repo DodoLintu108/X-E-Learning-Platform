@@ -15,6 +15,8 @@ interface Course {
   category: string;
   difficultyLevel: string;
   lectures: Lecture[]; // Include lectures
+  isEnded: boolean; // Indicates if the course has ended
+
 }
 
 interface Lecture {
@@ -194,6 +196,25 @@ const TeacherCourses = () => {
       average: number;
     };
   }
+
+  const handleEndCourse = async (courseId: string) => {
+    const token = localStorage.getItem('accessToken');
+    try {
+      const response = await axios.put(
+        `http://localhost:3000/courses/${courseId}/end`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success('Course has been ended successfully!');
+      fetchTeacherCourses(); // Refresh courses to reflect the updated status
+    } catch (error) {
+      console.error('Error ending the course:', error);
+      toast.error('Failed to end the course. Please try again.');
+    }
+  };
+  
   const handleViewCourseAnalytics = async (courseId: string) => {
     const token = localStorage.getItem('accessToken');
 
@@ -243,6 +264,24 @@ const TeacherCourses = () => {
       toast.error("No course selected!");
       return;
     }
+    const handleEndCourse = async (courseId: string) => {
+      const token = localStorage.getItem('accessToken');
+      try {
+        const response = await axios.put(
+          `http://localhost:3000/courses/${courseId}/end`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        toast.success('Course has been ended successfully!');
+        fetchTeacherCourses(); // Refresh courses to reflect the updated status
+      } catch (error) {
+        console.error('Error ending the course:', error);
+        toast.error('Failed to end the course. Please try again.');
+      }
+    };
+    
     const handleAddQuiz = async () => {
       if (!selectedCourse) {
         toast.error("No course selected!");
@@ -431,6 +470,21 @@ const TeacherCourses = () => {
                 }}
               >
                 View Course Analytics
+              </button>
+              <button
+                onClick={() => handleEndCourse(course._id)}
+                style={{
+                  padding: '10px 15px',
+                  backgroundColor: '#FF0000',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  marginRight: '10px',
+                }}
+                disabled={course.isEnded} // Disable the button if the course is already ended
+              >
+                {course.isEnded ? 'Course Ended' : 'End Course'}
               </button>
               <button
                 onClick={() => {

@@ -12,8 +12,9 @@ export declare class CoursesService {
         description: string;
         category: string;
         difficultyLevel: string;
-        courseImage: string;
-        courseMaterial: string;
+        courseImage?: string;
+        courseMaterial?: string;
+        isEnded?: boolean;
     }): Promise<Course>;
     addModule(data: {
         courseId: string;
@@ -42,6 +43,8 @@ export declare class CoursesService {
             correctAnswer: number;
         }>;
     }): Promise<any>;
+    getCourseDetailsForStudent(courseId: string, studentId: string): Promise<any>;
+    endCourse(id: string): Promise<Course>;
     submitQuizResponse(courseId: string, quizId: string, userId: string, answers: Array<{
         questionId: string;
         answer: number;

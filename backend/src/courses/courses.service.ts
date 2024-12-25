@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Schema } from 'mongoose';
 import { Course, CourseDocument } from './courses.entity';
 import { Module, ModuleDocument } from './modules.entity';
 import { Version, VersionDocument } from './version.entity';
@@ -18,12 +18,17 @@ export class CoursesService {
     description: string;
     category: string;
     difficultyLevel: string;
-    courseImage: string;
-    courseMaterial: string;
+    courseImage?: string;
+    courseMaterial?: string;
+    isEnded?: boolean; // Make it optional
   }): Promise<Course> {
-    const newCourse = new this.courseModel(data);
+    const newCourse = new this.courseModel({
+      ...data,
+      isEnded: data.isEnded ?? false, // Default to false if not provided
+    });
     return newCourse.save();
   }
+  
 
   async addModule(data: {
     courseId: string;
@@ -96,6 +101,8 @@ export class CoursesService {
       }
       return course;
     });
+    
+    
   }
 
   async getCourseById(courseId: string): Promise<Course> {
@@ -233,10 +240,42 @@ export class CoursesService {
     await course.save();
     return newQuiz;
   }
+  
+  async getCourseDetailsForStudent(courseId: string, studentId: string, ): Promise<any> {
+    const course = await this.courseModel.findById(courseId).exec();
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+  
+    // Calculate average score for the student
+    const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
+    const submissions = quizzes.flatMap((quiz) =>
+      quiz.submittedBy.filter((submission) => submission.userId === studentId)
+    );
+  
+    const totalScore = submissions.reduce((sum, sub) => sum + sub.score, 0);
+    const averageScore = submissions.length ? totalScore / submissions.length : 0;
+  
 
+    return {
+      
+      title: course.title,
+      description: course.description,
+      category: course.category,
+      difficultyLevel: course.difficultyLevel,
+      teacherName: course.createdBy, // Adjust if populated with user info
+      lectures: course.lectures, // Assuming lectures exist on the course schema
+      createdAt: course.createdAt,
+      isEnded: course.isEnded,
+      averageScore: averageScore.toFixed(2), // Include the average score
+    };
+  }
+  
 
-
-
+  async endCourse(id: string): Promise<Course> {
+    return this.courseModel.findByIdAndUpdate(id, { isEnded: true }, { new: true }).exec();
+  }
+  
   async submitQuizResponse(
     courseId: string,
     quizId: string,
@@ -361,7 +400,6 @@ export class CoursesService {
       throw new NotFoundException('Course not found');
     }
 
-    // Example structure returned
     return {
       title: course.title,
       description: course.description,
@@ -370,6 +408,7 @@ export class CoursesService {
       teacherName: course.createdBy, // Adjust if populated with user info
       lectures: course.lectures, // Assuming lectures exist on the course schema
       createdAt: course.createdAt,
+      isEnded: { type: Boolean, default: false },
     };
   }
 
@@ -386,6 +425,6 @@ export class CoursesService {
 
     return quizzes; // Return all quizzes as a flat array
   }
-
+  
 }
 
