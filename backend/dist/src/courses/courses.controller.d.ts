@@ -44,24 +44,23 @@ export declare class CoursesController {
         message: string;
         course: Course;
     }>;
-    addQuizToCourse(courseId: string, quizData: {
-        level: string;
-        questions: {
-            question: string;
-            options: string[];
-            correctAnswer: number;
-        }[];
-    }): Promise<any>;
     addQuiz(courseId: string, quizData: {
+        title: string;
         level: string;
         questions: Array<{
             question: string;
             options: string[];
             correctAnswer: number;
         }>;
+    }): Promise<any>;
+    submitQuiz(courseId: string, quizId: string, body: {
+        userId: string;
+        answers: Array<{
+            questionId: string;
+            answer: number;
+        }>;
     }): Promise<{
-        message: string;
-        quiz: any;
+        score: number;
     }>;
     getQuizzes(courseId: string): Promise<any[]>;
     getQuiz(courseId: string, quizId: string): Promise<any>;

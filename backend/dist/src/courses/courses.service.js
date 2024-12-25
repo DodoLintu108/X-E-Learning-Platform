@@ -174,21 +174,47 @@ let CoursesService = class CoursesService {
         if (!course) {
             throw new common_1.NotFoundException('Course not found');
         }
-        const quiz = {
+        const newQuiz = {
             quizId: new Date().toISOString(),
-            moduleId: courseId,
+            title: quizData.title || 'Untitled Quiz',
             level: quizData.level,
             questions: quizData.questions,
+            submittedBy: [],
             createdAt: new Date(),
         };
-        if (!course.lectures || course.lectures.length === 0) {
-            throw new common_1.NotFoundException('No lectures available to add the quiz');
-        }
         const targetLecture = course.lectures[course.lectures.length - 1];
-        targetLecture.quizzes = targetLecture.quizzes || [];
-        targetLecture.quizzes.push(quiz);
+        if (!targetLecture) {
+            throw new common_1.NotFoundException('No lectures found in the course to add the quiz.');
+        }
+        targetLecture.quizzes.push(newQuiz);
         await course.save();
-        return quiz;
+        return newQuiz;
+    }
+    async submitQuizResponse(courseId, quizId, userId, answers) {
+        const course = await this.courseModel.findById(courseId);
+        if (!course) {
+            throw new common_1.NotFoundException('Course not found');
+        }
+        const quiz = course.lectures
+            .flatMap((lecture) => lecture.quizzes || [])
+            .find((quiz) => quiz.quizId === quizId);
+        console.log(course.lectures);
+        console.log(quizId);
+        if (!quiz) {
+            throw new common_1.NotFoundException('Quiz not found');
+        }
+        const correctAnswers = quiz.questions.map((q) => q.correctAnswer);
+        const score = answers.reduce((total, answer, index) => {
+            const isCorrect = answer.answer === correctAnswers[index];
+            return total + (isCorrect ? 1 : 0);
+        }, 0);
+        quiz.submittedBy.push({
+            userId,
+            score,
+            submittedAt: new Date(),
+        });
+        await course.save();
+        return { score };
     }
     async getQuizzesByCourse(courseId) {
         const course = await this.courseModel.findById(courseId);

@@ -128,15 +128,19 @@ let CoursesController = class CoursesController {
             course: updatedCourse,
         };
     }
-    async addQuizToCourse(courseId, quizData) {
-        return this.coursesService.addQuizToCourse(courseId, quizData);
-    }
     async addQuiz(courseId, quizData) {
+        if (!quizData.title) {
+            quizData.title = 'Untitled Quiz';
+        }
         const quiz = await this.coursesService.addQuizToCourse(courseId, quizData);
         return {
             message: 'Quiz added successfully',
             quiz,
         };
+    }
+    async submitQuiz(courseId, quizId, body) {
+        const { userId, answers } = body;
+        return this.coursesService.submitQuizResponse(courseId, quizId, userId, answers);
     }
     async getQuizzes(courseId) {
         return this.coursesService.getQuizzesByCourse(courseId);
@@ -354,19 +358,22 @@ __decorate([
 ], CoursesController.prototype, "addFiles", null);
 __decorate([
     (0, common_1.Post)(':courseId/quizzes'),
-    __param(0, (0, common_1.Param)('courseId')),
-    __param(1, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
-], CoursesController.prototype, "addQuizToCourse", null);
-__decorate([
+    (0, common_1.Post)(':courseId/quizzes'),
     __param(0, (0, common_1.Param)('courseId')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "addQuiz", null);
+__decorate([
+    (0, common_1.Post)(':courseId/quizzes/:quizId/submit'),
+    __param(0, (0, common_1.Param)('courseId')),
+    __param(1, (0, common_1.Param)('quizId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "submitQuiz", null);
 __decorate([
     (0, common_1.Get)(':courseId/quizzes'),
     __param(0, (0, common_1.Param)('courseId')),

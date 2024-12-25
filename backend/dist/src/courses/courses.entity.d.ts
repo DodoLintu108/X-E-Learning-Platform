@@ -1,32 +1,27 @@
 import { Document } from 'mongoose';
-export type CourseDocument = Course & Document;
 export declare class Quiz {
     quizId: string;
-    moduleId: string;
+    title: string;
     level: string;
     questions: Array<{
         question: string;
         options: string[];
         correctAnswer: number;
     }>;
+    submittedBy: Array<{
+        userId: string;
+        score: number;
+        submittedAt: Date;
+    }>;
     createdAt: Date;
 }
-export declare class Lecture {
+declare class Lecture {
     title: string;
     type: 'video' | 'pdf';
-    quizzes: Quiz[];
     content: string;
+    quizzes: Quiz[];
     createdAt: Date;
 }
-export declare const LectureSchema: import("mongoose").Schema<Lecture, import("mongoose").Model<Lecture, any, any, any, Document<unknown, any, Lecture> & Lecture & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Lecture, Document<unknown, {}, import("mongoose").FlatRecord<Lecture>> & import("mongoose").FlatRecord<Lecture> & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}>;
 export declare class Course {
     courseId: string;
     title: string;
@@ -40,6 +35,7 @@ export declare class Course {
     createdAt: Date;
     lectures: Lecture[];
 }
+export type CourseDocument = Course & Document;
 export declare const CourseSchema: import("mongoose").Schema<Course, import("mongoose").Model<Course, any, any, any, Document<unknown, any, Course> & Course & {
     _id: import("mongoose").Types.ObjectId;
 } & {
@@ -49,3 +45,4 @@ export declare const CourseSchema: import("mongoose").Schema<Course, import("mon
 } & {
     __v: number;
 }>;
+export {};

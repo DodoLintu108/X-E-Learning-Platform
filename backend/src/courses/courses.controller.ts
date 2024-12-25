@@ -29,7 +29,7 @@ import mongoose from 'mongoose';
 @Controller('courses')
 @UseGuards(AuthGuard)
 export class CoursesController {
-  constructor(private readonly coursesService: CoursesService) {}
+  constructor(private readonly coursesService: CoursesService) { }
 
   @Post('create')
   @UseInterceptors(
@@ -116,18 +116,18 @@ export class CoursesController {
   ) {
     const courseMaterial = files?.files?.[0]?.filename || null;
     const courseImage = files?.imagefiles?.[0]?.filename || null;
-  
+
     const teacherId = req.user.userId; // Extract teacher ID from the logged-in user's data
-  
+
     const courseData = {
       ...createCourseDto,
       courseMaterial,
       courseImage,
       createdBy: teacherId, // Associate the course with the teacher
     };
-  
+
     const newCourse = await this.coursesService.createCourse(courseData);
-  
+
     return {
       message: 'Course created successfully',
       course: newCourse,
@@ -187,9 +187,9 @@ export class CoursesController {
 
   @Get('teacher')
   async getTeacherCourses(@Req() req): Promise<Course[]> {
-      const userId = req.user.userId; // Ensure req.user.userId exists
-      const courses = await this.coursesService.getCoursesByTeacher(userId);
-      return courses;
+    const userId = req.user.userId; // Ensure req.user.userId exists
+    const courses = await this.coursesService.getCoursesByTeacher(userId);
+    return courses;
   }
 
 
@@ -208,7 +208,7 @@ export class CoursesController {
   }
 
 
-  
+
   @Get('search')
   async searchCourses(@Query('query') query: string): Promise<Course[]> {
     return this.coursesService.searchCourses(query);
@@ -224,7 +224,7 @@ export class CoursesController {
   async getCourseById(@Param('courseId') courseId: string): Promise<Course> {
     return this.coursesService.getCourseById(courseId);
   }
-  
+
   @Get(':roleOrId')
   async getCourses(@Param('roleOrId') roleOrId: string): Promise<Course | Course[]> {
     if (roleOrId === 'admin') {
@@ -237,7 +237,7 @@ export class CoursesController {
       throw new BadRequestException('Invalid parameter.');
     }
   }
-  
+
   @Get('category/:category')
   async getCourseByCategory(
     @Param('category') category: string,
@@ -292,49 +292,60 @@ export class CoursesController {
   ) {
     const courseMaterial = files?.files?.[0]?.filename || null;
     const courseImage = files?.imagefiles?.[0]?.filename || null;
-  
+
     const updatedCourse = await this.coursesService.updateCourse(courseId, {
       courseMaterial,
       courseImage,
     });
-  
+
     return {
       message: 'Files added successfully',
       course: updatedCourse,
     };
 
-    
+
   }
 
   @Post(':courseId/quizzes')
-
-  async addQuizToCourse(
-    @Param('courseId') courseId: string,
-    @Body() quizData: { level: string; questions: { question: string; options: string[]; correctAnswer: number }[] },
-    ) {
-    return this.coursesService.addQuizToCourse(courseId, quizData);
-    }
-
+  @Post(':courseId/quizzes')
   async addQuiz(
     @Param('courseId') courseId: string,
-    @Body() quizData: {
+    @Body()
+    quizData: {
+      title: string;
       level: string;
       questions: Array<{ question: string; options: string[]; correctAnswer: number }>;
+    },
+  ): Promise<any> {
+    if (!quizData.title) {
+      quizData.title = 'Untitled Quiz'; // Set a default title
     }
-  ) {
     const quiz = await this.coursesService.addQuizToCourse(courseId, quizData);
     return {
       message: 'Quiz added successfully',
       quiz,
     };
   }
+  
+
+  @Post(':courseId/quizzes/:quizId/submit')
+  async submitQuiz(
+    @Param('courseId') courseId: string,
+    @Param('quizId') quizId: string,
+    @Body()
+    body: { userId: string; answers: Array<{ questionId: string; answer: number }> }
+  ): Promise<{ score: number }> {
+    const { userId, answers } = body;
+    return this.coursesService.submitQuizResponse(courseId, quizId, userId, answers);
+  }
+  
 
 
   @Get(':courseId/quizzes')
   async getQuizzes(@Param('courseId') courseId: string) {
     return this.coursesService.getQuizzesByCourse(courseId);
   }
-  
+
   @Get(':courseId/quizzes/:quizId')
   async getQuiz(
     @Param('courseId') courseId: string,
@@ -342,8 +353,8 @@ export class CoursesController {
   ) {
     return this.coursesService.getQuizById(courseId, quizId);
   }
-  
-  
+
+
   @Delete(':courseId/quizzes/:quizId')
   async deleteQuiz(
     @Param('courseId') courseId: string,
@@ -355,7 +366,7 @@ export class CoursesController {
       course,
     };
   }
-  
+
 
   @Post(':courseId/lectures')
   async addLecture(
@@ -368,30 +379,30 @@ export class CoursesController {
       course: updatedCourse,
     };
   }
-  
+
   @Post(':courseId/enroll')
-async enrollInCourse(
-  @Param('courseId') courseId: string,
-  @Req() req: any // To access the logged-in user's data
-) {
-  const userId = req.user.userId; // Assuming `userId` is available in the request object
-  const updatedCourse = await this.coursesService.enrollStudent(courseId, userId);
-  return {
-    message: 'Enrolled successfully',
-    course: updatedCourse,
-  };
-}
-@Get(':courseId/details')
-async getCourseDetails(@Param('courseId') courseId: string): Promise<any> {
-  const course = await this.coursesService.getCourseDetails(courseId);
-  if (!course) {
-    throw new NotFoundException('Course not found');
+  async enrollInCourse(
+    @Param('courseId') courseId: string,
+    @Req() req: any // To access the logged-in user's data
+  ) {
+    const userId = req.user.userId; // Assuming `userId` is available in the request object
+    const updatedCourse = await this.coursesService.enrollStudent(courseId, userId);
+    return {
+      message: 'Enrolled successfully',
+      course: updatedCourse,
+    };
   }
-  return course;
-}
-@Get(':courseId/quizzes')
-async getQuizzesForCourse(@Param('courseId') courseId: string) {
-  return this.coursesService.getAllQuizzesForCourse(courseId);
-}
+  @Get(':courseId/details')
+  async getCourseDetails(@Param('courseId') courseId: string): Promise<any> {
+    const course = await this.coursesService.getCourseDetails(courseId);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+    return course;
+  }
+  @Get(':courseId/quizzes')
+  async getQuizzesForCourse(@Param('courseId') courseId: string) {
+    return this.coursesService.getAllQuizzesForCourse(courseId);
+  }
 
 }

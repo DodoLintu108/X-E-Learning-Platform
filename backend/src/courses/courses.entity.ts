@@ -2,19 +2,17 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 
-export type CourseDocument = Course & Document;
 @Schema()
 export class Quiz {
   @Prop({ required: true })
-  quizId: string; // Unique ID for the quiz
+  quizId: string;
 
   @Prop({ required: true })
-  moduleId: string; // Associated module ID
+  title: string;
 
   @Prop({ required: true })
-  level: string; // Quiz level (Beginner, Intermediate, Advanced)
+  level: string;
 
-  
   @Prop({
     type: [
       {
@@ -26,29 +24,49 @@ export class Quiz {
   })
   questions: Array<{ question: string; options: string[]; correctAnswer: number }>;
 
+  @Prop({ type: [Object], default: [] }) // Submitted details
+  submittedBy: Array<{ userId: string; score: number; submittedAt: Date }>;
+
   @Prop({ default: Date.now })
-  createdAt: Date; // Timestamp of quiz creation
+  createdAt: Date;
 }
 
+
 @Schema()
-export class Lecture {
-  @Prop({ required: true })
-  title: string; // Title of the lecture
+class Lecture {
+  @Prop({ required: true, default: 'Untitled Quiz' })
+  title: string;
 
   @Prop({ required: true, enum: ['video', 'pdf'] })
   type: 'video' | 'pdf'; // Type of lecture
-  @Prop({ type: [Quiz], default: [] })
-  quizzes: Quiz[]; // Array of quizzes associated with the course
-  
+
   @Prop({ required: true })
   content: string; // YouTube URL for video or file path for PDF
+
+  @Prop({
+    type: [
+      {
+        quizId: { type: String, required: true },
+        title: { type: String, required: true, default: 'Untitled Quiz' },
+        level: { type: String, required: true },
+        questions: [
+          {
+            question: { type: String, required: true },
+            options: { type: [String], required: true },
+            correctAnswer: { type: Number, required: true },
+          },
+        ],
+        submittedBy: { type: [Object], default: [] },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    default: [],
+  })
+  quizzes: Quiz[]; // Array of quizzes associated with the lecture
 
   @Prop({ default: Date.now })
   createdAt: Date; // Timestamp for when the lecture was added
 }
-
-// Create the Mongoose schema for Lecture
-export const LectureSchema = SchemaFactory.createForClass(Lecture);
 
 @Schema()
 export class Course {
@@ -82,9 +100,10 @@ export class Course {
   @Prop({ default: Date.now })
   createdAt: Date; // Course creation date
 
-  @Prop({ type: [LectureSchema], default: [] })
+  @Prop({ type: [Lecture], default: [] })
   lectures: Lecture[]; // Array of lectures
 }
 
 // Create the Mongoose schema for Course
+export type CourseDocument = Course & Document;
 export const CourseSchema = SchemaFactory.createForClass(Course);
