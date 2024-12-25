@@ -21,7 +21,7 @@ import { BackupModule } from './security/backup/backup.module';
       dest: '../uploads',
     }),
     UsersModule,
-    AnalyticsModule, // Include this if analytics is part of your app
+    AnalyticsModule, 
     CoursesModule,
     FilesModule,
     ServeStaticModule.forRoot({

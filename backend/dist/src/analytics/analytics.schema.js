@@ -9,11 +9,23 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AnalyticsSchema = exports.Analytics = void 0;
+exports.QuizSchema = exports.Quiz = exports.AnalyticsSchema = exports.Analytics = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
 let Analytics = class Analytics {
 };
 exports.Analytics = Analytics;
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Analytics.prototype, "moduleId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [{ userId: String, score: Number, submittedAt: Date }] }),
+    __metadata("design:type", Array)
+], Analytics.prototype, "submittedBy", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Analytics.prototype, "level", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true, unique: true }),
     __metadata("design:type", String)
@@ -66,4 +78,23 @@ exports.Analytics = Analytics = __decorate([
     (0, mongoose_1.Schema)()
 ], Analytics);
 exports.AnalyticsSchema = mongoose_1.SchemaFactory.createForClass(Analytics);
+let Quiz = class Quiz {
+};
+exports.Quiz = Quiz;
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Quiz.prototype, "moduleId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Quiz.prototype, "level", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [{ userId: String, score: Number, submittedAt: Date }] }),
+    __metadata("design:type", Array)
+], Quiz.prototype, "submittedBy", void 0);
+exports.Quiz = Quiz = __decorate([
+    (0, mongoose_1.Schema)()
+], Quiz);
+exports.QuizSchema = mongoose_1.SchemaFactory.createForClass(Quiz);
 //# sourceMappingURL=analytics.schema.js.map

@@ -19,38 +19,31 @@ let AnalyticsController = class AnalyticsController {
     constructor(analyticsService) {
         this.analyticsService = analyticsService;
     }
-    async getStudentMetrics(studentId) {
-        return this.analyticsService.getStudentMetrics(studentId);
+    async getAverageQuizScore(courseId) {
+        return {
+            courseId,
+            averageQuizScore: await this.analyticsService.getAverageQuizScore(courseId),
+        };
     }
-    async getInstructorAnalytics(instructorId) {
-        return this.analyticsService.getInstructorAnalytics(instructorId);
-    }
-    async getDownloadableReport(instructorId) {
-        return this.analyticsService.getDownloadableReport(instructorId);
+    async getCourseAverageScore(courseId) {
+        return await this.analyticsService.getCourseAverageScore(courseId);
     }
 };
 exports.AnalyticsController = AnalyticsController;
 __decorate([
-    (0, common_1.Get)('student'),
-    __param(0, (0, common_1.Query)('studentId')),
+    (0, common_1.Get)('average-quiz'),
+    __param(0, (0, common_1.Query)('courseId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], AnalyticsController.prototype, "getStudentMetrics", null);
+], AnalyticsController.prototype, "getAverageQuizScore", null);
 __decorate([
-    (0, common_1.Get)('instructor'),
-    __param(0, (0, common_1.Query)('instructorId')),
+    (0, common_1.Get)('course'),
+    __param(0, (0, common_1.Query)('courseId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], AnalyticsController.prototype, "getInstructorAnalytics", null);
-__decorate([
-    (0, common_1.Get)('download-report'),
-    __param(0, (0, common_1.Query)('instructorId')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], AnalyticsController.prototype, "getDownloadableReport", null);
+], AnalyticsController.prototype, "getCourseAverageScore", null);
 exports.AnalyticsController = AnalyticsController = __decorate([
     (0, common_1.Controller)('analytics'),
     __metadata("design:paramtypes", [analytics_service_1.AnalyticsService])

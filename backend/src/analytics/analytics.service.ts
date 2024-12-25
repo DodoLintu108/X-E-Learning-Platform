@@ -1,90 +1,73 @@
-// Logic for calculating metrics and reports (Tasks 4.1, 4.2)
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Analytics } from './analytics.schema';
 
 @Injectable()
 export class AnalyticsService {
-  /**
-   * Task 4.1: Fetch Student Dashboard Metrics
-   * Fetches the following for a given student:
-   * - Course completion rates
-   * - Average scores
-   * - Engagement trends
-   *
-   * @param studentId - ID of the student
-   * @returns Object containing student performance metrics
-   */
-  async getStudentMetrics(studentId: string) {
-    // Example logic to fetch student metrics
-    // Simulating data fetch from database or business logic
-    const completionRate = 85; // Fetch from database: e.g., calculate % of completed courses
-    const averageScore = 92; // Fetch average quiz scores from quizzes table
-    const engagementTrends = {
-      modules: ['Introduction', 'Module 1', 'Module 2'],
-      timeSpent: [45, 30, 60], // Example: time spent in minutes per module
-    };
+  constructor(@InjectModel(Analytics.name) private analyticsModel: Model<Analytics>) {}
 
-    // Returning the computed metrics
-    return {
-      completionRate,
-      averageScore,
-      engagementTrends,
-    };
+  // Average quiz score for a course
+  async getAverageQuizScore(courseId: string): Promise<number> {
+    const analytics = await this.analyticsModel
+      .find({ 'contentEffectiveness.courseId': courseId })
+      .lean();
+
+    if (!analytics.length) return 0;
+
+    const totalScore = analytics.reduce((sum, entry) => {
+      return sum + entry.contentEffectiveness.reduce((quizSum, quiz) => quizSum + quiz.averageScore, 0);
+    }, 0);
+
+    const totalQuizzes = analytics.reduce((count, entry) => {
+      return count + entry.contentEffectiveness.length;
+    }, 0);
+
+    console.log(`Total Score: ${totalScore}, Total Quizzes: ${totalQuizzes}`); // Debug log
+
+    return totalScore / totalQuizzes;
   }
 
-  /**
-   * Task 4.2: Fetch Instructor Analytics
-   * Provides the following for a given instructor:
-   * - Student engagement data
-   * - Assessment results (passed vs failed)
-   * - Content effectiveness data
-   *
-   * @param instructorId - ID of the instructor
-   * @returns Object containing instructor analytics
-   */
-  async getInstructorAnalytics(instructorId: string) {
-    // Example logic to fetch instructor analytics
-    const studentEngagement = 78; // Fetch average engagement of students in instructor's courses
-    const assessmentResults = {
-      passed: 120, // Fetch the count of students who passed
-      failed: 30,  // Fetch the count of students who failed
-    };
-    const contentEffectiveness = [
-      {
-        quizId: 'quiz1',
-        difficulty: 'medium',
-        averageScore: 80, // Fetch average scores for a specific quiz
-      },
-      {
-        quizId: 'quiz2',
-        difficulty: 'hard',
-        averageScore: 70,
-      },
-    ];
-
-    // Returning analytics data
+  // Course average score (all quizzes combined / total quizzes)
+  async getCourseAverageScore(courseId: string): Promise<{ average: number; levelStats: any }> {
+    // Fetch quizzes linked to the course
+    const quizzes = await this.analyticsModel.find({ moduleId: courseId }).lean();
+  
+    if (!quizzes.length) return { average: 0, levelStats: {} };
+  
+    const scoresByLevel: Record<string, { totalScore: number; count: number }> = {};
+    let totalScore = 0;
+    let totalQuizzes = 0;
+  
+    quizzes.forEach((quiz) => {
+      if (quiz.submittedBy?.length > 0) {
+        quiz.submittedBy.forEach((submission) => {
+          totalScore += submission.score;
+          totalQuizzes++;
+  
+          if (!scoresByLevel[quiz.level]) {
+            scoresByLevel[quiz.level] = { totalScore: 0, count: 0 };
+          }
+  
+          scoresByLevel[quiz.level].totalScore += submission.score;
+          scoresByLevel[quiz.level].count++;
+        });
+      }
+    });
+  
+    const levelStats = Object.entries(scoresByLevel).reduce((acc, [level, data]) => {
+      acc[level] = {
+        average: data.totalScore / data.count,
+        totalQuizzes: data.count,
+      };
+      return acc;
+    }, {});
+  
     return {
-      studentEngagement,
-      assessmentResults,
-      contentEffectiveness,
+      average: totalScore / totalQuizzes,
+      levelStats,
     };
   }
+  
 
-  /**
-   * Task 4.2: Generate Downloadable Report
-   * Generates a downloadable performance report for the instructor.
-   *
-   * @param instructorId - ID of the instructor
-   * @returns Object containing the URL of the downloadable report
-   */
-  async getDownloadableReport(instructorId: string) {
-    // Simulate report generation logic
-    // This could involve creating a PDF or CSV file dynamically
-    const reportUrl = `/reports/instructor_${instructorId}_report.pdf`;
-
-    // Returning the report URL
-    return {
-      reportUrl,
-    };
-  }
 }
-
