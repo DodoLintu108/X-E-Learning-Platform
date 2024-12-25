@@ -34,8 +34,11 @@ let UsersController = class UsersController {
     async getAllTeachers() {
         return this.usersService.findAllByRole('teacher');
     }
-    async deleteUser(userId) {
-        return this.usersService.deleteUser(userId);
+    async deleteTeacher(userId) {
+        return this.usersService.deleteTeacher(userId);
+    }
+    async deleteStudent(userId) {
+        return this.usersService.deleteStudent(userId);
     }
 };
 exports.UsersController = UsersController;
@@ -69,12 +72,19 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "getAllTeachers", null);
 __decorate([
-    (0, common_1.Post)('delete/:userId'),
+    (0, common_1.Post)('delete/teachers/:userId'),
     __param(0, (0, common_1.Param)('userId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], UsersController.prototype, "deleteUser", null);
+], UsersController.prototype, "deleteTeacher", null);
+__decorate([
+    (0, common_1.Post)('delete/student/:userId'),
+    __param(0, (0, common_1.Param)('userId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "deleteStudent", null);
 exports.UsersController = UsersController = __decorate([
     (0, common_1.Controller)('users'),
     __metadata("design:paramtypes", [users_service_1.UsersService,
