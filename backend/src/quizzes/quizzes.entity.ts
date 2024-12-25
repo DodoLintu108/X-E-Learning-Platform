@@ -29,12 +29,27 @@ export class Quiz {
     options: string[];
     correctAnswer: number;
   }[];
-  
+
   @Prop({ type: [String], default: [] }) // Add submittedBy property
   submittedBy: string[];
 
   @Prop({ default: Date.now })
   createdAt: Date; // Timestamp for quiz creation
-}
 
+
+
+}
+  export class Response {
+  @Prop()
+  userId: string;
+
+  @Prop()
+  quizId: string;
+
+  @Prop({ type: Array })
+  answers: { questionId: string; answer: number }[];
+
+  @Prop({ default: Date.now })
+  submittedAt: Date;
+}
 export const QuizSchema = SchemaFactory.createForClass(Quiz);
