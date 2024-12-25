@@ -6,8 +6,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 
-
-
 type Question = {
   id: number
   text: string

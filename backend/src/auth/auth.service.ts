@@ -42,7 +42,6 @@ export class AuthService {
     return {
       accessToken, // Include the token with expiration
       role: user.role, // Explicitly include the role in the response
-      user,
     };
   }
 }

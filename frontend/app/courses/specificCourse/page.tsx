@@ -61,6 +61,4 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
   );
 };
 
-
-
 export default CourseDetailsPage;

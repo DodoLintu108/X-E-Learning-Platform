@@ -1,206 +1,133 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import "./QuizzesAndAssessments.css"; // Import your CSS file
+"use client";
 
-interface Quiz {
-  quizId: string; // Updated to match your backend structure
-  title: string;
-  level: string; // Assuming level exists in your schema
-  questions: Array<{
-    question: string;
-    options: string[];
-  }>;
-}
+import { useState, useEffect } from "react";
+import axios, {AxiosError } from "axios";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Navbar from "./Navbar";
 
-interface QuizzesAndAssessmentsProps {}
+type Question = {
+  id: number;
+  text: string;
+  options: string[];
+  correctAnswer: number;
+};
 
-export const QuizzesAndAssessments: React.FC<QuizzesAndAssessmentsProps> = () => {
-  const params = useParams();
-  const courseId = Array.isArray(params?.courseId) ? params.courseId[0] : params.courseId;
-
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+export function QuizzesAndAssessments({ courseId }: { courseId: string }) {
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [score, setScore] = useState(0);
+  const [quizCompleted, setQuizCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
-  const [answers, setAnswers] = useState<{ [key: number]: number }>({});
-  const [score, setScore] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
-  // Fetch quizzes for the course
   useEffect(() => {
-    if (!courseId) {
-      console.error("Course ID is missing");
-      return;
-    }
-  
-    const fetchQuizzes = async () => {
+    const fetchQuiz = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        const userId = localStorage.getItem("userID"); // Retrieve userId from localStorage
-  
-        if (!token) {
-          throw new Error("No access token found");
+        const token = localStorage.getItem('accessToken');
+        const response = await axios.get(
+          `http://localhost:3000/courses/${courseId}/quiz`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (response.data.questions) {
+          setQuestions(response.data.questions);
+        } else {
+          console.error('No quiz available for this course.');
+          setQuestions([]);
         }
-  
-        if (!userId) {
-          throw new Error("User ID not found in localStorage");
-        }
-  
-        const response = await fetch(`http://localhost:3000/courses/${courseId}/quizzes`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-  
-        if (!response.ok) {
-          throw new Error("Failed to fetch quizzes");
-        }
-  
-        const data = await response.json();
-  
-        // Filter out quizzes that have been submitted by the user
-        const availableQuizzes = data.filter((quiz: any) => {
-          return !quiz.submittedBy?.some((submission: any) => submission.userId === userId);
-        });
-  
-        setQuizzes(availableQuizzes);
       } catch (error) {
-        console.error("Error fetching quizzes:", error);
-        setError("Failed to load quizzes.");
-      } finally {
-        setLoading(false);
+        // Cast error as AxiosError
+        const err = error as AxiosError;
+    
+        if (err.response) {
+          console.error('Error fetching quiz:', err.response.data);
+        } else {
+          console.error('Error fetching quiz:', err.message);
+        }
+        setQuestions([]);
       }
     };
-  
-    fetchQuizzes();
+    fetchQuiz();
   }, [courseId]);
-  
 
-  // Handle answer change
-  const handleAnswerChange = (questionIndex: number, optionIndex: number) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [questionIndex]: optionIndex,
-    }));
-  };
-
-  // Handle quiz submission
-  const handleSubmit = async () => {
-    if (!selectedQuiz) return;
-  
-    if (Object.keys(answers).length !== selectedQuiz.questions.length) {
-      setError("Please answer all questions before submitting.");
-      return;
+  const handleAnswer = (index: number) => {
+    setSelectedAnswer(index);
+    if (index === questions[currentQuestion].correctAnswer) {
+      setScore(score + 1);
     }
-  
-    try {
-      const token = localStorage.getItem("accessToken");
-      const userId = localStorage.getItem("userID"); // Retrieve userId from localStorage
-  
-      if (!token) {
-        throw new Error("No access token found");
-      }
-  
-      if (!userId) {
-        throw new Error("User ID not found in localStorage");
-      }
-  
-      const response = await fetch(
-        `http://localhost:3000/courses/${courseId}/quizzes/${selectedQuiz.quizId}/submit`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            userId, // Use the retrieved userId
-            answers: Object.entries(answers).map(([questionId, answer]) => ({
-              questionId,
-              answer,
-            })),
-          }),
-        }
-      );
-  
-      if (!response.ok) {
-        throw new Error("Failed to submit quiz");
-      }
-  
-      const data = await response.json();
-      setScore(data.score);
-    } catch (error: any) {
-      console.error("Error submitting quiz:", error.message);
-      setError(error.message);
+
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+      setSelectedAnswer(null);
+    } else {
+      setQuizCompleted(true);
     }
   };
-  
-  
+
+  const resetQuiz = () => {
+    setCurrentQuestion(0);
+    setSelectedAnswer(null);
+    setScore(0);
+    setQuizCompleted(false);
+  };
 
   if (loading) {
-    return <div>Loading quizzes...</div>;
+    return <p>Loading quiz...</p>;
   }
 
-  if (quizzes.length === 0) {
-    return <div>No quizzes available for this course.</div>;
+  if (!questions.length) {
+    return <p>No quiz available for this course.</p>;
   }
 
   return (
-    <div className="quizzes-container">
-      <h2 className="quizzes-title">Quizzes</h2>
-      {error && <div className="error-message">{error}</div>}
-      {score !== null ? (
-        <div className="score-container">
-          <h3>Your Score: {score}</h3>
-        </div>
-      ) : selectedQuiz ? (
-        <div className="quiz">
-          <h3>{selectedQuiz.title}</h3>
-          <ul className="quiz-questions">
-            {selectedQuiz.questions.map((q, questionIndex) => (
-              <li key={questionIndex} className="quiz-question">
-                <p>{q.question}</p>
-                <ul className="quiz-options">
-                  {q.options.map((option, optionIndex) => (
-                    <li key={optionIndex}>
-                      <label>
-                        <input
-                          type="radio"
-                          name={`question-${questionIndex}`}
-                          value={optionIndex}
-                          checked={answers[questionIndex] === optionIndex}
-                          onChange={() => handleAnswerChange(questionIndex, optionIndex)}
-                        />
-                        {option}
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-          <button className="submit-button" onClick={handleSubmit}>
-            Submit Quiz
-          </button>
-        </div>
-      ) : (
-        <ul className="quizzes-list">
-          {quizzes.map((quiz) => (
-            <li key={quiz.quizId} className="quiz-item">
-              <div className="quiz-info">
-                <h3>{quiz.title}</h3>
-                <p>Level: {quiz.level}</p>
-                <p>{quiz.questions.length} questions</p>
+    <div>
+      <Navbar />
+      <Card>
+        <CardHeader>
+          <CardTitle>Course Quiz</CardTitle>
+          <CardDescription>Answer the questions to test your knowledge</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!quizCompleted ? (
+            <>
+              <h3 className="text-lg font-semibold mb-4">
+                Question {currentQuestion + 1} of {questions.length}
+              </h3>
+              <p className="mb-4">{questions[currentQuestion].text}</p>
+              <div className="flex flex-col space-y-2">
+                {questions[currentQuestion].options.map((option, index) => (
+                  <Button
+                    key={index}
+                    onClick={() => handleAnswer(index)}
+                    disabled={selectedAnswer !== null}
+                    variant={selectedAnswer === index ? "default" : "outline"}
+                  >
+                    {option}
+                  </Button>
+                ))}
               </div>
-              <button
-                className="quiz-button"
-                onClick={() => setSelectedQuiz(quiz)}
-              >
-                Start Quiz
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+            </>
+          ) : (
+            <div className="text-center">
+              <h3 className="text-2xl font-bold mb-4">Quiz Completed!</h3>
+              <p className="text-xl">
+                Your score: {score} out of {questions.length}
+              </p>
+              <Button onClick={resetQuiz}>Restart Quiz</Button>
+            </div>
+          )}
+        </CardContent>
+        <CardFooter className="flex justify-end">
+          {!quizCompleted && selectedAnswer !== null && (
+            <Button
+            onClick={() => handleAnswer(selectedAnswer!)}
+            variant="default"
+          >
+            {currentQuestion < questions.length - 1 ? 'Next Question' : 'Finish Quiz'}
+          </Button>
+          )}
+        </CardFooter>
+      </Card>
     </div>
   );
-};
+}

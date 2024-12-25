@@ -60,19 +60,7 @@ let CoursesService = class CoursesService {
         return this.courseModel.find({ enrolledStudents: { $ne: studentId } }).exec();
     }
     async getCoursesByTeacher(teacherId) {
-        const courses = await this.courseModel
-            .find({ createdBy: teacherId })
-            .exec();
-        const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
-        return courses.map((course) => {
-            if (course.courseImage) {
-                course.courseImage = `${baseUrl}/uploads/${course.courseImage}`;
-            }
-            if (course.courseMaterial) {
-                course.courseMaterial = `${baseUrl}/uploads/${course.courseMaterial}`;
-            }
-            return course;
-        });
+        return this.courseModel.find({ createdBy: teacherId }).exec();
     }
     async getCourseVersions(courseId) {
         return this.versionModel.find({ courseId }).sort({ updatedAt: -1 }).exec();
@@ -210,40 +198,8 @@ let CoursesService = class CoursesService {
         const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
         return quizzes;
     }
-    async submitQuizResponse(courseId, quizId, userId, answers) {
-        const course = await this.courseModel.findById(courseId);
-        if (!course) {
-            throw new common_1.NotFoundException('Course not found');
-        }
-        const quiz = course.lectures
-            .flatMap((lecture) => lecture.quizzes || [])
-            .find((q) => q.quizId === quizId);
-        if (!quiz) {
-            throw new common_1.NotFoundException('Quiz not found');
-        }
-        const existingSubmission = quiz.submittedBy?.find((submission) => submission.userId === userId);
-        if (existingSubmission) {
-            throw new common_1.ForbiddenException('You have already submitted this quiz.');
-        }
-        const correctAnswers = quiz.questions.map((q) => q.correctAnswer);
-        const score = answers.reduce((total, answer, index) => {
-            return total + (answer.answer === correctAnswers[index] ? 1 : 0);
-        }, 0);
-        const submission = {
-            userId,
-            score,
-            submittedAt: new Date(),
-        };
-        quiz.submittedBy = quiz.submittedBy || [];
-        quiz.submittedBy.push(submission);
-        await course.save();
-        return {
-            message: 'Quiz submitted successfully',
-            score,
-        };
-    }
     async getQuizById(courseId, quizId) {
-        const course = await this.courseModel.findById(courseId).exec();
+        const course = await this.courseModel.findById(courseId);
         if (!course) {
             throw new common_1.NotFoundException('Course not found');
         }
@@ -298,14 +254,6 @@ let CoursesService = class CoursesService {
             lectures: course.lectures,
             createdAt: course.createdAt,
         };
-    }
-    async getAllQuizzesForCourse(courseId) {
-        const course = await this.courseModel.findById(courseId);
-        if (!course) {
-            throw new common_1.NotFoundException('Course not found');
-        }
-        const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
-        return quizzes;
     }
 };
 exports.CoursesService = CoursesService;

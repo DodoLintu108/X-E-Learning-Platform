@@ -6,7 +6,6 @@ export declare enum DifficultyLevel {
 export declare class CreateCourseDto {
     title: string;
     description: string;
-    createdBy: string;
     category: string;
     rating: number;
     difficultyLevel: DifficultyLevel;

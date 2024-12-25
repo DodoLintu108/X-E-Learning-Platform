@@ -20,10 +20,6 @@ export class CreateCourseDto {
 
   @ApiProperty()
   @IsString()
-  createdBy: string;
-
-  @ApiProperty()
-  @IsString()
   category: string;
 
   @ApiProperty()

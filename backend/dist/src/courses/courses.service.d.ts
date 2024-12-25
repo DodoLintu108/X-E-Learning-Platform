@@ -42,13 +42,6 @@ export declare class CoursesService {
         }>;
     }): Promise<any>;
     getQuizzesByCourse(courseId: string): Promise<any[]>;
-    submitQuizResponse(courseId: string, quizId: string, userId: string, answers: Array<{
-        questionId: string;
-        answer: number;
-    }>): Promise<{
-        message: string;
-        score: number;
-    }>;
     getQuizById(courseId: string, quizId: string): Promise<any>;
     deleteQuiz(courseId: string, quizId: string): Promise<Course>;
     addLecture(courseId: string, lectureData: {
@@ -57,5 +50,4 @@ export declare class CoursesService {
         content: string;
     }): Promise<Course>;
     getCourseDetails(courseId: string): Promise<any>;
-    getAllQuizzesForCourse(courseId: string): Promise<any[]>;
 }

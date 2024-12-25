@@ -14,6 +14,5 @@ export declare class AuthController {
     }): Promise<{
         accessToken: string;
         role: string;
-        user: import("../users/users.entity").User;
     }>;
 }

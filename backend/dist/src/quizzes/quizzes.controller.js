@@ -22,10 +22,6 @@ let QuizzesController = class QuizzesController {
     async createQuiz(courseId, quizData) {
         return this.quizzesService.createQuiz(courseId, quizData);
     }
-    async getUnsubmittedQuizzes(courseId, req) {
-        const userId = req.user.userId;
-        return this.quizzesService.getUnsubmittedQuizzes(userId, courseId);
-    }
     async getQuizzesForCourse(courseId) {
         return this.quizzesService.getQuizzesForCourse(courseId);
     }
@@ -38,9 +34,6 @@ let QuizzesController = class QuizzesController {
     async submitQuizResponse(quizId, responseData) {
         return this.quizzesService.submitQuizResponse({ ...responseData, quizId });
     }
-    async getAllQuizzes(courseId) {
-        return this.quizzesService.getQuizzesForCourse(courseId);
-    }
 };
 exports.QuizzesController = QuizzesController;
 __decorate([
@@ -51,14 +44,6 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], QuizzesController.prototype, "createQuiz", null);
-__decorate([
-    (0, common_1.Get)(':courseId/quizzes/unsubmitted'),
-    __param(0, (0, common_1.Param)('courseId')),
-    __param(1, (0, common_1.Req)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
-], QuizzesController.prototype, "getUnsubmittedQuizzes", null);
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Param)('courseId')),
@@ -88,13 +73,6 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], QuizzesController.prototype, "submitQuizResponse", null);
-__decorate([
-    (0, common_1.Get)(':courseId/quizzes'),
-    __param(0, (0, common_1.Param)('courseId')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], QuizzesController.prototype, "getAllQuizzes", null);
 exports.QuizzesController = QuizzesController = __decorate([
     (0, common_1.Controller)('courses/:courseId/quizzes'),
     __metadata("design:paramtypes", [quizzes_service_1.QuizzesService])

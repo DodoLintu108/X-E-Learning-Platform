@@ -13,7 +13,6 @@ const auth_module_1 = require("./auth/auth.module");
 const users_module_1 = require("./users/users.module");
 const analytics_module_1 = require("./analytics/analytics.module");
 const courses_module_1 = require("./courses/courses.module");
-const backup_module_1 = require("./security/backup.module");
 const files_module_1 = require("./files/files.module");
 const platform_express_1 = require("@nestjs/platform-express");
 const serve_static_1 = require("@nestjs/serve-static");
@@ -33,12 +32,11 @@ exports.AppModule = AppModule = __decorate([
             analytics_module_1.AnalyticsModule,
             courses_module_1.CoursesModule,
             files_module_1.FilesModule,
-            backup_module_1.BackupModule,
             serve_static_1.ServeStaticModule.forRoot({
                 rootPath: (0, path_1.join)(__dirname, '..', '..', 'uploads'),
                 serveRoot: '/uploads',
             }),
-        ]
+        ],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

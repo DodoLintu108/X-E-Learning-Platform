@@ -11,7 +11,7 @@ export class CoursesService {
     @InjectModel(Course.name) private courseModel: Model<CourseDocument>,
     @InjectModel(Module.name) private moduleModel: Model<ModuleDocument>,
     @InjectModel(Version.name) private versionModel: Model<VersionDocument>,
-  ) { }
+  ) {}
 
   async createCourse(data: {
     title: string;
@@ -76,19 +76,7 @@ export class CoursesService {
 
   // Get courses taught by a teacher
   async getCoursesByTeacher(teacherId: string): Promise<Course[]> {
-        const courses = await this.courseModel
-          .find({ createdBy: teacherId })
-          .exec();
-        const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
-        return courses.map((course) => {
-          if (course.courseImage) {
-            course.courseImage = `${baseUrl}/uploads/${course.courseImage}`;
-          }
-          if (course.courseMaterial) {
-            course.courseMaterial = `${baseUrl}/uploads/${course.courseMaterial}`;
-          }
-          return course;
-        });
+    return this.courseModel.find({ createdBy: teacherId }).exec();
   }
 
 
@@ -198,7 +186,7 @@ export class CoursesService {
     else if (role === 'teacher') roleCriteria.forTeachers = true;
     else if (role === 'admin') roleCriteria.forAdmins = true;
     else throw new NotFoundException('Invalid role');
-
+  
     const courses = await this.courseModel.find(roleCriteria).exec();
     const baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}`;
     return courses.map((course) => ({
@@ -214,44 +202,12 @@ export class CoursesService {
   }
 
   // Add a quiz to a course
-  async addQuizToCourse(
-    courseId: string,
-    quizData: {
-      level: string;
-      questions: Array<{ question: string; options: string[]; correctAnswer: number }>;
-    }
-  ): Promise<any> {
-    const course = await this.courseModel.findById(courseId);
-
-    if (!course) {
-      throw new NotFoundException('Course not found');
-    }
-
-    // Create quiz object with moduleId
-    const quiz = {
-      quizId: new Date().toISOString(), // Generate a unique ID
-      moduleId: courseId, // Add the courseId as the moduleId
-      level: quizData.level,
-      questions: quizData.questions,
-      createdAt: new Date(),
-    };
-
-    // Assuming the course schema contains an array of lectures
-    if (!course.lectures || course.lectures.length === 0) {
-      throw new NotFoundException('No lectures available to add the quiz');
-    }
-
-    // Add quiz to the last lecture (or any specific logic)
-    const targetLecture = course.lectures[course.lectures.length - 1];
-    targetLecture.quizzes = targetLecture.quizzes || [];
-    targetLecture.quizzes.push(quiz);
-
-    await course.save();
-    return quiz;
+async addQuizToCourse(
+  courseId: string,
+  quizData: {
+    level: string;
+    questions: Array<{ question: string; options: string[]; correctAnswer: number }>;
   }
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
 ): Promise<any> {
   const course = await this.courseModel.findById(courseId);
 
@@ -259,13 +215,12 @@ export class CoursesService {
     throw new NotFoundException('Course not found');
   }
 
-  // Create quiz object with `submittedBy` as an empty array
+  // Create quiz object with moduleId
   const quiz = {
     quizId: new Date().toISOString(), // Generate a unique ID
     moduleId: courseId, // Add the courseId as the moduleId
     level: quizData.level,
     questions: quizData.questions,
-    submittedBy: [], // Initialize as an empty array
     createdAt: new Date(),
   };
 
@@ -282,9 +237,6 @@ export class CoursesService {
   await course.save();
   return quiz;
 }
-=======
->>>>>>> b7cc8b65868416c9ecaa08e74932c4c986ecdb48
->>>>>>> Stashed changes
 
   // Get all quizzes for a course
   async getQuizzesByCourse(courseId: string): Promise<any[]> {
@@ -298,79 +250,26 @@ export class CoursesService {
     const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
     return quizzes;
   }
-  async submitQuizResponse(
-    courseId: string,
-    quizId: string,
-    userId: string,
-    answers: Array<{ questionId: string; answer: number }>
-  ): Promise<{ message: string; score: number }> {
-    // Fetch the course
-    const course = await this.courseModel.findById(courseId);
-    if (!course) {
-      throw new NotFoundException('Course not found');
-    }
-  
-    // Find the quiz
-    const quiz = course.lectures
-      .flatMap((lecture) => lecture.quizzes || [])
-      .find((q) => q.quizId === quizId);
-  
-    if (!quiz) {
-      throw new NotFoundException('Quiz not found');
-    }
-  
-    // Check if user already submitted
-    const existingSubmission = quiz.submittedBy?.find((submission) => submission.userId === userId);
-    if (existingSubmission) {
-      throw new ForbiddenException('You have already submitted this quiz.');
-    }
-  
-    // Grade the quiz
-    const correctAnswers = quiz.questions.map((q) => q.correctAnswer);
-    const score = answers.reduce((total, answer, index) => {
-      return total + (answer.answer === correctAnswers[index] ? 1 : 0);
-    }, 0);
-  
-    // Save submission
-    const submission = {
-      userId,
-      score,
-      submittedAt: new Date(),
-    };
-  
-    quiz.submittedBy = quiz.submittedBy || [];
-    quiz.submittedBy.push(submission);
-  
-    // Save the course with the updated quiz
-    await course.save();
-  
-    return {
-      message: 'Quiz submitted successfully',
-      score,
-    };
-  }
-  
-  
-  
+
   // Get a specific quiz by its ID
   async getQuizById(courseId: string, quizId: string): Promise<any> {
-    const course = await this.courseModel.findById(courseId).exec();
-  
+    const course = await this.courseModel.findById(courseId);
+
     if (!course) {
       throw new NotFoundException('Course not found');
     }
-  
+
+    // Find the quiz in the lectures
     const quiz = course.lectures
       .flatMap((lecture) => lecture.quizzes || [])
       .find((q) => q.quizId === quizId);
-  
+
     if (!quiz) {
       throw new NotFoundException('Quiz not found');
     }
-  
+
     return quiz;
   }
-  
   
   // Delete a specific quiz by its ID
   async deleteQuiz(courseId: string, quizId: string): Promise<Course> {
@@ -420,7 +319,7 @@ export class CoursesService {
     if (!course) {
       throw new NotFoundException('Course not found');
     }
-
+  
     // Example structure returned
     return {
       title: course.title,
@@ -432,44 +331,7 @@ export class CoursesService {
       createdAt: course.createdAt,
     };
   }
-
   
-<<<<<<< Updated upstream
-  async getAllQuizzesForCourse(courseId: string): Promise<any[]> {
-    // Fetch the course by ID
-    const course = await this.courseModel.findById(courseId);
-=======
-<<<<<<< HEAD
-    async getAllQuizzesForCourse(courseId: string): Promise<any[]> {
-      const course = await this.courseModel.findById(courseId).exec();
-    
-      if (!course) {
-        throw new NotFoundException('Course not found');
-      }
-    
-      // Extract quizzes from lectures
-      const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
-    
-      return quizzes; // Return all quizzes as a flat array
-    }
-    
-=======
-  async getAllQuizzesForCourse(courseId: string): Promise<any[]> {
-    // Fetch the course by ID
-    const course = await this.courseModel.findById(courseId);
->>>>>>> b7cc8b65868416c9ecaa08e74932c4c986ecdb48
->>>>>>> Stashed changes
   
-    if (!course) {
-      throw new NotFoundException('Course not found');
-    }
-  
-    // Extract quizzes from lectures
-    const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
-  
-    return quizzes; // Return all quizzes as a flat array
-  }
-  
-
 }
 

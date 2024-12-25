@@ -4,12 +4,10 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { AnalyticsModule } from './analytics/analytics.module'; // If AnalyticsModule is still needed
 import { CoursesModule } from './courses/courses.module';
-import { BackupModule } from './security/backup.module';
 import { FilesModule } from './files/files.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-import { BackupController } from './security/backup.controller';
 
 @Module({
   imports: [
@@ -24,12 +22,10 @@ import { BackupController } from './security/backup.controller';
     AnalyticsModule, // Include this if analytics is part of your app
     CoursesModule,
     FilesModule,
-    BackupModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '..', 'uploads'), // Move up two levels from 'dist'
       serveRoot: '/uploads',
     }),
-  ]
-
+  ],
 })
-export class AppModule { }
+export class AppModule {}

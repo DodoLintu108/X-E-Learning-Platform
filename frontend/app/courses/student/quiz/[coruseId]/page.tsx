@@ -4,11 +4,9 @@ const QuizPage = () => {
   return (
     <div style={{ padding: "20px" }}>
       <h1>Quizzes and Assessments</h1>
-      <QuizzesAndAssessments />
+      <QuizzesAndAssessments courseId={""} />
     </div>
   );
 };
-
-
 
 export default QuizPage;

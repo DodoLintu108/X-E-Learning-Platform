@@ -9,11 +9,6 @@ export declare class Quiz {
         options: string[];
         correctAnswer: number;
     }>;
-    submittedBy: Array<{
-        userId: string;
-        score: number;
-        submittedAt: Date;
-    }>;
     createdAt: Date;
 }
 export declare class Lecture {

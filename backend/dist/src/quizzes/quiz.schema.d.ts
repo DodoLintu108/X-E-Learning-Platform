@@ -1,36 +1,20 @@
 import { Document, Schema as MongooseSchema } from 'mongoose';
-
-export type QuizDocument = Quiz & Document;
-
-export declare class Quiz {
-    quizId: string;
-    courseId: string;
+export declare class Quiz extends Document {
     title: string;
-    questions: {
+    courseId: string;
+    questions: Array<{
         question: string;
         options: string[];
-        correctAnswer: number;
-    }[];
-    submittedBy: string[];
-    createdAt: Date;
+        correctAnswer: string;
+    }>;
+    attempts: number;
 }
-
-export declare class Response {
-    userId: string;
-    quizId: string;
-    answers: {
-        questionId: string;
-        answer: number;
-    }[];
-    submittedAt: Date;
-}
-
-export declare const QuizSchema: MongooseSchema<Quiz, import("mongoose").Model<Quiz, any, any, any, Document<unknown, any, Quiz> & Quiz & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
+export declare const QuizSchema: MongooseSchema<Quiz, import("mongoose").Model<Quiz, any, any, any, Document<unknown, any, Quiz> & Quiz & Required<{
+    _id: unknown;
+}> & {
     __v: number;
-}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Quiz, Document<unknown, {}, import("mongoose").FlatRecord<Quiz>> & import("mongoose").FlatRecord<Quiz> & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
+}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Quiz, Document<unknown, {}, import("mongoose").FlatRecord<Quiz>> & import("mongoose").FlatRecord<Quiz> & Required<{
+    _id: unknown;
+}> & {
     __v: number;
 }>;
