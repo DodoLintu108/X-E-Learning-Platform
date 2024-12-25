@@ -8,12 +8,14 @@ import { FilesModule } from './files/files.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { BackupModule } from './security/backup/backup.module';
 
 @Module({
   imports: [
     MongooseModule.forRoot(
       'mongodb+srv://abdelrhmanmersal:merso2003@main.y2sz6.mongodb.net/main?retryWrites=true&w=majority',
     ),
+    BackupModule,
     AuthModule,
     MulterModule.register({
       dest: '../uploads',

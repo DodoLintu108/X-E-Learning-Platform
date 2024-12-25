@@ -2,16 +2,107 @@
 
 import React, { useState } from "react";
 import axios from "axios";
+// BackupManager Component
+const BackupManager = () => {
+  const handleCreateBackup = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      await axios.post(
+        "http://localhost:3000/backup/create",
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      alert("Backup created successfully");
+    } catch (error) {
+      console.error("Error creating backup:", error);
+      alert("Failed to create backup");
+    }
+  };
 
+  const handleDownloadBackup = async (type: string) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get(
+        `http://localhost:3000/backup/download/${type}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "blob", // Important for file downloads
+        }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `${type}_backup.json`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error downloading backup:", error);
+      alert("Failed to download backup");
+    }
+  };
+
+  return (
+    <div style={{ marginTop: "40px" }}>
+      <h3>Backup Management</h3>
+      <button
+        onClick={handleCreateBackup}
+        style={{
+          backgroundColor: "blue",
+          color: "white",
+          padding: "10px",
+          margin: "10px",
+          border: "none",
+          borderRadius: "5px",
+        }}
+      >
+        Create Backup
+      </button>
+      <button
+        onClick={() => handleDownloadBackup("users")}
+        style={{
+          backgroundColor: "green",
+          color: "white",
+          padding: "10px",
+          margin: "10px",
+          border: "none",
+          borderRadius: "5px",
+        }}
+      >
+        Download User Backup
+      </button>
+      <button
+        onClick={() => handleDownloadBackup("courses")}
+        style={{
+          backgroundColor: "orange",
+          color: "white",
+          padding: "10px",
+          margin: "10px",
+          border: "none",
+          borderRadius: "5px",
+        }}
+      >
+        Download Course Backup
+      </button>
+    </div>
+  );
+};
+// Main AdminDashboard Component
 const AdminDashboard = () => {
-  const [allCourses, setAllCourses] = useState<any[]>([]); // Replace 'any[]' with the appropriate type for courses
-  const [allStudents, setAllStudents] = useState<any[]>([]); // Replace 'any[]' with the appropriate type for students
-  const [allTeachers, setAllTeachers] = useState<any[]>([]); // Replace 'any[]' with the appropriate type for teachers
+  const [allCourses, setAllCourses] = useState<any[]>([]);
+  const [allStudents, setAllStudents] = useState<any[]>([]);
+  const [allTeachers, setAllTeachers] = useState<any[]>([]);
 
   const [error, setError] = useState("");
 
-  const fetchData = async (endpoint: string, setData: React.Dispatch<React.SetStateAction<any[]>>) => {
-    const token = localStorage.getItem("accessToken"); // Retrieve token from localStorage
+  const fetchData = async (
+    endpoint: string,
+    setData: React.Dispatch<React.SetStateAction<any[]>>
+  ) => {
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       console.error("Access token is missing. Please log in.");
       setError("Access token is missing. Please log in.");
@@ -28,7 +119,7 @@ const AdminDashboard = () => {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         console.error("Unauthorized access. Redirecting to login...");
         setError("Unauthorized access. Please log in again.");
-        window.location.href = "/login"; // Redirect to login page if unauthorized
+        window.location.href = "/login";
       } else {
         console.error(`Error fetching ${endpoint}:`, error);
         setError(`Error fetching ${endpoint}: ${error}`);
@@ -42,25 +133,24 @@ const AdminDashboard = () => {
       setError("ID is missing for deletion.");
       return;
     }
-  
+
     const token = localStorage.getItem("accessToken");
     if (!token) {
       console.error("Access token is missing. Please log in.");
       setError("Access token is missing. Please log in.");
       return;
     }
-  
+
     try {
       await axios.delete(`http://localhost:3000/${endpoint}/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log(`${endpoint.slice(0, -1)} deleted successfully.`);
-  
-      // Refresh the respective data
+
       if (endpoint === "courses") fetchData("courses/all", setAllCourses);
       if (endpoint === "students") fetchData("users/students", setAllStudents);
       if (endpoint === "teachers") fetchData("users/teachers", setAllTeachers);
-  
+
       setError("");
     } catch (error) {
       console.error(`Error deleting ${endpoint.slice(0, -1)}:`, error);
@@ -180,7 +270,10 @@ const AdminDashboard = () => {
             <p>No students available</p>
           )}
         </div>
+        
       </div>
+            {/* Backup Section */}
+      <BackupManager />
     </div>
   );
 };
