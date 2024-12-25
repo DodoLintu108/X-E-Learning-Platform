@@ -255,6 +255,14 @@ let CoursesService = class CoursesService {
             createdAt: course.createdAt,
         };
     }
+    async getAllQuizzesForCourse(courseId) {
+        const course = await this.courseModel.findById(courseId);
+        if (!course) {
+            throw new common_1.NotFoundException('Course not found');
+        }
+        const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
+        return quizzes;
+    }
 };
 exports.CoursesService = CoursesService;
 exports.CoursesService = CoursesService = __decorate([
