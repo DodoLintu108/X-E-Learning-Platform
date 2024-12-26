@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import Navbar from "@/app/components/Navbar";
+import "../../globals.css";
 // BackupManager Component
 const BackupManager = () => {
   const handleCreateBackup = async () => {
@@ -49,24 +50,25 @@ const BackupManager = () => {
   };
 
   return (
-    <div style={{ marginTop: "40px" }}>
-      <h3>Backup Management</h3>
-      <button
-        onClick={handleCreateBackup}
-        className="button blue"
-      >
+    <div
+      style={{
+        marginTop: "40px",
+        display: "flex",
+        flexDirection: "row",
+        gap: "8px",
+      }}>
+     
+      <button onClick={handleCreateBackup} className="button blue">
         Create Backup
       </button>
       <button
         onClick={() => handleDownloadBackup("users")}
-        className="button green"
-      >
+        className="button green">
         Download User Backup
       </button>
       <button
         onClick={() => handleDownloadBackup("courses")}
-        className="button orange"
-      >
+        className="button orange">
         Download Course Backup
       </button>
     </div>
@@ -123,29 +125,38 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+    <div>
+      <Navbar />
       <ToastContainer />
-      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Admin Dashboard</h1>
+      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>
+        Admin Dashboard
+      </h1>
 
-      {error && <div style={{ color: "red", marginBottom: "20px" }}>{error}</div>}
+      {error && (
+        <div style={{ color: "red", marginBottom: "20px" }}>{error}</div>
+      )}
 
-      <div style={{ marginBottom: "20px", textAlign: "center" }}>
+      <div
+        style={{
+          marginBottom: "20px",
+          textAlign: "center",
+          display: "flex",
+          flexDirection: "row",
+          gap: "8px",
+        }}>
         <button
           onClick={() => fetchData("courses/all", setAllCourses)}
-          className="button blue"
-        >
+          className="button blue">
           Get All Courses
         </button>
         <button
           onClick={() => fetchData("users/teachers", setAllTeachers)}
-          className="button green"
-        >
+          className="button green">
           Get All Teachers
         </button>
         <button
           onClick={() => fetchData("users/students", setAllStudents)}
-          className="button orange"
-        >
+          className="button orange">
           Get All Students
         </button>
       </div>
@@ -156,16 +167,12 @@ const AdminDashboard = () => {
         <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
           {allCourses.length > 0 ? (
             allCourses.map((course) => (
-              <div
-                key={course._id}
-                className="card"
-              >
+              <div key={course._id} className="card">
                 <h3>{course.title}</h3>
                 <p>{course.description}</p>
                 <button
                   onClick={() => handleDelete("courses", course._id)}
-                  className="button red"
-                >
+                  className="button red">
                   Delete
                 </button>
               </div>
@@ -182,16 +189,12 @@ const AdminDashboard = () => {
         <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
           {allTeachers.length > 0 ? (
             allTeachers.map((teacher) => (
-              <div
-                key={teacher._id}
-                className="card"
-              >
+              <div key={teacher._id} className="card">
                 <h3>{teacher.name}</h3>
                 <p>{teacher.email}</p>
                 <button
                   onClick={() => handleDelete("teachers", teacher._id)}
-                  className="button red"
-                >
+                  className="button red">
                   Delete
                 </button>
               </div>
@@ -208,16 +211,12 @@ const AdminDashboard = () => {
         <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
           {allStudents.length > 0 ? (
             allStudents.map((student) => (
-              <div
-                key={student._id}
-                className="card"
-              >
+              <div key={student._id} className="card">
                 <h3>{student.name}</h3>
                 <p>{student.email}</p>
                 <button
                   onClick={() => handleDelete("students", student._id)}
-                  className="button red"
-                >
+                  className="button red">
                   Delete
                 </button>
               </div>
@@ -235,4 +234,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-

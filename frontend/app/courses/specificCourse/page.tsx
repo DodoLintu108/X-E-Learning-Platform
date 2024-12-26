@@ -3,19 +3,21 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Navbar from "../../components/Navbar";
+import { useParams } from "next/navigation";
 
-const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
+const CourseDetailsPage = () => {
   const [courseDetails, setCourseDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const { courseId } = params;
-
+  const params = useParams();
+  const courseId = params.courseId;
+  console.log(params);
   useEffect(() => {
     fetchCourseDetails();
   }, []);
 
   const fetchCourseDetails = async () => {
     const token = localStorage.getItem("accessToken");
-  
+
     try {
       const response = await axios.get(
         `http://localhost:3000/courses/${courseId}/details`,
@@ -30,13 +32,11 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
       setLoading(false);
     }
   };
-  
 
   if (loading) {
     return <p>Loading course details...</p>;
   }
 
-  
   return (
     <div>
       <Navbar />
