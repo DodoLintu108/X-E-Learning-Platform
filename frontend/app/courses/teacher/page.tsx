@@ -1,11 +1,13 @@
 "use client";
-
+import Lottie from "lottie-react";
 import React, { useState, useEffect } from "react";
 import axios, { AxiosError } from "axios";
 import Navbar from "../../components/Navbar";
 import "../../globals.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Underline } from "lucide-react";
+import courseAn from "../../../public/course.json";
 
 // Interfaces
 interface Course {
@@ -14,9 +16,11 @@ interface Course {
   description: string;
   category: string;
   difficultyLevel: string;
+  courseImage: File | null;
+  courseMaterial: File | null;
+
   lectures: Lecture[]; // Include lectures
   isEnded: boolean; // Indicates if the course has ended
-
 }
 
 interface Lecture {
@@ -52,8 +56,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
         justifyContent: "center",
         alignItems: "center",
         zIndex: 1000,
-      }}
-    >
+      }}>
       <div
         style={{
           backgroundColor: "white",
@@ -61,8 +64,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
           borderRadius: "8px",
           minWidth: "500px",
           position: "relative",
-        }}
-      >
+        }}>
         <button
           onClick={onClose}
           style={{
@@ -76,8 +78,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
             position: "absolute",
             top: "10px",
             right: "10px",
-          }}
-        >
+          }}>
           ✖
         </button>
         {children}
@@ -95,7 +96,56 @@ const TeacherCourses = () => {
   const [isViewLectureModalOpen, setIsViewLectureModalOpen] = useState(false); // View lectures modal
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false); // Quiz modal
   const [expandedLecture, setExpandedLecture] = useState<string | null>(null); // Track expanded lecture
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
+  useEffect(() => {
+    if (debouncedQuery) {
+      handleSearch(debouncedQuery);
+    }
+  }, [debouncedQuery]);
+  const handleSearch = async (query: string) => {
+    const token = localStorage.getItem("accessToken");
+
+    if (!query) {
+      setCourses([]);
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `http://localhost:3000/courses/search?query=${searchQuery}`,
+        {
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setCourses(response.data);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const statusCode = error.response?.status;
+        toast.error(
+          "No courses Available!",
+          error.response?.data || error.message
+        );
+        if (statusCode === 401) {
+          toast.error("Session expired. Redirecting to Login...");
+          window.location.href = "/Login";
+          return;
+        }
+      } else {
+        console.error("Error:", error);
+        toast.error("Error Occured!");
+      }
+    }
+  };
   const [newQuiz, setNewQuiz] = useState({
     level: "Beginner",
     questions: [
@@ -107,11 +157,22 @@ const TeacherCourses = () => {
     ],
   });
 
-  const [newCourse, setNewCourse] = useState({
+  const [newCourse, setNewCourse] = useState<{
+    title: string;
+    description: string;
+    category: string;
+    difficultyLevel: string;
+    courseImage: File | null;
+    courseMaterial: File | null;
+    rating: number;
+  }>({
     title: "",
     description: "",
     category: "Select Course Category",
     difficultyLevel: "Select Difficulty Level",
+    courseImage: null,
+    courseMaterial: null,
+    rating: 0.0,
   });
 
   const [newLecture, setNewLecture] = useState<Lecture>({
@@ -127,9 +188,12 @@ const TeacherCourses = () => {
   const fetchTeacherCourses = async () => {
     const token = localStorage.getItem("accessToken");
     try {
-      const response = await axios.get("http://localhost:3000/courses/teacher", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        "http://localhost:3000/courses/teacher",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setCourses(response.data);
     } catch (error) {
       console.error("Error fetching courses:", error);
@@ -173,7 +237,7 @@ const TeacherCourses = () => {
     }
   };
   const handleViewQuizAnalytics = async (quizId: string) => {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
 
     try {
       const response = await axios.get(
@@ -186,8 +250,8 @@ const TeacherCourses = () => {
       const { data } = response;
       toast.success(`Quiz Average: ${data.averageQuizScore}`);
     } catch (error) {
-      console.error('Error fetching quiz analytics:', error);
-      toast.error('Error fetching quiz analytics.');
+      console.error("Error fetching quiz analytics:", error);
+      toast.error("Error fetching quiz analytics.");
     }
   };
   interface LevelStats {
@@ -198,7 +262,7 @@ const TeacherCourses = () => {
   }
 
   const handleEndCourse = async (courseId: string) => {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     try {
       const response = await axios.put(
         `http://localhost:3000/courses/${courseId}/end`,
@@ -207,16 +271,16 @@ const TeacherCourses = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      toast.success('Course has been ended successfully!');
+      toast.success("Course has been ended successfully!");
       fetchTeacherCourses(); // Refresh courses to reflect the updated status
     } catch (error) {
-      console.error('Error ending the course:', error);
-      toast.error('Failed to end the course. Please try again.');
+      console.error("Error ending the course:", error);
+      toast.error("Failed to end the course. Please try again.");
     }
   };
-  
+
   const handleViewCourseAnalytics = async (courseId: string) => {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
 
     try {
       const response = await axios.get(
@@ -231,16 +295,20 @@ const TeacherCourses = () => {
       const levelStats = Object.entries(data.levelStats)
         .map(
           ([level, stats]) =>
-            `${level}: ${stats.totalQuizzes} quizzes, Average: ${stats.average.toFixed(2)}`
+            `${level}: ${
+              stats.totalQuizzes
+            } quizzes, Average: ${stats.average.toFixed(2)}`
         )
-        .join('\n');
+        .join("\n");
 
       toast.success(
-        `Course Average: ${data.average.toFixed(2)}\nLevel Breakdown:\n${levelStats}`
+        `Course Average: ${data.average.toFixed(
+          2
+        )}\nLevel Breakdown:\n${levelStats}`
       );
     } catch (error) {
-      console.error('Error fetching course analytics:', error);
-      toast.error('Error fetching course analytics.');
+      console.error("Error fetching course analytics:", error);
+      toast.error("Error fetching course analytics.");
     }
   };
 
@@ -265,7 +333,7 @@ const TeacherCourses = () => {
       return;
     }
     const handleEndCourse = async (courseId: string) => {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem("accessToken");
       try {
         const response = await axios.put(
           `http://localhost:3000/courses/${courseId}/end`,
@@ -274,14 +342,14 @@ const TeacherCourses = () => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        toast.success('Course has been ended successfully!');
+        toast.success("Course has been ended successfully!");
         fetchTeacherCourses(); // Refresh courses to reflect the updated status
       } catch (error) {
-        console.error('Error ending the course:', error);
-        toast.error('Failed to end the course. Please try again.');
+        console.error("Error ending the course:", error);
+        toast.error("Failed to end the course. Please try again.");
       }
     };
-    
+
     const handleAddQuiz = async () => {
       if (!selectedCourse) {
         toast.error("No course selected!");
@@ -311,12 +379,17 @@ const TeacherCourses = () => {
         fetchTeacherCourses();
       } catch (error: any) {
         console.error("Error adding quiz:", error);
-        toast.error(error.response?.data?.message || "Error adding quiz. Please try again.");
+        toast.error(
+          error.response?.data?.message ||
+            "Error adding quiz. Please try again."
+        );
       }
     };
     const token = localStorage.getItem("accessToken");
     const toggleLectureContent = (lectureTitle: string) => {
-      setExpandedLecture(expandedLecture === lectureTitle ? null : lectureTitle);
+      setExpandedLecture(
+        expandedLecture === lectureTitle ? null : lectureTitle
+      );
     };
     try {
       await axios.post(
@@ -342,7 +415,8 @@ const TeacherCourses = () => {
       const error = err as AxiosError<{ message: string }>;
       console.error("Error adding lecture:", error);
       toast.error(
-        error.response?.data?.message || "Error adding lecture. Please try again."
+        error.response?.data?.message ||
+          "Error adding lecture. Please try again."
       );
     }
   };
@@ -390,340 +464,588 @@ const TeacherCourses = () => {
     <div>
       <Navbar />
       <ToastContainer />
-      <h1>Teacher Courses</h1>
-      <button
-        onClick={() => setIsModalOpen(true)}
+      <div
         style={{
-          padding: "10px 20px",
-          backgroundColor: "#7AB2D3",
-          color: "white",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-          marginBottom: "20px",
-        }}
-      >
-        Create Course
-      </button>
-
-      <ul style={{ listStyleType: "none", padding: 0 }}>
-        {courses.length > 0 ? (
-          courses.map((course) => (
-            <li
-              key={course._id}
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          marginTop: "40px",
+          alignItems: "center",
+          gap: "8px",
+        }}>
+        <h1
+          style={{
+            color: "#7F8081",
+            fontSize: "28px",
+          }}>
+          Manage Your Courses
+        </h1>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "start",
+            marginTop: "40px",
+            alignItems: "start",
+            gap: "8px",
+            padding: "18px",
+          }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "flex-start",
+              alignItems: "center",
+            }}>
+            <button
               style={{
-                border: "1px solid #ccc",
-                padding: "20px",
-                marginBottom: "10px",
-                borderRadius: "5px",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                width: "100%",
+                padding: "10px",
+                backgroundColor: "#7AB2D3",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                marginLeft: "25px",
               }}
-            >
-              <h3>{course.title}</h3>
-              <p>{course.description}</p>
-              <p>Category: {course.category}</p>
-              <p>Difficulty: {course.difficultyLevel}</p>
-              <button
-                onClick={() => {
-                  setSelectedCourse(course);
-                  setIsEditModalOpen(true);
-                }}
-                style={{
-                  marginRight: '10px',
-                  padding: '10px 15px',
-                  backgroundColor: '#4CAF50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                }}
-              >
-                Edit
-              </button>
+              onClick={() => setIsModalOpen(true)}>
+              Create Course
+            </button>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              border: "2px solid #7F8081",
+              padding: "9px",
+              borderRadius: "4px",
+              width: "100%",
+            }}>
+            <input
+              style={{
+                width: "20%",
+                padding: "10px",
+                marginBottom: "10px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search for courses..."
+            />
 
-              <button
-                onClick={() => handleDeleteCourse(course._id)}
-                style={{
-                  padding: '10px 15px',
-                  backgroundColor: '#F44336',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  marginRight: '10px',
-                }}
-              >
-                Delete
-              </button>
+            <ul style={{ listStyleType: "none", padding: 0 }}>
+              {courses.length > 0 ? (
+                courses.map((course) => (
+                  <li>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        gap: "13px",
+                      }}>
+                      <div
+                        key={course._id}
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          padding: "9px",
+                          borderRadius: "4px",
+                          border: "1px solid #7F8081",
+                          boxShadow: "1px 4px 6px rgba(0, 0, 0, 0.5)",
+                          cursor: "pointer",
+                          transition: "transform 0.2s",
+                        }}
+                        onMouseOver={(e) =>
+                          (e.currentTarget.style.transform = "scale(1.02)")
+                        }
+                        onMouseOut={(e) =>
+                          (e.currentTarget.style.transform = "scale(1)")
+                        }>
+                        <div style={{ marginRight: "10px" }}>
+                          <Lottie className="h-44" animationData={courseAn} />
+                        </div>
+                        <div
+                          onClick={() =>
+                            (window.location.href = `/courses/specificCourse/?courseId=${course._id}`)
+                          }
+                          onMouseOver={(e) =>
+                            (e.currentTarget.style.transform = "scale(1.02)")
+                          }
+                          onMouseOut={(e) =>
+                            (e.currentTarget.style.transform = "scale(1)")
+                          }
+                          style={{
+                            flex: "1",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between",
+                            gap: "5px",
+                            paddingLeft: "10px",
+                            maxWidth: "500px",
+                            cursor: "pointer",
+                            transition: "transform 0.2s",
+                          }}>
+                          <h3
+                            style={{
+                              margin: 0,
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}>
+                            Title: {course.title}
+                          </h3>
+                          <p
+                            style={{
+                              margin: 0,
+                              whiteSpace: "normal",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              maxWidth: "400px",
+                            }}>
+                            Description: {course.description}
+                          </p>
 
-              {/* New Button for Viewing Course Analytics */}
-              <button
-                onClick={() => handleViewCourseAnalytics(course._id)}
-                style={{
-                  padding: '10px 15px',
-                  backgroundColor: '#4CAF50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  marginRight: '10px',
-                }}
-              >
-                View Course Analytics
-              </button>
-              <button
-                onClick={() => handleEndCourse(course._id)}
-                style={{
-                  padding: '10px 15px',
-                  backgroundColor: '#FF0000',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  marginRight: '10px',
-                }}
-                disabled={course.isEnded} // Disable the button if the course is already ended
-              >
-                {course.isEnded ? 'Course Ended' : 'End Course'}
-              </button>
-              <button
-                onClick={() => {
-                  setSelectedCourse(course);
-                  setIsEditModalOpen(true);
-                }}
-                style={{
-                  marginRight: "10px",
-                  padding: "10px 15px",
-                  backgroundColor: "#4CAF50",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                }}
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => {
-                  setSelectedCourse(course);
-                  setIsQuizModalOpen(true);
-                }}
-                style={{
-                  padding: "10px 15px",
-                  backgroundColor: "#FF5722",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                  marginRight: "10px",
-                }}
-              >
-
-                Add Quiz
-              </button>
-              <button
-                onClick={() => handleDeleteCourse(course._id)}
-                style={{
-                  padding: "10px 15px",
-                  backgroundColor: "#F44336",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                  marginRight: "10px",
-                }}
-              >
-                Delete
-              </button>
-              <button
-                onClick={() => {
-                  setSelectedCourse(course);
-                  setIsLectureModalOpen(true);
-                }}
-                style={{
-                  padding: "10px 15px",
-                  backgroundColor: "#2196F3",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                  marginRight: "10px",
-                }}
-              >
-                Add Lecture
-              </button>
-              <button
-                onClick={() => {
-                  setSelectedCourse(course);
-                  setIsViewLectureModalOpen(true);
-                }}
-                style={{
-                  padding: "10px 15px",
-                  backgroundColor: "#607D8B",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                }}
-              >
-                View Lectures
-              </button>
-            </li>
-          ))
-        ) : (
-          <p>No courses available</p>
-        )}
-      </ul>
+                          <p style={{ margin: 0 }}>
+                            Category: {course.category}
+                          </p>
+                          <p style={{ margin: 0 }}>
+                            Level: {course.difficultyLevel}
+                          </p>
+                        </div>
+                        <div className=" flex flex-row">
+                          <button
+                            onClick={() =>
+                              handleViewCourseAnalytics(course._id)
+                            }
+                            style={{
+                              padding: "10px 15px",
+                              backgroundColor: "#9AA6B2",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "5px",
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                              marginRight: "10px",
+                            }}>
+                            View Course Analytics
+                          </button>
+                          <button
+                            onClick={() => handleEndCourse(course._id)}
+                            style={{
+                              padding: "10px 15px",
+                              backgroundColor: "#9AA6B2",
+                              color: "white",
+                              textDecoration: "underline",
+                              border: "none",
+                              borderRadius: "5px",
+                              cursor: "pointer",
+                              marginRight: "10px",
+                            }}
+                            disabled={course.isEnded}>
+                            {course.isEnded ? "Course Ended" : "End Course"}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedCourse(course);
+                              setIsEditModalOpen(true);
+                            }}
+                            style={{
+                              marginRight: "10px",
+                              padding: "10px 15px",
+                              backgroundColor: "#9AA6B2",
+                              color: "white",
+                              textDecoration: "underline",
+                              border: "none",
+                              borderRadius: "5px",
+                              cursor: "pointer",
+                            }}>
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedCourse(course);
+                              setIsQuizModalOpen(true);
+                            }}
+                            style={{
+                              padding: "10px 15px",
+                              backgroundColor: "#9AA6B2",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "5px",
+                              cursor: "pointer",
+                              textDecoration: "underline",
+                              marginRight: "10px",
+                            }}>
+                            Add Quiz
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCourse(course._id)}
+                            style={{
+                              padding: "10px 15px",
+                              backgroundColor: "#9AA6B2",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "5px",
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                              marginRight: "10px",
+                            }}>
+                            Delete
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedCourse(course);
+                              setIsLectureModalOpen(true);
+                            }}
+                            style={{
+                              padding: "10px 15px",
+                              backgroundColor: "#9AA6B2",
+                              color: "white",
+                              border: "none",
+                              textDecoration: "underline",
+                              borderRadius: "5px",
+                              cursor: "pointer",
+                              marginRight: "10px",
+                            }}>
+                            Add Lecture
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedCourse(course);
+                              setIsViewLectureModalOpen(true);
+                            }}
+                            style={{
+                              padding: "10px 15px",
+                              backgroundColor: "#9AA6B2",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "5px",
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}>
+                            View Lectures
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                ))
+              ) : (
+                <p>No courses available</p>
+              )}
+            </ul>
+          </div>
+        </div>{" "}
+      </div>
 
       {/* Create Course Modal */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <h2>Create New Course</h2>
-        <input
-          type="text"
-          placeholder="Title"
-          value={newCourse.title}
-          onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })}
-        />
-        <textarea
-          placeholder="Description"
-          value={newCourse.description}
-          onChange={(e) =>
-            setNewCourse({ ...newCourse, description: e.target.value })
-          }
-        ></textarea>
-        <select
-          value={newCourse.category}
-          onChange={(e) =>
-            setNewCourse({ ...newCourse, category: e.target.value })
-          }
-        >
-          <option disabled>Select Course Category</option>
-          <option value="Mathematics">Mathematics</option>
-          <option value="Machine Learning">Machine Learning</option>
-          <option value="Physics">Physics</option>
-          <option value="Chemistry">Chemistry</option>
-        </select>
-        <select
-          value={newCourse.difficultyLevel}
-          onChange={(e) =>
-            setNewCourse({ ...newCourse, difficultyLevel: e.target.value })
-          }
-        >
-          <option disabled>Select Difficulty Level</option>
-          <option value="Beginner">Beginner</option>
-          <option value="Intermediate">Intermediate</option>
-          <option value="Advanced">Advanced</option>
-        </select>
-        <button onClick={handleCreateCourse}>Submit</button>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            padding: "9px",
+            borderRadius: "4px",
+          }}>
+          <input
+            type="text"
+            value={newCourse.title}
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "10px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
+            onChange={(e) =>
+              setNewCourse({ ...newCourse, title: e.target.value })
+            }
+            placeholder="Title"
+          />
+          <textarea
+            value={newCourse.description}
+            onChange={(e) =>
+              setNewCourse({ ...newCourse, description: e.target.value })
+            }
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "10px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
+            placeholder="Description"></textarea>
+          <select
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "20px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
+            value={newCourse.category}
+            onChange={(e) =>
+              setNewCourse({ ...newCourse, category: e.target.value })
+            }>
+            <option value="Select Course Category" disabled>
+              Select Course Category
+            </option>
+            <option value="Mathematics">Mathematics</option>
+            <option value="Machine Learning">Machine Learning</option>
+            <option value="Physics">Physics</option>
+            <option value="Chemistry">Chemistry</option>
+          </select>
+          <select
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "20px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
+            value={newCourse.difficultyLevel}
+            onChange={(e) =>
+              setNewCourse({ ...newCourse, difficultyLevel: e.target.value })
+            }>
+            <option value="Select Difficulty Level" disabled>
+              Select Difficulty Level
+            </option>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+        </div>
+        <button
+          style={{
+            width: "85%",
+            padding: "4px 5px",
+            backgroundColor: "#7AB2D3",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            marginLeft: "25px",
+            marginTop: "-15px",
+          }}
+          onClick={handleCreateCourse}>
+          submit
+        </button>
       </Modal>
-
       {/* Edit Course Modal */}
       <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
         <h2>Edit Course</h2>
         {selectedCourse && (
           <>
-            <input
-              type="text"
-              value={selectedCourse.title}
-              onChange={(e) =>
-                setSelectedCourse({ ...selectedCourse, title: e.target.value })
-              }
-            />
-            <textarea
-              value={selectedCourse.description}
-              onChange={(e) =>
-                setSelectedCourse({
-                  ...selectedCourse,
-                  description: e.target.value,
-                })
-              }
-            ></textarea>
-            <select
-              value={selectedCourse.category}
-              onChange={(e) =>
-                setSelectedCourse({
-                  ...selectedCourse,
-                  category: e.target.value,
-                })
-              }
-            >
-              <option disabled>Select Course Category</option>
-              <option value="Mathematics">Mathematics</option>
-              <option value="Machine Learning">Machine Learning</option>
-              <option value="Physics">Physics</option>
-              <option value="Chemistry">Chemistry</option>
-            </select>
-            <select
-              value={selectedCourse.difficultyLevel}
-              onChange={(e) =>
-                setSelectedCourse({
-                  ...selectedCourse,
-                  difficultyLevel: e.target.value,
-                })
-              }
-            >
-              <option disabled>Select Difficulty Level</option>
-              <option value="Beginner">Beginner</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
-            </select>
-            <button onClick={handleEditCourse}>Save Changes</button>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                padding: "9px",
+                borderRadius: "4px",
+              }}>
+              <input
+                type="text"
+                value={selectedCourse.title}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  marginBottom: "10px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
+                onChange={(e) =>
+                  setSelectedCourse({
+                    ...selectedCourse,
+                    title: e.target.value,
+                  })
+                }
+                placeholder="Title"
+              />
+              <textarea
+                value={selectedCourse.description}
+                onChange={(e) =>
+                  setSelectedCourse({
+                    ...selectedCourse,
+                    description: e.target.value,
+                  })
+                }
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  marginBottom: "10px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
+                placeholder="Description"></textarea>
+              <select
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  marginBottom: "20px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
+                value={selectedCourse.category}
+                onChange={(e) =>
+                  setSelectedCourse({
+                    ...selectedCourse,
+                    category: e.target.value,
+                  })
+                }>
+                <option value="Select Course Category" disabled>
+                  Select Course Category
+                </option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Machine Learning">Machine Learning</option>
+                <option value="Physics">Physics</option>
+                <option value="Chemistry">Chemistry</option>
+              </select>
+              <select
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  marginBottom: "20px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
+                value={selectedCourse?.difficultyLevel}
+                onChange={(e) =>
+                  setSelectedCourse({
+                    ...selectedCourse,
+                    difficultyLevel: e.target.value,
+                  })
+                }>
+                <option value="Select Difficulty Level" disabled>
+                  Select Difficulty Level
+                </option>
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </select>
+            </div>
+            <button
+              style={{
+                width: "85%",
+                padding: "4px 5px",
+                backgroundColor: "#7AB2D3",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                marginLeft: "25px",
+                marginTop: "-15px",
+              }}
+              onClick={handleEditCourse}>
+              submit
+            </button>
           </>
         )}
       </Modal>
-
       {/* Add Lecture Modal */}
       <Modal
         isOpen={isLectureModalOpen}
-        onClose={() => setIsLectureModalOpen(false)}
-      >
+        onClose={() => setIsLectureModalOpen(false)}>
         <h2>Add Lecture to {selectedCourse?.title}</h2>
-        <input
-          type="text"
-          placeholder="Lecture Title"
-          value={newLecture.title}
-          onChange={(e) =>
-            setNewLecture({ ...newLecture, title: e.target.value })
-          }
-        />
-        <select
-          value={newLecture.type}
-          onChange={(e) =>
-            setNewLecture({
-              ...newLecture,
-              type: e.target.value as "video" | "pdf",
-            })
-          }
-        >
-          <option value="video">YouTube Video</option>
-          <option value="pdf">PDF</option>
-        </select>
-        {newLecture.type === "video" ? (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            padding: "9px",
+            borderRadius: "4px",
+          }}>
           <input
             type="text"
-            placeholder="YouTube Link"
-            value={newLecture.content}
+            placeholder="Lecture Title"
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "10px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
+            value={newLecture.title}
             onChange={(e) =>
-              setNewLecture({ ...newLecture, content: e.target.value })
+              setNewLecture({ ...newLecture, title: e.target.value })
             }
           />
-        ) : (
-          <input
-            type="file"
-            accept="application/pdf"
+          <select
+            value={newLecture.type}
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "20px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
             onChange={(e) =>
-              e.target.files &&
               setNewLecture({
                 ...newLecture,
-                content: URL.createObjectURL(e.target.files[0]),
+                type: e.target.value as "video" | "pdf",
               })
-            }
-          />
-        )}
-        <button onClick={handleAddLecture} style={{ marginTop: "20px" }}>
+            }>
+            <option value="video">YouTube Video</option>
+            <option value="pdf">PDF</option>
+          </select>
+          {newLecture.type === "video" ? (
+            <input
+              type="text"
+              placeholder="YouTube Link"
+              style={{
+                width: "100%",
+                padding: "10px",
+                marginBottom: "10px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
+              value={newLecture.content}
+              onChange={(e) =>
+                setNewLecture({ ...newLecture, content: e.target.value })
+              }
+            />
+          ) : (
+            <input
+              type="file"
+              accept="application/pdf"
+              style={{
+                width: "100%",
+                padding: "10px",
+                marginBottom: "10px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
+              onChange={(e) =>
+                e.target.files &&
+                setNewLecture({
+                  ...newLecture,
+                  content: URL.createObjectURL(e.target.files[0]),
+                })
+              }
+            />
+          )}
+        </div>
+
+        <button
+          onClick={handleAddLecture}
+          style={{
+            width: "85%",
+            padding: "4px 5px",
+            backgroundColor: "#7AB2D3",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            marginLeft: "25px",
+            marginTop: "-15px",
+          }}>
           Add Lecture
         </button>
       </Modal>
+
       {/* Add Quiz Modal */}
       <Modal isOpen={isQuizModalOpen} onClose={() => setIsQuizModalOpen(false)}>
         <h2>Add Quiz to {selectedCourse?.title}</h2>
@@ -736,28 +1058,27 @@ const TeacherCourses = () => {
             padding: "10px",
             border: "1px solid #ccc",
             borderRadius: "5px",
-          }}
-        >
+          }}>
           {/* Quiz Level */}
           <label>
             Select Level:
             <select
               value={newQuiz.level}
-              onChange={(e) => setNewQuiz({ ...newQuiz, level: e.target.value })}
+              onChange={(e) =>
+                setNewQuiz({ ...newQuiz, level: e.target.value })
+              }
               style={{
                 display: "block",
                 margin: "10px 0",
                 padding: "8px",
                 borderRadius: "4px",
                 width: "100%",
-              }}
-            >
+              }}>
               <option value="Beginner">Beginner</option>
               <option value="Intermediate">Intermediate</option>
               <option value="Advanced">Advanced</option>
             </select>
           </label>
-
 
           {/* Questions */}
           <h3>Questions</h3>
@@ -770,8 +1091,7 @@ const TeacherCourses = () => {
                 border: "1px solid #ddd",
                 borderRadius: "5px",
                 backgroundColor: "#f9f9f9",
-              }}
-            >
+              }}>
               <input
                 type="text"
                 placeholder={`Question ${idx + 1}`}
@@ -780,7 +1100,9 @@ const TeacherCourses = () => {
                   setNewQuiz({
                     ...newQuiz,
                     questions: newQuiz.questions.map((question, i) =>
-                      i === idx ? { ...question, question: e.target.value } : question
+                      i === idx
+                        ? { ...question, question: e.target.value }
+                        : question
                     ),
                   })
                 }
@@ -806,11 +1128,11 @@ const TeacherCourses = () => {
                       questions: newQuiz.questions.map((question, i) =>
                         i === idx
                           ? {
-                            ...question,
-                            options: question.options.map((opt, j) =>
-                              j === optIdx ? e.target.value : opt
-                            ),
-                          }
+                              ...question,
+                              options: question.options.map((opt, j) =>
+                                j === optIdx ? e.target.value : opt
+                              ),
+                            }
                           : question
                       ),
                     })
@@ -835,7 +1157,10 @@ const TeacherCourses = () => {
                       ...newQuiz,
                       questions: newQuiz.questions.map((question, i) =>
                         i === idx
-                          ? { ...question, correctAnswer: parseInt(e.target.value) }
+                          ? {
+                              ...question,
+                              correctAnswer: parseInt(e.target.value),
+                            }
                           : question
                       ),
                     })
@@ -846,8 +1171,7 @@ const TeacherCourses = () => {
                     padding: "8px",
                     borderRadius: "4px",
                     width: "100%",
-                  }}
-                >
+                  }}>
                   {q.options.map((_, optIdx) => (
                     <option key={optIdx} value={optIdx}>
                       Option {optIdx + 1}
@@ -878,8 +1202,7 @@ const TeacherCourses = () => {
             border: "none",
             borderRadius: "5px",
             cursor: "pointer",
-          }}
-        >
+          }}>
           Add Question
         </button>
 
@@ -893,19 +1216,14 @@ const TeacherCourses = () => {
             border: "none",
             borderRadius: "5px",
             cursor: "pointer",
-          }}
-        >
+          }}>
           Submit Quiz
         </button>
-
-
       </Modal>
-
       {/* View Lectures Modal */}
       <Modal
         isOpen={isViewLectureModalOpen}
-        onClose={() => setIsViewLectureModalOpen(false)}
-      >
+        onClose={() => setIsViewLectureModalOpen(false)}>
         <h2>Lectures for {selectedCourse?.title}</h2>
         <ul>
           {selectedCourse?.lectures.map((lecture, index) => (
@@ -917,8 +1235,7 @@ const TeacherCourses = () => {
                   color: "blue",
                   textDecoration: "underline",
                 }}
-                onClick={() => toggleLectureContent(lecture.title)}
-              >
+                onClick={() => toggleLectureContent(lecture.title)}>
                 {lecture.title}
               </span>
 
@@ -933,8 +1250,7 @@ const TeacherCourses = () => {
                       frameBorder="0"
                       allow="autoplay; encrypted-media"
                       allowFullScreen
-                      title={lecture.title}
-                    ></iframe>
+                      title={lecture.title}></iframe>
                   ) : (
                     <iframe
                       src={lecture.content}
@@ -945,8 +1261,7 @@ const TeacherCourses = () => {
                         marginTop: "10px",
                         borderRadius: "5px",
                       }}
-                      title={lecture.title}
-                    ></iframe>
+                      title={lecture.title}></iframe>
                   )}
                 </div>
               )}
@@ -954,7 +1269,6 @@ const TeacherCourses = () => {
           ))}
         </ul>
       </Modal>
-
     </div>
   );
 };
