@@ -7,7 +7,8 @@ import { ToastContainer, toast } from "react-toastify";
 import Link from "next/link"; // Import Link from Next.js
 import "react-toastify/dist/ReactToastify.css";
 import "../../globals.css";
-
+import courseAn from "../../../public/course.json";
+import Lottie from "lottie-react";
 interface Course {
   _id: string;
   title: string;
@@ -19,7 +20,6 @@ interface Course {
   teacherName: string; // Assuming teacherName is returned in the course object
   isEnded: boolean; // Indicates whether the course has ended
 }
-
 
 const StudentPage = () => {
   const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
@@ -51,9 +51,12 @@ const StudentPage = () => {
     setLoading(true);
 
     try {
-      const response = await axios.get("http://localhost:3000/courses/student", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        "http://localhost:3000/courses/student",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       const { assigned, available } = response.data;
       setEnrolledCourses(assigned);
@@ -95,7 +98,9 @@ const StudentPage = () => {
   }
 
   if (!enrolledCourses.length && !availableCourses.length && !loading) {
-    return <p>No courses available or you are not enrolled in any courses yet.</p>;
+    return (
+      <p>No courses available or you are not enrolled in any courses yet.</p>
+    );
   }
 
   return (
@@ -121,7 +126,6 @@ const StudentPage = () => {
         />
 
         <h2>Your Enrolled Courses</h2>
-        <h2>Your Enrolled Courses</h2>
         {enrolledCourses.length > 0 ? (
           <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
             {enrolledCourses.map((course) => (
@@ -133,19 +137,10 @@ const StudentPage = () => {
                   borderRadius: "8px",
                   boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
                   maxWidth: "300px",
-                }}
-              >
-                <img
-                  src={course.courseImage || "default-image.jpg"}
-                  alt={course.title}
-                  style={{
-                    width: "100%",
-                    height: "150px",
-                    objectFit: "cover",
-                    borderRadius: "8px",
-                    marginBottom: "10px",
-                  }}
-                />
+                }}>
+                <div style={{ marginRight: "10px" }}>
+                  <Lottie className="h-44" animationData={courseAn} />
+                </div>
                 <h3>{course.title}</h3>
                 <p>{course.description}</p>
                 <p>Category: {course.category}</p>
@@ -162,8 +157,7 @@ const StudentPage = () => {
                       textAlign: "center",
                       color: "#4CAF50",
                       fontWeight: "bold",
-                    }}
-                  >
+                    }}>
                     🎉 Congratulations on completing this course! 🎉
                   </div>
                 ) : (
@@ -176,8 +170,7 @@ const StudentPage = () => {
                         border: "none",
                         borderRadius: "5px",
                         cursor: "pointer",
-                      }}
-                    >
+                      }}>
                       View Details
                     </button>
                   </Link>
@@ -201,19 +194,10 @@ const StudentPage = () => {
                   borderRadius: "8px",
                   boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
                   maxWidth: "300px",
-                }}
-              >
-                <img
-                  src={course.courseImage || "default-image.jpg"}
-                  alt={course.title}
-                  style={{
-                    width: "100%",
-                    height: "150px",
-                    objectFit: "cover",
-                    borderRadius: "8px",
-                    marginBottom: "10px",
-                  }}
-                />
+                }}>
+                <div style={{ marginRight: "10px" }}>
+                  <Lottie className="h-44" animationData={courseAn} />
+                </div>
                 <h3>{course.title}</h3>
                 <p>{course.description}</p>
                 <p>Category: {course.category}</p>
@@ -228,8 +212,7 @@ const StudentPage = () => {
                     border: "none",
                     borderRadius: "5px",
                     cursor: "pointer",
-                  }}
-                >
+                  }}>
                   Enroll
                 </button>
               </div>

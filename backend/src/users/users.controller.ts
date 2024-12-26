@@ -19,7 +19,10 @@ export class UsersController {
   @Post('create-course')
   @Roles('create-courses') // Role-based access control
   createCourse(@Req() req, @Body() courseData) {
-    return this.coursesService.createCourse({ ...courseData, createdBy: req.user.userId });
+    return this.coursesService.createCourse({
+      ...courseData,
+      createdBy: req.user.userId,
+    });
   }
 
   @Get('students')
@@ -32,7 +35,13 @@ export class UsersController {
     return this.usersService.findAllByRole('teacher'); // Fetch all teachers
   }
 
-  
+  @Get('user/:userId')
+  async findById(@Param('userId') userId: string) {
+    console.log(userId);
+    const courses = await this.usersService.findById(userId);
+    return courses;
+  }
+
   @Post('delete/teachers/:userId')
   async deleteTeacher(@Param('userId') userId: string) {
     return this.usersService.deleteTeacher(userId); // Specific to teachers
@@ -43,7 +52,3 @@ export class UsersController {
     return this.usersService.deleteStudent(userId); // Specific to students
   }
 }
-  
-
-  
-  

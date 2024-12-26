@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation"; // Import the router for navigation
 import axios from "axios";
 import Navbar from "../../components/Navbar";
+import courseAn from "../../../public/course.json";
+import Lottie from "lottie-react";
 
 const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
   const [courseDetails, setCourseDetails] = useState<any>(null);
@@ -12,6 +14,7 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
   const [isNotesVisible, setIsNotesVisible] = useState(false); // State for sidebar toggle
   const [notes, setNotes] = useState<string>(""); // Notes content
   const router = useRouter(); // Use Next.js router
+  const [teacherName, setTeacherName] = useState<any>(null); // Notes content
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,6 +47,17 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
         }
       );
       setCourseDetails(response.data);
+      try {
+        const res = await axios.get(
+          `http://localhost:3000/users/user/${response.data.teacherName}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setTeacherName(res.data);
+      } catch (error) {
+        console.error("Error fetching course details:", error);
+      }
     } catch (error) {
       console.error("Error fetching course details:", error);
     } finally {
@@ -81,13 +95,27 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
           padding: "20px",
           marginRight: isNotesVisible ? "300px" : "0", // Adjust margin when notes are visible
           transition: "margin-right 0.3s ease", // Smooth transition
-        }}
-      >
-        <h1>{courseDetails.title}</h1>
-        <p>{courseDetails.description}</p>
-        <p>Category: {courseDetails.category}</p>
-        <p>Difficulty: {courseDetails.difficultyLevel}</p>
-        <p>Created By: {courseDetails.teacherName}</p>
+        }}>
+        <div style={{ marginRight: "10px" }}>
+          <Lottie className="h-44" animationData={courseAn} />
+        </div>
+        <h1>
+          <strong> Title :</strong> {courseDetails.title}
+        </h1>
+        <p>
+          <strong> Description :</strong>
+          {courseDetails.description}
+        </p>
+        <p>
+          <strong> Category :</strong> {courseDetails.category}
+        </p>
+        <p>
+          <strong>Difficulty:</strong>
+          {courseDetails.difficultyLevel}
+        </p>
+        <p>
+          <strong>Created By: </strong> {teacherName?.name}
+        </p>
 
         {/* Button to redirect to Quizzes and Assessments */}
         <button
@@ -100,8 +128,7 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
             borderRadius: "5px",
             cursor: "pointer",
             marginBottom: "20px",
-          }}
-        >
+          }}>
           Go to Quizzes and Assessments
         </button>
 
@@ -117,8 +144,7 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
             cursor: "pointer",
             marginBottom: "20px",
             marginLeft: "10px",
-          }}
-        >
+          }}>
           {isNotesVisible ? "Close Notes" : "Open Notes"}
         </button>
 
@@ -137,8 +163,7 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
                   backgroundColor: "#f9f9f9",
                   cursor: "pointer",
                   fontWeight: "bold",
-                }}
-              >
+                }}>
                 {lecture.title}
               </button>
               {expandedLecture === index && (
@@ -149,21 +174,16 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
                     border: "1px solid #ccc",
                     borderRadius: "8px",
                     backgroundColor: "#fff",
-                  }}
-                >
+                  }}>
                   {lecture.type === "video" ? (
                     <iframe
                       width="100%"
                       height="315"
-                      src={lecture.content.replace(
-                        "watch?v=",
-                        "embed/"
-                      )} // Ensure the YouTube URL is in embed format
+                      src={lecture.content.replace("watch?v=", "embed/")} // Ensure the YouTube URL is in embed format
                       title={lecture.title}
                       frameBorder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    ></iframe>
+                      allowFullScreen></iframe>
                   ) : lecture.type === "pdf" ? (
                     <iframe
                       src={lecture.content}
@@ -173,8 +193,7 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
                         border: "1px solid #ccc",
                         borderRadius: "5px",
                       }}
-                      title={lecture.title}
-                    ></iframe>
+                      title={lecture.title}></iframe>
                   ) : (
                     <p>Unsupported content type</p>
                   )}
@@ -199,8 +218,7 @@ const CourseDetailsPage = ({ params }: { params: { courseId: string } }) => {
             padding: "20px",
             boxShadow: "-2px 0px 5px rgba(0,0,0,0.2)",
             zIndex: 1000,
-          }}
-        >
+          }}>
           <h2>Notes</h2>
           <textarea
             style={{

@@ -26,13 +26,21 @@ let UsersController = class UsersController {
         return this.usersService.getDashboard(req.user);
     }
     createCourse(req, courseData) {
-        return this.coursesService.createCourse({ ...courseData, createdBy: req.user.userId });
+        return this.coursesService.createCourse({
+            ...courseData,
+            createdBy: req.user.userId,
+        });
     }
     async getAllStudents() {
         return this.usersService.findAllByRole('student');
     }
     async getAllTeachers() {
         return this.usersService.findAllByRole('teacher');
+    }
+    async findById(userId) {
+        console.log(userId);
+        const courses = await this.usersService.findById(userId);
+        return courses;
     }
     async deleteTeacher(userId) {
         return this.usersService.deleteTeacher(userId);
@@ -71,6 +79,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "getAllTeachers", null);
+__decorate([
+    (0, common_1.Get)('user/:userId'),
+    __param(0, (0, common_1.Param)('userId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "findById", null);
 __decorate([
     (0, common_1.Post)('delete/teachers/:userId'),
     __param(0, (0, common_1.Param)('userId')),
