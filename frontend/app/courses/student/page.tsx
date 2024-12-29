@@ -9,6 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "../../globals.css";
 import courseAn from "../../../public/course.json";
 import Lottie from "lottie-react";
+
 interface Course {
   _id: string;
   title: string;
@@ -24,30 +25,32 @@ interface Course {
 const StudentPage = () => {
   const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
   const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([]);
-  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]); // To store filtered results
-  const [searchQuery, setSearchQuery] = useState(""); // To handle search input
+  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [studentGrades, setStudentGrades] = useState<Record<string, number>>(
+    {}
+  ); // To store grades for enrolled courses
+  const [feedback, setFeedback] = useState<string>("");
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCourses();
   }, []);
 
   useEffect(() => {
-    // Filter availableCourses based on the search query
     if (searchQuery.trim() === "") {
       setFilteredCourses(availableCourses);
     } else {
-      const filtered = availableCourses.filter(
-        (course) =>
-          course.title.toLowerCase().includes(searchQuery.toLowerCase()) //||
-        //course.teacherName.toLowerCase().includes(searchQuery.toLowerCase())
+      const filtered = availableCourses.filter((course) =>
+        course.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredCourses(filtered);
     }
   }, [searchQuery, availableCourses]);
 
   const fetchCourses = async () => {
-    const token = localStorage.getItem("accessToken"); // Assuming JWT token is stored in localStorage
+    const token = localStorage.getItem("accessToken");
     setLoading(true);
 
     try {
@@ -61,7 +64,31 @@ const StudentPage = () => {
       const { assigned, available } = response.data;
       setEnrolledCourses(assigned);
       setAvailableCourses(available);
-      setFilteredCourses(available); // Set initially filtered courses
+      setFilteredCourses(available);
+
+      // Fetch grades for enrolled courses
+      const grades = await Promise.all(
+        assigned.map(async (course: Course) => {
+          try {
+            const res = await axios.get(
+              `http://localhost:3000/analytics/student?courseId=${course._id}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
+            return { courseId: course._id, grade: res.data.averageScore || 0 };
+          } catch (err) {
+            console.error(`Error fetching grade for course ${course._id}:`, err);
+            return { courseId: course._id, grade: null };
+          }
+        })
+      );
+
+      const gradesMap: Record<string, number> = {};
+      grades.forEach((gradeData) => {
+        gradesMap[gradeData.courseId] = gradeData.grade;
+      });
+      setStudentGrades(gradesMap);
     } catch (error) {
       console.error("Error fetching courses:", error);
       toast.error("Failed to fetch courses.");
@@ -81,10 +108,31 @@ const StudentPage = () => {
       );
 
       toast.success("Successfully enrolled in the course!");
-      fetchCourses(); // Refresh the course list after enrollment
+      fetchCourses();
     } catch (error) {
       console.error("Error enrolling in course:", error);
       toast.error("Failed to enroll in the course.");
+    }
+  };
+
+  const handleSubmitFeedback = async () => {
+    if (!selectedCourseId || !feedback.trim()) return;
+    const token = localStorage.getItem("accessToken");
+
+    try {
+      await axios.post(
+        `http://localhost:3000/courses/${selectedCourseId}/feedback`,
+        { comment: feedback },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("Feedback submitted successfully!");
+      setSelectedCourseId(null);
+      setFeedback("");
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      toast.error("Failed to submit feedback.");
     }
   };
 
@@ -94,12 +142,6 @@ const StudentPage = () => {
         <p>Loading courses...</p>
         <div className="spinner" />
       </div>
-    );
-  }
-
-  if (!enrolledCourses.length && !availableCourses.length && !loading) {
-    return (
-      <p>No courses available or you are not enrolled in any courses yet.</p>
     );
   }
 
@@ -113,7 +155,7 @@ const StudentPage = () => {
         {/* Search Bar */}
         <input
           type="text"
-          placeholder="Search courses by name or teacher..."
+          placeholder="Search courses by name..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           style={{
@@ -137,7 +179,8 @@ const StudentPage = () => {
                   borderRadius: "8px",
                   boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
                   maxWidth: "300px",
-                }}>
+                }}
+              >
                 <div style={{ marginRight: "10px" }}>
                   <Lottie className="h-44" animationData={courseAn} />
                 </div>
@@ -146,20 +189,42 @@ const StudentPage = () => {
                 <p>Category: {course.category}</p>
                 <p>Difficulty: {course.difficultyLevel}</p>
 
-                {/* Check if the course has ended */}
                 {course.isEnded ? (
-                  <div
-                    style={{
-                      backgroundColor: "#E8F5E9",
-                      padding: "15px",
-                      borderRadius: "8px",
-                      marginTop: "10px",
-                      textAlign: "center",
-                      color: "#4CAF50",
-                      fontWeight: "bold",
-                    }}>
-                    🎉 Congratulations on completing this course! 🎉
-                  </div>
+                  <>
+                    <p>
+                      <strong>
+                        Grade:{" "}
+                        <span
+                          style={{
+                            color:
+                              studentGrades[course._id] >= 50
+                                ? "green"
+                                : "red",
+                          }}
+                        >
+                          {studentGrades[course._id]?.toFixed(2)}%
+                        </span>{" "}
+                        -{" "}
+                        {studentGrades[course._id] >= 50
+                          ? "Passed 🎉"
+                          : "Failed 😞"}
+                      </strong>
+                    </p>
+                    <button
+                      onClick={() => setSelectedCourseId(course._id)}
+                      style={{
+                        padding: "10px 20px",
+                        backgroundColor: "#4CAF50",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "5px",
+                        cursor: "pointer",
+                        marginTop: "10px",
+                      }}
+                    >
+                      Submit Feedback
+                    </button>
+                  </>
                 ) : (
                   <Link href={`/courses/${course._id}`} passHref>
                     <button
@@ -170,7 +235,8 @@ const StudentPage = () => {
                         border: "none",
                         borderRadius: "5px",
                         cursor: "pointer",
-                      }}>
+                      }}
+                    >
                       View Details
                     </button>
                   </Link>
@@ -194,7 +260,8 @@ const StudentPage = () => {
                   borderRadius: "8px",
                   boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
                   maxWidth: "300px",
-                }}>
+                }}
+              >
                 <div style={{ marginRight: "10px" }}>
                   <Lottie className="h-44" animationData={courseAn} />
                 </div>
@@ -212,7 +279,8 @@ const StudentPage = () => {
                     border: "none",
                     borderRadius: "5px",
                     cursor: "pointer",
-                  }}>
+                  }}
+                >
                   Enroll
                 </button>
               </div>
@@ -222,6 +290,78 @@ const StudentPage = () => {
           <p>No courses match your search query.</p>
         )}
       </div>
+
+      {/* Feedback Modal */}
+      {selectedCourseId && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "white",
+              padding: "20px",
+              borderRadius: "8px",
+              minWidth: "400px",
+            }}
+          >
+            <h2>Submit Feedback</h2>
+            <textarea
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="Write your feedback here..."
+              rows={5}
+              style={{
+                width: "100%",
+                padding: "10px",
+                marginBottom: "10px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
+            />
+            <button
+              onClick={handleSubmitFeedback}
+              style={{
+                padding: "10px 20px",
+                backgroundColor: "#007BFF",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+              }}
+            >
+              Submit
+            </button>
+            <button
+              onClick={() => {
+                setSelectedCourseId(null);
+                setFeedback("");
+              }}
+              style={{
+                padding: "10px 20px",
+                backgroundColor: "#FF5722",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                marginLeft: "10px",
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

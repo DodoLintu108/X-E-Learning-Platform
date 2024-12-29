@@ -25,6 +25,13 @@ let CoursesController = class CoursesController {
     constructor(coursesService) {
         this.coursesService = coursesService;
     }
+    async submitFeedback(courseId, comment, req) {
+        const userId = req.user.userId;
+        if (!userId) {
+            throw new common_1.NotFoundException('User not found.');
+        }
+        return this.coursesService.submitFeedback(courseId, userId, comment);
+    }
     async createCourse(req, createCourseDto, files) {
         const courseMaterial = files?.files?.[0]?.filename || null;
         const courseImage = files?.imagefiles?.[0]?.filename || null;
@@ -149,7 +156,8 @@ let CoursesController = class CoursesController {
     }
     async submitQuiz(courseId, quizId, body) {
         const { userId, answers } = body;
-        return this.coursesService.submitQuizResponse(courseId, quizId, userId, answers);
+        const submission = await this.coursesService.submitQuizResponse(courseId, quizId, userId, answers);
+        return submission;
     }
     async getQuizzes(courseId) {
         return this.coursesService.getQuizzesByCourse(courseId);
@@ -189,8 +197,44 @@ let CoursesController = class CoursesController {
     async getQuizzesForCourse(courseId) {
         return this.coursesService.getAllQuizzesForCourse(courseId);
     }
+    async editCourse(courseId, updateData, files) {
+        const courseMaterial = files?.files?.[0]?.filename || updateData.courseMaterial;
+        const courseImage = files?.imagefiles?.[0]?.filename || updateData.courseImage;
+        const courseData = {
+            ...updateData,
+            courseMaterial,
+            courseImage,
+        };
+        const updatedCourse = await this.coursesService.editCourse(courseId, courseData);
+        return {
+            message: 'Course updated successfully',
+            course: updatedCourse,
+        };
+    }
+    async deleteCourseById(courseId) {
+        await this.coursesService.deleteCourseById(courseId);
+        return {
+            message: 'Course deleted successfully',
+        };
+    }
+    async updateQuiz(courseId, lectureId, quizId, quizUpdateData) {
+        const updatedCourse = await this.coursesService.updateQuiz(courseId, lectureId, quizId, quizUpdateData);
+        return {
+            message: 'Quiz updated successfully',
+            course: updatedCourse,
+        };
+    }
 };
 exports.CoursesController = CoursesController;
+__decorate([
+    (0, common_1.Post)(':id/feedback'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('comment')),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "submitFeedback", null);
 __decorate([
     (0, common_1.Post)('create'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileFieldsInterceptor)([
@@ -443,6 +487,36 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CoursesController.prototype, "getQuizzesForCourse", null);
+__decorate([
+    (0, common_1.Put)('edit/:courseId'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileFieldsInterceptor)([
+        { name: 'files', maxCount: 2 },
+        { name: 'imagefiles', maxCount: 2 },
+    ], multer_config_1.multerOptions)),
+    __param(0, (0, common_1.Param)('courseId')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.UploadedFiles)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "editCourse", null);
+__decorate([
+    (0, common_1.Delete)('delete/:courseId'),
+    __param(0, (0, common_1.Param)('courseId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "deleteCourseById", null);
+__decorate([
+    (0, common_1.Put)(':courseId/lectures/:lectureId/quizzes/:quizId'),
+    __param(0, (0, common_1.Param)('courseId')),
+    __param(1, (0, common_1.Param)('lectureId')),
+    __param(2, (0, common_1.Param)('quizId')),
+    __param(3, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String, Object]),
+    __metadata("design:returntype", Promise)
+], CoursesController.prototype, "updateQuiz", null);
 exports.CoursesController = CoursesController = __decorate([
     (0, common_1.Controller)('courses'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard),

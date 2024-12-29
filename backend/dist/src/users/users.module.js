@@ -21,7 +21,7 @@ exports.UsersModule = UsersModule;
 exports.UsersModule = UsersModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            mongoose_1.MongooseModule.forFeature([{ name: users_entity_1.User.name, schema: users_entity_1.UserSchema }]),
+            mongoose_1.MongooseModule.forFeature([{ name: users_entity_1.User.name, schema: users_entity_1.UserSchema }, { name: users_entity_1.Log.name, schema: users_entity_1.LogSchema },]),
             courses_module_1.CoursesModule,
         ],
         providers: [

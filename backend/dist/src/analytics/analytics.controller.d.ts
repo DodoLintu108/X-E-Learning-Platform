@@ -8,6 +8,16 @@ export declare class AnalyticsController {
     }>;
     getCourseAverageScore(courseId: string): Promise<{
         average: number;
-        levelStats: any;
+        levelStats: Record<string, {
+            average: number;
+            totalQuizzes: number;
+        }>;
+    }>;
+    getQuizAnalytics(quizId: string): Promise<{
+        quizId: string;
+        averageQuizScore: number;
+    }>;
+    getStudentAnalytics(req: any, courseId: string): Promise<{
+        averageScore: number;
     }>;
 }

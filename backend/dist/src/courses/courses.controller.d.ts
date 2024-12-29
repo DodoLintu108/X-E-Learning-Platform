@@ -6,6 +6,9 @@ import { CreateCourseDto } from './create-course.dto';
 export declare class CoursesController {
     private readonly coursesService;
     constructor(coursesService: CoursesService);
+    submitFeedback(courseId: string, comment: string, req: any): Promise<{
+        message: string;
+    }>;
     createCourse(req: any, createCourseDto: CreateCourseDto, files: {
         files?: Express.Multer.File[];
         imagefiles?: Express.Multer.File[];
@@ -86,4 +89,26 @@ export declare class CoursesController {
     }>;
     getCourseDetails(courseId: string): Promise<any>;
     getQuizzesForCourse(courseId: string): Promise<any[]>;
+    editCourse(courseId: string, updateData: Partial<Course>, files: {
+        files?: Express.Multer.File[];
+        imagefiles?: Express.Multer.File[];
+    }): Promise<{
+        message: string;
+        course: Course;
+    }>;
+    deleteCourseById(courseId: string): Promise<{
+        message: string;
+    }>;
+    updateQuiz(courseId: string, lectureId: string, quizId: string, quizUpdateData: {
+        title?: string;
+        level?: string;
+        questions?: Array<{
+            question: string;
+            options: string[];
+            correctAnswer: number;
+        }>;
+    }): Promise<{
+        message: string;
+        course: Course;
+    }>;
 }

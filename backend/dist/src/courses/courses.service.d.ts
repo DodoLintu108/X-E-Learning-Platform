@@ -61,4 +61,18 @@ export declare class CoursesService {
     }): Promise<Course>;
     getCourseDetails(courseId: string): Promise<any>;
     getAllQuizzesForCourse(courseId: string): Promise<any[]>;
+    editCourse(courseId: string, updateData: Partial<Course>): Promise<Course>;
+    deleteCourseById(courseId: string): Promise<void>;
+    updateQuiz(courseId: string, lectureId: string, quizId: string, quizUpdateData: {
+        title?: string;
+        level?: string;
+        questions?: Array<{
+            question: string;
+            options: string[];
+            correctAnswer: number;
+        }>;
+    }): Promise<Course>;
+    submitFeedback(courseId: string, userId: string, comment: string): Promise<{
+        message: string;
+    }>;
 }

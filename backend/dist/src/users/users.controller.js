@@ -17,10 +17,14 @@ const common_1 = require("@nestjs/common");
 const roles_decorator_1 = require("./roles.decorator");
 const users_service_1 = require("./users.service");
 const courses_service_1 = require("../courses/courses.service");
+const users_entity_1 = require("./users.entity");
+const mongoose_1 = require("@nestjs/mongoose");
+const mongoose_2 = require("mongoose");
 let UsersController = class UsersController {
-    constructor(usersService, coursesService) {
+    constructor(usersService, coursesService, userModel) {
         this.usersService = usersService;
         this.coursesService = coursesService;
+        this.userModel = userModel;
     }
     getDashboard(req) {
         return this.usersService.getDashboard(req.user);
@@ -42,11 +46,49 @@ let UsersController = class UsersController {
         const courses = await this.usersService.findById(userId);
         return courses;
     }
-    async deleteTeacher(userId) {
-        return this.usersService.deleteTeacher(userId);
+    async updateUser(userId, updateData) {
+        return this.usersService.updateUser(userId, updateData);
     }
-    async deleteStudent(userId) {
-        return this.usersService.deleteStudent(userId);
+    async deleteUser(id) {
+        await this.usersService.deleteUser(id);
+        return { message: 'User deleted successfully' };
+    }
+    async resetFailedLogins(userId) {
+        await this.usersService.resetFailedLogin(userId);
+        return { message: 'Failed login attempts reset successfully' };
+    }
+    async getFailedLogins(userId) {
+        const attempts = await this.usersService.getFailedLoginAttempts(userId);
+        return { attempts };
+    }
+    async getAccessLogs(userId) {
+        const logs = await this.usersService.getUnauthorizedLogs(userId);
+        return { logs };
+    }
+    async deleteTeacher(id) {
+        const deleted = await this.usersService.deleteTeacher(id);
+        if (deleted) {
+            return { message: 'Teacher deleted successfully' };
+        }
+        else {
+            throw new common_1.NotFoundException('Teacher not found');
+        }
+    }
+    async deleteStudent(id) {
+        const deleted = await this.userModel.deleteOne({ _id: id });
+        if (deleted.deletedCount > 0) {
+            return { message: 'Student deleted successfully' };
+        }
+        else {
+            throw new common_1.NotFoundException('Student not found');
+        }
+    }
+    async getStudentLogs(id) {
+        const logs = await this.usersService.getUserLogs(id);
+        if (!logs) {
+            throw new common_1.NotFoundException('Logs not found for student');
+        }
+        return logs;
     }
 };
 exports.UsersController = UsersController;
@@ -87,22 +129,67 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "findById", null);
 __decorate([
-    (0, common_1.Post)('delete/teachers/:userId'),
+    (0, common_1.Put)('user/:userId'),
     __param(0, (0, common_1.Param)('userId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "updateUser", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "deleteUser", null);
+__decorate([
+    (0, common_1.Put)('user/:userId/reset-failed-logins'),
+    __param(0, (0, common_1.Param)('userId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "resetFailedLogins", null);
+__decorate([
+    (0, common_1.Get)('user/:userId/failed-logins'),
+    __param(0, (0, common_1.Param)('userId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getFailedLogins", null);
+__decorate([
+    (0, common_1.Get)('user/:userId/access-logs'),
+    __param(0, (0, common_1.Param)('userId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getAccessLogs", null);
+__decorate([
+    (0, common_1.Delete)('teachers/:id'),
+    __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "deleteTeacher", null);
 __decorate([
-    (0, common_1.Post)('delete/student/:userId'),
-    __param(0, (0, common_1.Param)('userId')),
+    (0, common_1.Delete)('students/:id'),
+    __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "deleteStudent", null);
+__decorate([
+    (0, common_1.Get)('students/:id/logs'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getStudentLogs", null);
 exports.UsersController = UsersController = __decorate([
     (0, common_1.Controller)('users'),
+    __param(2, (0, mongoose_1.InjectModel)(users_entity_1.User.name)),
     __metadata("design:paramtypes", [users_service_1.UsersService,
-        courses_service_1.CoursesService])
+        courses_service_1.CoursesService,
+        mongoose_2.Model])
 ], UsersController);
 //# sourceMappingURL=users.controller.js.map

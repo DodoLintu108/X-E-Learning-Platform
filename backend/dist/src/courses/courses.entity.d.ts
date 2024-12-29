@@ -1,4 +1,4 @@
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 export declare class Quiz {
     quizId: string;
     title: string;
@@ -15,12 +15,18 @@ export declare class Quiz {
     }>;
     createdAt: Date;
 }
-declare class Lecture {
+export declare class Lecture {
+    _id?: Types.ObjectId;
     title: string;
     type: 'video' | 'pdf';
     content: string;
-    quizzes: Quiz[];
     createdAt: Date;
+    quizzes: Quiz[];
+}
+export declare class Feedback {
+    userId: string;
+    comment: string;
+    submittedAt: Date;
 }
 export declare class Course {
     courseId: string;
@@ -34,22 +40,16 @@ export declare class Course {
     courseMaterial: string;
     createdAt: Date;
     lectures: Lecture[];
-}
-export interface Course {
-    title: string;
-    description: string;
-    category: string;
-    difficultyLevel: string;
     isEnded: boolean;
+    feedback: Feedback[];
 }
 export type CourseDocument = Course & Document;
 export declare const CourseSchema: import("mongoose").Schema<Course, import("mongoose").Model<Course, any, any, any, Document<unknown, any, Course> & Course & {
-    _id: import("mongoose").Types.ObjectId;
+    _id: Types.ObjectId;
 } & {
     __v: number;
 }, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Course, Document<unknown, {}, import("mongoose").FlatRecord<Course>> & import("mongoose").FlatRecord<Course> & {
-    _id: import("mongoose").Types.ObjectId;
+    _id: Types.ObjectId;
 } & {
     __v: number;
 }>;
-export {};

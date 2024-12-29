@@ -21,8 +21,36 @@ export class User {
   @Prop({ required: true, enum: ['student', 'teacher', 'admin'] })
   role: string;
 
+  @Prop({ enum: ['pdf', 'video'], default: null })
+  learningPreference?: string;
+
+  @Prop({ type: [String], default: [] })
+  subjectsOfInterest?: string[];
+
+  @Prop({ default: Date.now })
+  createdAt: Date;
+
+  @Prop({ default: 0 })
+  failedLoginAttempts: number;  // <-- NEW: Tracks failed logins
+
+  @Prop({ type: [{ date: Date, ipAddress: String }], default: [] })
+  unauthorizedAccessLogs: Array<{ date: Date; ipAddress: string }>;  // <-- NEW: Unauthorized logs
+
+  
+}
+
+
+export const UserSchema = SchemaFactory.createForClass(User);
+
+@Schema()
+export class Log extends Document {
+  @Prop({ required: true })
+  userId: string;
+
+  @Prop({ required: true })
+  action: string;
+
   @Prop({ default: Date.now })
   createdAt: Date;
 }
-
-export const UserSchema = SchemaFactory.createForClass(User);
+export const LogSchema = SchemaFactory.createForClass(Log);

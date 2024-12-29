@@ -218,30 +218,52 @@ let CoursesService = class CoursesService {
         return this.courseModel.findByIdAndUpdate(id, { isEnded: true }, { new: true }).exec();
     }
     async submitQuizResponse(courseId, quizId, userId, answers) {
-        const course = await this.courseModel.findById(courseId);
-        if (!course) {
-            throw new common_1.NotFoundException('Course not found');
+        try {
+            const course = await this.courseModel.findById(courseId);
+            if (!course) {
+                throw new common_1.NotFoundException('Course not found');
+            }
+            const quiz = course.lectures
+                .flatMap((lecture) => lecture.quizzes || [])
+                .find((quiz) => quiz.quizId === quizId);
+            if (!quiz) {
+                throw new common_1.NotFoundException('Quiz not found');
+            }
+            const totalQuestions = quiz.questions.length;
+            const correctAnswers = quiz.questions.map((q) => q.correctAnswer);
+            const correctCount = answers.reduce((total, answer, index) => {
+                const isCorrect = answer.answer === correctAnswers[index];
+                return total + (isCorrect ? 1 : 0);
+            }, 0);
+            const score = ((correctCount / totalQuestions) * 100).toFixed(2);
+            const existingSubmission = quiz.submittedBy.find((submission) => submission.userId === userId);
+            if (existingSubmission) {
+                existingSubmission.score = Number(score);
+                existingSubmission.submittedAt = new Date();
+            }
+            else {
+                quiz.submittedBy.push({
+                    userId,
+                    score: Number(score),
+                    submittedAt: new Date(),
+                });
+            }
+            const result = await this.courseModel.updateOne({ _id: courseId, 'lectures.quizzes.quizId': quizId }, { $set: { 'lectures.$[l].quizzes.$[q].submittedBy': quiz.submittedBy } }, {
+                arrayFilters: [
+                    { 'l.quizzes.quizId': quizId },
+                    { 'q.quizId': quizId },
+                ],
+            });
+            if (result.modifiedCount === 0) {
+                console.log('Failed to update quiz submission:', result);
+                throw new Error('Failed to update quiz submission.');
+            }
+            return { score: Number(score) };
         }
-        const quiz = course.lectures
-            .flatMap((lecture) => lecture.quizzes || [])
-            .find((quiz) => quiz.quizId === quizId);
-        console.log(course.lectures);
-        console.log(quizId);
-        if (!quiz) {
-            throw new common_1.NotFoundException('Quiz not found');
+        catch (error) {
+            console.error('Error during quiz submission:', error.message);
+            throw new common_1.HttpException(`Quiz submission failed: ${error.message}`, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        const correctAnswers = quiz.questions.map((q) => q.correctAnswer);
-        const score = answers.reduce((total, answer, index) => {
-            const isCorrect = answer.answer === correctAnswers[index];
-            return total + (isCorrect ? 1 : 0);
-        }, 0);
-        quiz.submittedBy.push({
-            userId,
-            score,
-            submittedAt: new Date(),
-        });
-        await course.save();
-        return { score };
     }
     async getQuizzesByCourse(courseId) {
         const course = await this.courseModel.findById(courseId);
@@ -316,6 +338,58 @@ let CoursesService = class CoursesService {
         }
         const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
         return quizzes;
+    }
+    async editCourse(courseId, updateData) {
+        const course = await this.courseModel.findById(courseId);
+        if (!course) {
+            throw new common_1.NotFoundException('Course not found');
+        }
+        Object.assign(course, updateData);
+        return await course.save();
+    }
+    async deleteCourseById(courseId) {
+        const result = await this.courseModel.findByIdAndDelete(courseId);
+        if (!result) {
+            throw new common_1.NotFoundException('Course not found');
+        }
+    }
+    async updateQuiz(courseId, lectureId, quizId, quizUpdateData) {
+        const course = await this.courseModel.findById(courseId).exec();
+        if (!course) {
+            return null;
+        }
+        const lecture = course.lectures.find((lec) => lec._id.toString() === lectureId);
+        if (!lecture) {
+            return null;
+        }
+        const quiz = lecture.quizzes.find((q) => q.quizId === quizId);
+        if (!quiz) {
+            return null;
+        }
+        if (quizUpdateData.title)
+            quiz.title = quizUpdateData.title;
+        if (quizUpdateData.level)
+            quiz.level = quizUpdateData.level;
+        if (quizUpdateData.questions)
+            quiz.questions = quizUpdateData.questions;
+        await course.save();
+        return course;
+    }
+    async submitFeedback(courseId, userId, comment) {
+        const course = await this.courseModel.findById(courseId);
+        if (!course) {
+            throw new common_1.NotFoundException('Course not found');
+        }
+        if (!course.isEnded) {
+            throw new common_1.NotFoundException('Course is still ongoing.');
+        }
+        course.feedback.push({
+            userId,
+            comment,
+            submittedAt: new Date(),
+        });
+        await course.save();
+        return { message: 'Feedback submitted successfully' };
     }
 };
 exports.CoursesService = CoursesService;

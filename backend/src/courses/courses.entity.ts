@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 
 @Schema()
@@ -22,96 +22,94 @@ export class Quiz {
       },
     ],
   })
-  questions: Array<{ question: string; options: string[]; correctAnswer: number }>;
+  questions: Array<{
+    question: string;
+    options: string[];
+    correctAnswer: number;
+  }>;
 
-  @Prop({ type: [Object], default: [] }) // Submitted details
+  @Prop({ type: [Object], default: [] })
   submittedBy: Array<{ userId: string; score: number; submittedAt: Date }>;
 
   @Prop({ default: Date.now })
   createdAt: Date;
 }
 
-
 @Schema()
-class Lecture {
+export class Lecture {
+  @Prop({ type: Types.ObjectId, auto: true, required: false })
+  _id?: Types.ObjectId;  // <-- make `_id` optional
+
   @Prop({ required: true, default: 'Untitled Quiz' })
   title: string;
 
   @Prop({ required: true, enum: ['video', 'pdf'] })
-  type: 'video' | 'pdf'; // Type of lecture
+  type: 'video' | 'pdf';
 
   @Prop({ required: true })
-  content: string; // YouTube URL for video or file path for PDF
-
-  @Prop({
-    type: [
-      {
-        quizId: { type: String, required: true },
-        title: { type: String, required: true, default: 'Untitled Quiz' },
-        level: { type: String, required: true },
-        questions: [
-          {
-            question: { type: String, required: true },
-            options: { type: [String], required: true },
-            correctAnswer: { type: Number, required: true },
-          },
-        ],
-        submittedBy: { type: [Object], default: [] },
-        createdAt: { type: Date, default: Date.now },
-      },
-    ],
-    default: [],
-  })
-  quizzes: Quiz[]; // Array of quizzes associated with the lecture
+  content: string;
 
   @Prop({ default: Date.now })
-  createdAt: Date; // Timestamp for when the lecture was added
-}
+  createdAt: Date;
 
+  @Prop({ type: [SchemaFactory.createForClass(Quiz)], default: [] })
+  quizzes: Quiz[];
+
+
+}
+@Schema()
+export class Feedback {
+  @Prop({ required: true })
+  userId: string;
+
+  @Prop({ required: true })
+  comment: string;
+
+  @Prop({ required: true, default: Date.now })
+  submittedAt: Date;
+}
 @Schema()
 export class Course {
   @Prop({ required: true, default: uuidv4 })
-  courseId: string; // Unique identifier for the course
+  courseId: string;
 
   @Prop({ required: true })
-  title: string; // Course title
+  title: string;
 
   @Prop({ required: true })
-  description: string; // Course description
+  description: string;
 
   @Prop({ required: true })
-  category: string; // Course category (e.g., Mathematics, Physics)
+  category: string;
 
   @Prop({ required: true })
-  difficultyLevel: string; // Beginner, Intermediate, Advanced
+  difficultyLevel: string;
 
   @Prop({ required: true })
-  createdBy: string; // ID of the instructor who created the course
+  createdBy: string;
 
   @Prop({ default: [] })
-  enrolledStudents: string[]; // Array of student IDs enrolled in the course
+  enrolledStudents: string[];
 
   @Prop({ default: 'default-image.jpg' })
-  courseImage: string; // Default course image
+  courseImage: string;
 
   @Prop({ type: String })
-  courseMaterial: string; // Additional course material, if any
+  courseMaterial: string;
 
   @Prop({ default: Date.now })
-  createdAt: Date; // Course creation date
+  createdAt: Date;
 
-  @Prop({ type: [Lecture], default: [] })
-  lectures: Lecture[]; // Array of lectures
+  @Prop({ type: [SchemaFactory.createForClass(Lecture)], default: [] })
+  lectures: Lecture[];
 
+  @Prop({ default: false })
+  isEnded: boolean;
 
+  @Prop({ type: [Feedback], default: [] })
+  feedback: Feedback[];
 }
-export interface Course {
-  title: string;
-  description: string;
-  category: string;
-  difficultyLevel: string;
-  isEnded: boolean; // Add this line
-}
-// Create the Mongoose schema for Course
+
+// This interface merges your schema and Mongoose Document
 export type CourseDocument = Course & Document;
 export const CourseSchema = SchemaFactory.createForClass(Course);

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Schema } from 'mongoose';
 import { Course, CourseDocument } from './courses.entity';
@@ -28,7 +28,7 @@ export class CoursesService {
     });
     return newCourse.save();
   }
-  
+
 
   async addModule(data: {
     courseId: string;
@@ -101,8 +101,8 @@ export class CoursesService {
       }
       return course;
     });
-    
-    
+
+
   }
 
   async getCourseById(courseId: string): Promise<Course> {
@@ -240,25 +240,25 @@ export class CoursesService {
     await course.save();
     return newQuiz;
   }
-  
-  async getCourseDetailsForStudent(courseId: string, studentId: string, ): Promise<any> {
+
+  async getCourseDetailsForStudent(courseId: string, studentId: string,): Promise<any> {
     const course = await this.courseModel.findById(courseId).exec();
     if (!course) {
       throw new NotFoundException('Course not found');
     }
-  
+
     // Calculate average score for the student
     const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
     const submissions = quizzes.flatMap((quiz) =>
       quiz.submittedBy.filter((submission) => submission.userId === studentId)
     );
-  
+
     const totalScore = submissions.reduce((sum, sub) => sum + sub.score, 0);
     const averageScore = submissions.length ? totalScore / submissions.length : 0;
-  
+
 
     return {
-      
+
       title: course.title,
       description: course.description,
       category: course.category,
@@ -270,52 +270,92 @@ export class CoursesService {
       averageScore: averageScore.toFixed(2), // Include the average score
     };
   }
-  
+
 
   async endCourse(id: string): Promise<Course> {
     return this.courseModel.findByIdAndUpdate(id, { isEnded: true }, { new: true }).exec();
   }
-  
+
+
   async submitQuizResponse(
     courseId: string,
     quizId: string,
     userId: string,
     answers: Array<{ questionId: string; answer: number }>
   ): Promise<{ score: number }> {
-    const course = await this.courseModel.findById(courseId);
-    if (!course) {
-      throw new NotFoundException('Course not found');
+    try {
+      const course = await this.courseModel.findById(courseId);
+      if (!course) {
+        throw new NotFoundException('Course not found');
+      }
+  
+      const quiz = course.lectures
+        .flatMap((lecture) => lecture.quizzes || [])
+        .find((quiz) => quiz.quizId === quizId);
+  
+      if (!quiz) {
+        throw new NotFoundException('Quiz not found');
+      }
+  
+      // Calculate total number of questions
+      const totalQuestions = quiz.questions.length;
+  
+      // Validate answers and calculate score as a percentage
+      const correctAnswers = quiz.questions.map((q) => q.correctAnswer);
+      const correctCount = answers.reduce((total, answer, index) => {
+        const isCorrect = answer.answer === correctAnswers[index];
+        return total + (isCorrect ? 1 : 0);
+      }, 0);
+  
+      const score = ((correctCount / totalQuestions) * 100).toFixed(2);
+  
+      // Ensure proper update of the submission
+      const existingSubmission = quiz.submittedBy.find(
+        (submission) => submission.userId === userId
+      );
+  
+      if (existingSubmission) {
+        // Update existing submission
+        existingSubmission.score = Number(score);
+        existingSubmission.submittedAt = new Date();
+      } else {
+        // Add new submission
+        quiz.submittedBy.push({
+          userId,
+          score: Number(score),
+          submittedAt: new Date(),
+        });
+      }
+  
+      // Save the updated course document
+      const result = await this.courseModel.updateOne(
+        { _id: courseId, 'lectures.quizzes.quizId': quizId },
+        { $set: { 'lectures.$[l].quizzes.$[q].submittedBy': quiz.submittedBy } },
+        {
+          arrayFilters: [
+            { 'l.quizzes.quizId': quizId },
+            { 'q.quizId': quizId },
+          ],
+        }
+      );
+  
+      if (result.modifiedCount === 0) {
+        console.log('Failed to update quiz submission:', result);
+        throw new Error('Failed to update quiz submission.');
+      }
+  
+      return { score: Number(score) };
+    } catch (error) {
+      console.error('Error during quiz submission:', error.message);
+      throw new HttpException(
+        `Quiz submission failed: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
-
-    const quiz = course.lectures
-      .flatMap((lecture) => lecture.quizzes || [])
-      .find((quiz) => quiz.quizId === quizId);
-      console.log(course.lectures); // Check the lectures structure
-      console.log(quizId); // Ensure it matches an existing quizId
-    if (!quiz) {
-      throw new NotFoundException('Quiz not found');
-    }
-
-    // Validate answers and calculate the score
-    const correctAnswers = quiz.questions.map((q) => q.correctAnswer);
-    const score = answers.reduce((total, answer, index) => {
-      const isCorrect =
-        answer.answer === correctAnswers[index];
-      return total + (isCorrect ? 1 : 0);
-    }, 0);
-
-    // Save submission details
-    quiz.submittedBy.push({
-      userId,
-      score,
-      submittedAt: new Date(),
-    });
-
-    await course.save(); // Save the updated course document
-
-    return { score };
   }
+  
 
+  
 
 
   // Get all quizzes for a course
@@ -424,6 +464,91 @@ export class CoursesService {
     const quizzes = course.lectures.flatMap((lecture) => lecture.quizzes || []);
 
     return quizzes; // Return all quizzes as a flat array
+  }
+
+  async editCourse(courseId: string, updateData: Partial<Course>): Promise<Course> {
+    const course = await this.courseModel.findById(courseId);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    // Update the course with new data
+    Object.assign(course, updateData);
+    return await course.save();
+  }
+
+  async deleteCourseById(courseId: string): Promise<void> {
+    const result = await this.courseModel.findByIdAndDelete(courseId);
+    if (!result) {
+      throw new NotFoundException('Course not found');
+    }
+  }
+
+
+  async updateQuiz(
+    courseId: string,
+    lectureId: string,
+    quizId: string,
+    quizUpdateData: {
+      title?: string;
+      level?: string;
+      questions?: Array<{
+        question: string;
+        options: string[];
+        correctAnswer: number;
+      }>;
+    },
+  ): Promise<Course> {
+    // 1) Find the course
+    const course = await this.courseModel.findById(courseId).exec();
+    if (!course) {
+      // throw new NotFoundException('Course not found');
+      return null;
+    }
+
+    // 2) Find the lecture by _id
+    const lecture = course.lectures.find(
+      (lec) => lec._id.toString() === lectureId,
+    );
+    if (!lecture) {
+      // throw new NotFoundException('Lecture not found');
+      return null;
+    }
+
+    // 3) Find the quiz within that lecture
+    const quiz = lecture.quizzes.find((q) => q.quizId === quizId);
+    if (!quiz) {
+      // throw new NotFoundException('Quiz not found');
+      return null;
+    }
+
+    // 4) Overwrite quiz fields
+    if (quizUpdateData.title) quiz.title = quizUpdateData.title;
+    if (quizUpdateData.level) quiz.level = quizUpdateData.level;
+    if (quizUpdateData.questions) quiz.questions = quizUpdateData.questions;
+
+    // 5) Save the updated course
+    await course.save();
+    return course;
+  }
+  async submitFeedback(courseId: string, userId: string, comment: string) {
+    const course = await this.courseModel.findById(courseId);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+    if (!course.isEnded) {
+      throw new NotFoundException('Course is still ongoing.');
+    }
+  
+    // Add feedback with all required fields
+    course.feedback.push({
+      userId,
+      comment,
+      submittedAt: new Date(), // Include the current date and time
+    });
+    
+    await course.save();
+    return { message: 'Feedback submitted successfully' };
   }
   
 }
